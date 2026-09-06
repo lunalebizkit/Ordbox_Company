@@ -1,0 +1,26 @@
+version: '3'
+services:
+  api:
+    image:  lunale/ordbox:api-latest
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_URLS=http://+:80    
+    volumes:
+      - /home/ordbox/docker-compose-files/front/app/wwwroot/Production:/app/wwwroot/media/doc:rw
+      - /home/ordbox/docker-compose-files/front/app/wwwroot/media:/app/wwwroot/media:rw
+      - /home/ordbox/docker-compose-files/front/app/PrivateFiles/media:/app/PrivateFiles/media:rw
+      - /home/ordbox/docker-compose-files/front/app/logs:/app/logs:rw
+
+  front:
+    image: lunale/ordbox:front-latest
+    restart: always
+    expose:
+      - 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    environment:
+      API_URL: ""
+      API_VERSION: "1"
+
