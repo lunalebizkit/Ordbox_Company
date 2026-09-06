@@ -1,6 +1,8 @@
 /BE/.config
 /BE/.vs
 /BE/Api/.vs
+/BE/Api/.json
+/BE/Api/wwwroot
 /BE/Api/bin
 /BE/Api/obj
 /BE/Sdk/obj
@@ -11,3 +13,7 @@
 /BE/Services/obj
 /BE/Api/.config
 /.vs
+/BE/Api/appsettings.Development.json
+/BE/Api/appsettings.Production.json
+/BE/Api/appsettings.Staging.json
+/BE/openssl.cnf
