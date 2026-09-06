@@ -1,5 +1,13 @@
 /BE/.config
 /BE/.vs
 /BE/Api/.vs
+/BE/Api/bin
+/BE/Api/obj
+/BE/Sdk/obj
+/BE/Domain/obj
+/BE/Domain/bin
+/BE/Sdk/bin
+/BE/Services/bin
+/BE/Services/obj
 /BE/Api/.config
 /.vs

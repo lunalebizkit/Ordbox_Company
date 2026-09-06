@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Ordbox": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
