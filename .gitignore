@@ -17,3 +17,5 @@
 /BE/Api/appsettings.Production.json
 /BE/Api/appsettings.Staging.json
 /BE/openssl.cnf
+
+/FE/.vscode/
