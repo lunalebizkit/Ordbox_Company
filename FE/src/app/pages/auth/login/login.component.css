@@ -1,0 +1,142 @@
+:host {
+  width: 100%;
+  height: 100%;
+}
+
+.login{
+	height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card{
+  max-width: 50%;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px 0 rgba(0,173,181);
+}
+.login-sidebar {
+  text-align: center;
+} 
+  .overlay {
+    /* border-right: 1px solid rgba($primary-color, 0.2); */
+    display: flex;
+    flex-direction:column;
+    justify-content: space-between;
+    margin-top: 140px;
+    margin-left: 50px
+  }
+
+    img{
+      margin: auto 0;
+    }
+    img.logo1{
+      display: none;
+    }
+    
+    .copyright {
+      display: flex;
+      align-items: center;
+      margin: 10px;
+      font-size: 0.85rem;
+      justify-content: center;
+      flex-direction: row;
+      min-width: 100%;
+    }
+  
+
+  @media only screen and (max-width: 1000px) {
+    .overlay {
+        display:flex; 
+        position: absolute;
+        opacity: 0.9;
+    } 
+    img{
+      display: none;
+    }
+    img.logo1{
+      display: flex;
+      overflow: auto;
+      margin: 0;
+      width: 200px;
+      height: auto;
+      margin-left: -25px;
+      margin-top: -110px;
+      overflow: auto;
+    
+    }
+    p {
+      margin-top: 0px;
+      margin-bottom: 0px;
+      margin-block-end: auto;
+      margin-right: auto;
+
+     }
+     .card{
+      width: 350px;
+     }
+     h1{
+      display:none;
+     }
+     .login-sidebar{
+     width: auto;
+     margin: 50px;
+     }
+
+  }
+  @media (max-width:500px){
+    img.logo1{
+      width: 250px;
+      height: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+ 
+
+
+.login-container{
+  margin: auto 0;
+  padding: 10vmin;
+}
+  h1{
+    font-size: 1.5rem;
+    text-align: center;
+    /* color: $color-title-login; */
+  }
+
+  h3{
+    font-size: 0.95rem;
+    font-weight: 10;
+    /* color: $color-title-login; */
+  }
+  
+  .form{
+    margin-top: 15px;
+    display: grid;
+  }
+    button{
+      margin: auto;
+    }
+  
+
+  .login-container{
+    display: flex;
+    justify-content: center;
+  }
+    .logo {
+      width: 75%;
+      margin-top: -20%;
+      margin-bottom: -12%;
+      display: none;
+    }
+    
+/* 
+    @media only screen and (min-width: 1000px) {
+      .logo {
+          display: none;
+      }
+      img.logo1{
+        display: flex;
+      }
+    } */

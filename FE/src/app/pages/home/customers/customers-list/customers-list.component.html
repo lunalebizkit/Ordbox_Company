@@ -1,0 +1,69 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Clientes</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateCustomer]" nz-tooltip nzTooltipTitle="Nuevo" [routerLink]="['/home/customers/new']"
+        nz-button nzType="primary" nzShape="circle">
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <nz-content>
+
+    <app-search-filter [title]="'Filtros'" [(model)]="queryParams.filter" [palceHolder]="'Ingrese Nombre o CUIT-DNI'"
+      (onSearchClick)="search()"></app-search-filter>
+
+    <!-- Tabla -->
+
+    <div class="table">
+      <nz-table [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize" [nzPageIndex]="1" nzShowSizeChanger
+        class="tabla" nzShowPagination nzFrontPagination="false" (nzQueryParams)="onQueryParamsChange($event)"
+        [nzData]="entityList()" [nzSize]="'small'" [nzLoading]="loading()" nzTableLayout="fixed">
+        <thead>
+          <tr>
+            <th nzEllipsis nzWidth="60px">Nombre</th>
+            <th nzEllipsis nzWidth="60px">Dni</th>
+            <th nzEllipsis nzWidth="60px">Cuit/Cuil</th>
+            <th nzEllipsis nzWidth="100px">Dirección</th>
+            <th nzEllipsis nzWidth="130px">Observación</th>
+            <th nzEllipsis nzWidth="70px">Teléfono/s</th>
+            <th nzEllipsis nzWidth="110px">Email/s</th>
+            <th nzEllipsis nzWidth="45px" style="text-align: center;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of entityList(); track $index) {
+          <tr class="small-text" (dblclick)="onDoubleClicked(data.id)">
+            <td nzEllipsis>{{ data.name }}</td>
+            <td nzEllipsis>{{ data.dni }}</td>
+            <td nzEllipsis>{{ data.cuit | cuit }}</td>
+            <td nzEllipsis>{{ data.address }}</td>
+            <td nzEllipsis>{{ data.observation }}</td>
+            <td nzEllipsis>{{ data.phoneEntity }}</td>
+            <td nzEllipsis>{{ data.emailEntity }}</td>
+            <td style="text-align: center;">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a *nzSpaceItem [routerLink]="[`/home/customers/edit/${data.id}`]">
+                  <i nz-tooltip nzTooltipTitle="Editar" nz-icon nzType="edit"></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a (click)="popup.showDeleteConfirmation(data.id)" *authPermission="[permissions.DeleteUser]">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'"></i>
+                </a>
+              </nz-space>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar el cliente seleccionado?'"
+  [message]="'Esta acción no se puede revertir'" (handleOk)="handleOk()">
+</app-popup-confirmation>

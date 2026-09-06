@@ -1,0 +1,19 @@
+.list-header {
+    margin-bottom: 10px;
+    top: 0;
+    display: inline-block;
+    width:  100%;
+    background-color: #f6f6f6;
+    padding: 13px;
+    z-index: 101;
+    box-shadow: -1px 1px 5px 1px #dfdddf;
+    height: 100px;
+  }
+  .tablaProduct{
+    pointer-events:visiblePainted;
+  }
+  .tablaProduct tr :hover{
+    background-color: rgb(146, 204, 243);
+    cursor: pointer;
+  }
+ 

@@ -1,0 +1,205 @@
+<app-header-op-buttons #header [title]="'Producto'" [showSpinner]="isSaving()" [iconBack]="'rollback'"
+    [iconSave]="'save'" [iconTitle]="'tags'" (onSaveClick)="msjConfirmOk()" [showBack]="true" [showSave]="isEditMode()"
+    (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'"
+    [editPermission]="permissions.EditProduct">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" style="margin-top: 20px;">
+    <form nz-form [formGroup]="form" class="margin-top">
+        <nz-collapse>
+            <nz-collapse-panel nzHeader="Producto" [nzActive]="true">
+                <nz-content>
+                    <!--Nombre-->
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="description">Descripción
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input formControlName="description" nz-input id="description" maxlength="250"
+                                autocomplete="off" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="code">Código </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input formControlName="code" nz-input id="code" maxlength="250" autocomplete="off" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="categoryName">Categoría </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <nz-spin [nzSpinning]="isLoadingCategory()">
+                                <nz-select nzAllowClear nzShowSearch nzServerSearch
+                                    (nzOnSearch)="onSearchCategory($event)" formControlName="categoryName"
+                                    (nzModelChange)="categorySelectedChange($event)" [nzId]="'categoryName'">
+                                    @for (p of allCategories; track $index) {
+                                    <nz-option [nzValue]="p.value" [nzLabel]="p.label"></nz-option>}
+                                    @if (isLoadingCategory()) {
+                                    <nz-option nzDisabled nzCustomContent>
+                                        <span nz-icon nzType="loading" class="loading-icon"></span>
+                                        Loading Data...
+                                    </nz-option>}
+
+                                </nz-select>
+
+                            </nz-spin>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="brandName">Marca </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <nz-spin [nzSpinning]="isLoadingBrand()">
+                                <nz-select nzAllowClear nzShowSearch nzServerSearch (nzOnSearch)="onSearchBrand($event)"
+                                    formControlName="brandName" (nzModelChange)="brandSelectedChange($event)"
+                                    [nzId]="'brandName'">
+                                    @for (p of allBrands; track $index) {
+                                    <nz-option [nzValue]="p.value" [nzLabel]="p.label"></nz-option>}
+                                    @if (isLoadingBrand()) {
+                                    <nz-option nzDisabled nzCustomContent>
+                                        <span nz-icon nzType="loading" class="loading-icon"></span>
+                                        Loading Data...
+                                    </nz-option>}
+
+                                </nz-select>
+
+                            </nz-spin>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="supplierName">Proveedor</nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <nz-spin [nzSpinning]="isLoadingEntity()">
+                                <nz-select nzAllowClear nzShowSearch nzServerSearch (nzOnSearch)="onSearch($event)"
+                                    formControlName="supplierName" (nzModelChange)="entitySelectedChange($event)"
+                                    [nzId]="'supplierName'">
+                                    @for (p of allSuppliers; track $index) {
+                                    <nz-option [nzValue]="p.value" [nzLabel]="p.label"></nz-option>}
+                                    @if (isLoadingEntity()) {
+                                    <nz-option nzDisabled nzCustomContent>
+                                        <span nz-icon nzType="loading" class="loading-icon"></span>
+                                        Loading Data...
+                                    </nz-option>}
+
+                                </nz-select>
+                            </nz-spin>
+                        </nz-form-control>
+
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="barCode">Código de barra
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input formControlName="barCode" nz-input id="barCode" maxlength="250"
+                                ng-model="this.codeBar" autocomplete="off" />
+                        </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="observation">Observación
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input formControlName="observation" nz-input id="observation" maxlength="250"
+                                autocomplete="off" />
+                        </nz-form-control>
+                    </nz-form-item>
+                </nz-content>
+            </nz-collapse-panel>
+        </nz-collapse>
+        <nz-collapse>
+            <nz-collapse-panel [nzHeader]="'Precio'" [nzActive]="true">
+                <nz-content>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="pointOrder">Punto Pedido
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="pointOrder" id="pointOrder"
+                            [nzMin]="0"></nz-input-number>
+
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="quantity">Cantidad
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="quantity" id="quantity"
+                            [nzMin]="0"></nz-input-number>
+
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="purchasePrice">Precio Costo
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="purchasePrice"
+                            [nzFormatter]="formatterPeso" id="purchasePrice" [nzMin]="0" [nzMax]="10000000"
+                            (ngModelChange)="onPrecioCosto($event)">
+                        </nz-input-number>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="salePrice">Precio Lista
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" id="salePrice" formControlName="salePrice" [nzMin]="0"
+                            [nzFormatter]="formatterPeso"></nz-input-number>
+
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="salePercentage">Porcentaje
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="salePercentage" id="salePercentage"
+                            [nzMin]="0" (ngModelChange)="valuechange($event)" [nzFormatter]="formatterPorcentaje">
+                        </nz-input-number>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="cashSalePrice">Precio
+                            Contado
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="cashSalePrice" id="cashSalePrice"
+                            [nzFormatter]="formatterPeso" [nzMin]="0" [nzMax]="10000000"></nz-input-number>
+
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="cashSalePercentage">
+                            Porcentaje
+                            Contado
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="cashSalePercentage"
+                            id="cashSalePercentage" [nzMin]="0" [nzMax]="10000000" [nzStep]="1"
+                            [nzFormatter]="formatterPorcentaje" (ngModelChange)="valuechange($event)"></nz-input-number>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="cardSalePrice">Precio
+                            Tarjeta
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="cardSalePrice" id="cardSalePrice"
+                            [nzFormatter]="formatterPeso" [nzMin]="0" [nzMax]="10000000" [nzStep]="1">
+                        </nz-input-number>
+
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="cardSalePercentage">
+                            Porcentaje
+                            Tarjeta
+                        </nz-form-label>
+                        <nz-input-number style="width: 120px;" formControlName="cardSalePercentage"
+                            id="cardSalePercentage" [nzMin]="0" [nzMax]="10000000" [nzFormatter]="formatterPorcentaje"
+                            (ngModelChange)="valuechange($event)"></nz-input-number>
+                    </nz-form-item>
+                </nz-content>
+            </nz-collapse-panel>
+        </nz-collapse>
+
+    </form>
+</nz-spin>
+<div class="btn-footer-container">
+    <app-button-op-footer *authPermission="[permissions.DeleteBrand]" [className]="'btn-footer-productSave'"
+        [iconSave]="'eye'" (onSaveClick)="popupActiveComponent.showConfirmation()" [showSpinner]="isSaving()"
+        [btnSaveText]="'Activar'" [hidden]="!isDeleted">
+    </app-button-op-footer>
+    <app-button-op-footer *authPermission="[permissions.DeleteBrand]" [className]="'btn-footer-productSave'"
+        (onSaveClick)="popupDelete.showDeleteConfirmation(id())" [showSpinner]="isSaving()" [btnSaveText]="'Eliminar'"
+        [nzDanger]="true" [nzType]="'default'" [hidden]="isDeleted || id() == 0">
+    </app-button-op-footer>
+    <app-button-op-footer [className]="'btn-footer-productSave'" [iconSave]="'save'" (onSaveClick)="msjConfirmOk()"
+        [showSpinner]="isSaving()" [btnSaveText]="'Guardar'">
+    </app-button-op-footer>
+</div>
+<app-popup-confirmation #pop [title]="'Confirmar Producto'" [header]="'¿Está seguro que desea guardar producto?'"
+    [message]="'Esta acción no se puede revertir'" (handleOk)="save()">
+</app-popup-confirmation>
+
+<app-popup-confirmation #popupDelete [title]="'Confirmar eliminación'"
+    [header]="'¿Está seguro de que desea eliminar el producto seleccionado?'" (handleOk)="handleOk()">
+</app-popup-confirmation>
+<app-popup-confirmation #popupActive [title]="'Confirmar Activar'"
+    [header]="'¿Está seguro de que desea activar el producto seleccionado?'" (handleOk)="handleActiveOk()">
+</app-popup-confirmation>

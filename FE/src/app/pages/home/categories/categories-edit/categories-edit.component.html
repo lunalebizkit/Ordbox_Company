@@ -1,0 +1,32 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Categorias'"
+[showSpinner]="isSaving()" [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'tags'"
+(onSaveClick)="msjConfirmOk()" [showBack]="true" [showSave]="isEditMode()" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.EditCategory">
+</app-header-op-buttons>
+<nz-spin [nzSpinning]="isLoading()" style="margin-top: 20px;">
+    
+    <nz-collapse>
+        <nz-collapse-panel nzHeader="Categoria" [nzActive]="true">
+    <form nz-form [formGroup]="form" style="margin-top: 16px">
+        <!--Nombre-->
+        <nz-form-item>
+            <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="description">Descripción </nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+                <input formControlName="description" nz-input id="description" maxlength="250" />
+            </nz-form-control>
+        </nz-form-item>     
+      
+    </form>
+        </nz-collapse-panel>
+    </nz-collapse>
+
+</nz-spin>
+
+<app-popup-confirmation
+  #pop
+  [title]="'Confirmar Categoría'"
+  [header]="'¿Está seguro que desea guardar categoría?'"
+  [message]="'Esta acción no se puede revertir'"
+  (handleOk)="save()"
+  [disabled]="isSaving()"
+>
+</app-popup-confirmation>

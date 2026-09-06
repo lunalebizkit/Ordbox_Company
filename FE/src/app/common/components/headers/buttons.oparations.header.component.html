@@ -1,0 +1,101 @@
+<nz-page-header class="sticky">
+  <nz-page-header-title>
+    <i nz-icon [nzType]="iconTitle" style="padding-right: 5px; color: 'none'"></i>
+    {{ title }}
+  </nz-page-header-title>
+
+  @if (showTag) {
+  <nz-page-header-tags>
+    <nz-tag [nzColor]="color">{{ tagText }}</nz-tag>
+  </nz-page-header-tags>
+  }
+
+  <nz-page-header-extra>
+    @if (showDelete) {
+    <button style="margin: 2px" nz-button nzDanger [nzLoading]="showSpinner" (click)="onDeleteClick.emit($event)">
+      <i nz-icon [nzType]="iconDelete"></i>{{ btnDeleteText }}
+    </button>
+    }
+
+    @if (showBack) {
+    <button style="margin: 2px" nz-button nzType="default" [disabled]="showSpinner" (click)="goBack()">
+      <i nz-icon [nzType]="iconBack"></i>{{ btnCancelText }}
+    </button>
+    }
+
+    @if (showClose) {
+    <button style="margin: 2px" nz-button nzType="default" [disabled]="showSpinner" (click)="onCloseClick.emit($event)">
+      <i nz-icon [nzType]="iconBack"></i>{{ btnCloseText }}
+    </button>
+    }
+
+    @if (showSave) {
+    <button style="margin: 2px" nz-button nzType="primary" [nzLoading]="showSpinner" [disabled]="disabled"
+      (click)="onSaveClick.emit($event)">
+      <i nz-icon [nzType]="iconSave"></i>{{ btnSaveText }}
+    </button>
+    }
+
+    @if (showSend) {
+    <button style="margin: 2px" nz-button nzType="primary" [nzLoading]="showSpinner" (click)="onSendClick.emit($event)">
+      <i nz-icon [nzType]="iconSend"></i>{{ btnSendText }}
+    </button>
+    }
+
+    @if (showEmail) {
+    <button style="margin: 2px" nz-button nzType="primary" [nzLoading]="showSpinner" [disabled]="disabled"
+      (click)="onSendEmailClick.emit($event)">
+      <i nz-icon [nzType]="iconSend"></i>{{ btnSendEmail }}
+    </button>
+    }
+
+    @if (showUpdate) {
+    <button style="margin: 2px" nz-button class="btnGreen" [nzLoading]="showSpinner"
+      (click)="onUpdateClick.emit($event)">
+      <i nz-icon [nzType]="iconUpdate"></i>{{ btnUpdateText }}
+    </button>
+    }
+
+    @if (showReprint) {
+    <button style="margin: 2px" nz-button class="btnGreen" [disabled]="disabled" [nzLoading]="showSpinner"
+      (click)="onReprintClick.emit($event)">
+      <i nz-icon [nzType]="iconReprint"></i>{{ btnReprintText }}
+    </button>
+    }
+
+    @if (showCerrar) {
+    <button style="margin: 2px" nz-button [disabled]="disabled" (click)="onCerrarClick.emit($event)">
+      <i nz-icon [nzType]="iconReprint"></i>{{ btnCerrarText }}
+    </button>
+    }
+
+    @if (showPrint) {
+    <button style="margin: 2px" nz-button class="btnGreen" [disabled]="disabled" [nzLoading]="showSpinner"
+      (click)="onReprintClick.emit($event)">
+      <i nz-icon [nzType]="iconReprint"></i>{{ btnPrintText }}
+    </button>
+    }
+
+    @if (showFacturaPro) {
+    <button style="margin: 2px" nz-button [disabled]="disabled" (click)="onFacturaProClick.emit($event)">
+      <i nz-icon [nzType]="iconFacturaPro"></i>{{ btnFacturaProText }}
+    </button>
+
+
+    <button style="margin: 2px" [hidden]="showARCA" nz-button [disabled]="disabledARCA"
+      (click)="onFacturaARCAClick.emit($event)">
+      <i nz-icon [nzType]="iconFacturaARCA"></i>{{ btnFacturaARCAText }}
+    </button>
+
+    <button style="margin: 2px" [hidden]="showARCA" nz-button [disabled]="disabledEnviarARCA"
+      (click)="onEnviarEmailFacturaARCAClick.emit($event)">
+      <i nz-icon nzType="mail" nzTheme="twotone" nzTwotoneColor="#fc413d"></i>
+      {{ btnEnviarFacturaARCAText }}
+    </button>
+    }    
+    
+    <button nz-button nzType="default" (click)="onEditClick.emit()" *authPermission="[editPermission]" [disabled]="disabledEdit">
+      <i nz-icon nzType="edit"></i>{{btnEditText}}</button>
+
+  </nz-page-header-extra>
+</nz-page-header>

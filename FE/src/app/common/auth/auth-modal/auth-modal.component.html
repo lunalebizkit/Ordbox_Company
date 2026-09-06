@@ -1,0 +1,38 @@
+<div nz-row style="z-index: 2000;">
+  <div nz-col nzSpan="12" class="container">
+    <img
+      class="logo"
+      src="../../../../assets/img/OrdboXLogo.png"
+      alt="logo"
+    />
+  </div>
+  <div nz-col nzSpan="12" class="container">
+    <form nz-form name="login" nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Debe ingresar un nombre de usuario." >
+          <nz-input-wrapper>
+            <nz-icon nzPrefixIcon="user"/>
+            <input nz-input type="text"
+              formControlName="userName"
+              placeholder="Nombre de usuario" />
+          </nz-input-wrapper>
+        </nz-form-control>
+      </nz-form-item>      
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Debe ingresar una contraseña.">
+          <nz-input-wrapper>
+            <input
+              nz-input
+              type="password"
+              formControlName="password"
+              placeholder="Contraseña"
+            />
+          </nz-input-wrapper>
+        </nz-form-control>
+      </nz-form-item>
+      <button nz-button nzType="primary" [nzLoading]="isLoading">
+        <i nz-icon nzType="login" nzTheme="outline"></i>Ingresar
+      </button>
+    </form>
+  </div>
+</div>

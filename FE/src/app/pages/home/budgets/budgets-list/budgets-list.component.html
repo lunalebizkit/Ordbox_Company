@@ -1,0 +1,91 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Presupuestos</nz-page-header-title>
+    <nz-page-header-extra>
+      <button
+        *authPermission="[permissions.GetBudget]"
+        nz-tooltip
+        nzTooltipTitle="Nuevo"
+        nz-button
+        nzType="primary"
+        nzShape="circle"
+       [routerLink]="['/home/budgets/new']"
+      >
+        <i nz-icon nzType="plus" nzTheme="outline"></i></button
+      ><!-- -->
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-content>
+    <!-- Busqueda -->
+     <app-search-custom-filter [customSearchForm]="customBSearchForm" (onSearchCustomClick)="search()"></app-search-custom-filter>
+   <!-- Tabla -->
+
+    <div class="table">
+      <nz-table class="tabla" [nzData]="dataList()" nzBordered="true" [nzLoading]="loading()" [nzSize]="'small'"
+      [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" [nzTotal]="totalItems()" nzTableLayout="fixed"
+      [nzFrontPagination]="false" (nzQueryParams)="onQueryParamsChange($event)" nzShowSizeChanger>
+        <thead>
+          <tr>
+            <th nzEllipsis nzWidth="100px">Numero</th>
+            <th nzEllipsis nzWidth="160px">Fecha</th>
+            <th nzEllipsis nzWidth="100px">Nombre</th>
+            <th nzEllipsis nzWidth="100px">Dirección</th>
+            <th nzEllipsis nzWidth="100px">Total</th>
+            <th [nzAlign]="'center'" nzEllipsis nzWidth="70px">Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (data of dataList(); track $index) {
+        <tr class="small-text" (dblclick)="onDoubleClick(data.id)">
+            <td nzEllipsis>{{ data.budgetNumber }}</td>
+            <td nzEllipsis>{{ data.dateTime | datePipe}}</td>
+            <td nzEllipsis>{{ data.customerName }}</td>
+            <td nzEllipsis>{{ data.customerAddress }}</td>
+            <td nzEllipsis>
+              <b>{{ this.currencyFormat(data.total) }}</b>
+            </td>
+            <td style="text-align: center">              
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a (click)="reimprimirBudgets(data.id)">
+                  <i
+                  nz-icon
+                  nz-tooltip
+                  nzTooltipTitle="Descargar pdf"
+                  nzType="file-pdf"
+                  nzTheme="twotone"
+                  [nzTwotoneColor]="'#f5222d'"
+                  style="font-size: 16px; margin-right: 20px"
+                ></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>                
+                <a (click)="onDoubleClick(data.id)">
+                  <i
+                    nz-icon
+                    nzType="edit"
+                    nzTheme="outline"
+                    style="margin-right: 20px; color: green; font-size: 16px;"
+                  ></i>
+                </a>                             
+                <ng-template #spaceSplit>
+                </ng-template>                
+                <a (click)="popup.showDeleteConfirmation(data.id)">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'" style="font-size: 16px;"></i>
+                </a>
+              </nz-space>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar el presupuesto seleccionado?'"
+  [message]="'Esta acción no se puede revertir'" (handleOk)="handleOk()">
+</app-popup-confirmation>

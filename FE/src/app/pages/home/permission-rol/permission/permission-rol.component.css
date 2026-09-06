@@ -1,0 +1,19 @@
+::ng-deep .ant-transfer-list{
+    width: 275px;
+    height: 400px;
+    
+}
+.transfer{
+    display: flex;  
+    align-content: flex-start;
+    align-content: end;
+    margin-left: 30%;
+}
+@media (max-width:1000px){
+    .transfer{
+        display: flex;  
+        align-content: flex-start;
+        align-content: end;
+        margin-left: 15%;
+    }
+  }

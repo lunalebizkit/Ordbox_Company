@@ -1,0 +1,57 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Marcas</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateBrand, permissions.EditBrand]" nz-tooltip nzTooltipTitle="Nuevo"
+        nz-button nzType="primary" nzShape="circle" [routerLink]="['/home/brands/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"> </i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-content>
+    <!-- Busqueda -->
+
+    <app-search-filter [title]="'Filtros'" [(model)]="queryParams.filter" (keydown.enter)="search()"
+      [palceHolder]="'Ingrese marca'"></app-search-filter>
+
+    <div class="table">
+      <nz-table class="tabla" [nzTotal]="totalItems()" [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" nzShowSizeChanger
+        (nzQueryParams)="onQueryParamsChange($event)" [nzData]="brandList()" nzBordered="true" [nzLoading]="loading()"
+        [nzSize]="'small'" nzShowPagination nzFrontPagination="false" nzTableLayout="fixed">
+        <thead>
+          <tr>
+            <th nzEllipsis>#</th>
+            <th nzEllipsis>Marca</th>
+            <th nzEllipsis style="text-align: center;" *authPermission="[permissions.DeleteBrand]">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (brand of brandList(); track $index) {
+          <tr (dblclick)="onDoubleClicked(brand.id)">
+            <td nzEllipsis>{{ brand.id }}</td>
+            <td nzEllipsis>{{ brand.description}}</td>
+            <td style="text-align: center;">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a *authPermission="[permissions.DeleteBrand]" (click)="popup.showDeleteConfirmation(brand.id)">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'"></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a *nzSpaceItem [routerLink]="[`/home/brands/edit/${brand.id}`]">
+                  <i nz-tooltip nzTooltipTitle="Editar" nz-icon nzType="edit"></i>
+                </a>
+              </nz-space>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar la marca seleccionada?'" [message]="'Esta acción no se puede revertir'"
+  (handleOk)="handleOk()">
+</app-popup-confirmation>

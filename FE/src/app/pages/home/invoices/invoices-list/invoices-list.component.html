@@ -1,0 +1,85 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Comprobantes de Venta</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateInvoice]" nz-tooltip nzTooltipTitle="Nuevo" nz-button nzType="primary"
+        nzShape="circle" [routerLink]="['/home/invoices/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <nz-content>
+    <nz-collapse>
+      <app-search-custom-filter [customSearchForm]="customSearchForm"
+        (onSearchCustomClick)="search()"></app-search-custom-filter>
+    </nz-collapse>
+
+    <!-- Tabla -->
+    <div class="table">
+      <nz-table class="tabla" [nzPageIndex]="1" [nzTotal]="totalItems()" (nzQueryParams)="onQueryParamsChange($event)"
+        [nzPageSize]="queryParams.pageSize" nzShowSizeChanger [nzData]="invoicesList()" nzBordered="false"
+        [nzSize]="'small'" [nzLoading]="loading()" [nzPaginationType]="'small'" nzFrontPagination="false">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Cuit/Cuil</th>
+            <th>Nombre</th>
+            <th [nzAlign]="'center'">Total</th>
+            <th [nzAlign]="'center'">Tipo</th>
+            <th [nzAlign]="'center'">Creado por</th>
+            <th nzWidth="200px" [nzAlign]="'center'">Notas</th>
+            <th [nzAlign]="'center'">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of invoicesList(); track $index) {
+          <tr class="small-text" (dblclick)="onDoubleClicked(data.id)">
+            <td>{{ data.invoiceNumber }}</td>
+            <td>{{ data.dateTime | datePipe}}</td>
+            <td>{{ data.customerCuit | cuit }}</td>
+            <td>{{ data.customerName }}</td>
+            <td [nzAlign]="'right'">
+              <b>{{ this.currencyFormat(data.total) }}</b>
+            </td>
+            <td [nzAlign]="'center'">{{ data.type | invoiceTypeFilter }}</td>
+            <td>{{ data.createdBy }}</td>
+            <ng-container>
+              <td style="text-align: center">
+                <a>
+                  <button nz-button nzType="primary" nzSize="small" style="
+                      background-color: rgb(3, 155, 3);
+                      margin-right: 20px;
+                      border-color: rgb(3, 155, 3);"
+                    (click)="onToCreditClicked(data.id)">
+                    Crédito
+                  </button>
+                </a>
+                <button nz-button nzSize="small" nzType="primary" (click)="onToDebitClicked(data.id)" >
+                  Débito
+                </button>
+              </td>
+            </ng-container>
+            <td style="text-align: center">
+              <a>
+                <i nz-icon nzType="eye" nzTheme="outline" style="font-size: 17px; margin-right: 20px"
+                  (click)="onDoubleClicked(data.id)"></i>
+              </a>
+              @if (data.integrationSuccess == null) {
+              <a (click)="reimprimirInvoice(data.id, data.invoiceNumber)">
+                <i nz-icon nz-tooltip nzTooltipTitle="Descargar pdf" nzType="file-pdf" nzTheme="twotone"
+                  [nzTwotoneColor]="'#f5222d'" style="font-size: 16px; margin-right: 2px"></i>
+              </a>}
+              @if(data.integrationSuccess == true && data.version == invoiceVersion.Arca){
+              <a (click)="imprimirInvoiceArca(data.id, data.invoiceNumber)">
+                <i nz-icon nz-tooltip nzTooltipTitle="Descargar pdf" nzType="file-pdf" nzTheme="twotone"
+                  [nzTwotoneColor]="'#24acf2'" style="font-size: 16px; margin-right: 2px"></i>
+              </a>}
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>

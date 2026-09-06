@@ -1,0 +1,39 @@
+.margin-top {
+    margin-top: 20px;
+}
+
+.margin-top-bottom {
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.input-error {
+    font-size: 10px;
+    color: #ff4d4f;
+}
+
+.tabla td {
+    font-size: 11px;
+    padding: 6%;
+}
+
+.list-header {
+    position: relative;
+    height: 64px;
+    padding: 10px;
+    background: #fff;
+    box-shadow: -1px 1px 5px 1px #a3a1a3;
+    margin-bottom: 10px;
+}
+
+.editable-cell {
+  position: relative;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.editable-row:hover .editable-cell {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 4px 11px;
+}

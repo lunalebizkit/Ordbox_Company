@@ -1,0 +1,82 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Remitos </nz-page-header-title>
+    <nz-page-header-extra>
+      <button
+        *authPermission="[permissions.GetRemito]"
+        nz-tooltip
+        nzTooltipTitle="Nuevo"
+        nz-button
+        nzType="primary"
+        nzShape="circle"
+        [routerLink]="['/home/delivery-notes/new']"
+      >
+        <!-- -->
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-content>
+    <!-- Busqueda -->
+    <nz-collapse>
+      <app-search-custom-filter [customSearchForm]="form" (onSearchCustomClick)="search()"></app-search-custom-filter>
+    </nz-collapse>
+
+    <!-- Tabla -->
+    <div class="table">
+      <nz-table class="tabla" [nzData]="dataList()" nzBordered="true" [nzLoading]="loading()" [nzSize]="'small'"
+      [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" [nzTotal]="totalItems()" nzTableLayout="fixed"
+      [nzFrontPagination]="false" (nzQueryParams)="onQueryParamsChange($event)" nzShowSizeChanger>
+        <thead>
+          <tr>
+            <th nzEllipsis>N° Remito</th>
+            <th nzEllipsis>Fecha</th>
+            <th>Cuit/Cuil</th>
+            <th nzEllipsis nzWidth="100px">Nombre</th>
+            <th nzEllipsis>Estado</th>
+            <th nzEllipsis [nzAlign]="'center'">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of dataList(); track $index) {
+        <tr class="small-text" (dblclick)="onDoubleClick(data.id)">
+            <td nzEllipsis>{{ data.id | noComma }}</td>
+            <td nzEllipsis>{{ data.dateTime | datePipe }}</td>
+            <td nzEllipsis>{{ data.supplierCuit }}</td>
+            <td nzEllipsis>{{ data.supplierName }}</td>
+            <td>{{ this.getStatusName(data.statusId) }}</td>
+            <td style="text-align: center">
+              <a>
+                <i
+                  nz-icon
+                  nzType="eye"
+                  style="font-size: 16px"
+                  (click)="onDoubleClick(data.id)"
+                ></i>
+              </a>
+              <a style="margin-left: 20px" (click)="reimprimirdeliveryNotes(data.id)">
+                <i
+                  nz-icon
+                  nz-tooltip
+                  nzTooltipTitle="Descargar pdf"
+                  nzType="file-pdf"
+                  nzTheme="twotone"
+                  [nzTwotoneColor]="'#f5222d'"
+                  style="font-size: 16px; margin-right: 2px"
+                ></i>
+              </a>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+
+<app-popup-confirmation
+  #popup
+  [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar el usuario seleccionado?'"
+  [message]="'Esta acción no se puede revertir'"
+>
+</app-popup-confirmation>

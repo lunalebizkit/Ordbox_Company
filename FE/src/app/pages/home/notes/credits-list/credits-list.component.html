@@ -1,0 +1,59 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado Nota de Crédito</nz-page-header-title>
+    <nz-page-header-extra>
+      <button nz-tooltip nzTooltipTitle="Nuevo" nz-button nzType="primary" nzShape="circle" [routerLink]="['/home/credits/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <app-search-custom-filter [customSearchForm]="customNCSearchForm" (onSearchCustomClick)="search()"></app-search-custom-filter> 
+
+  <nz-divider style="margin:auto"></nz-divider>
+
+  <div class="table">
+    <nz-table class="tabla" [nzData]="dataList()" nzBordered="true" [nzLoading]="loading()" [nzSize]="'small'"
+      [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" [nzTotal]="totalItems()" nzTableLayout="fixed"
+      [nzFrontPagination]="false" (nzQueryParams)="onQueryParamsChange($event)" nzShowSizeChanger>
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Fecha</th>
+          <th>Cuit/Cuil</th>
+          <th>Nombre</th>
+          <th [nzAlign]="'center'">Total</th>
+          <th [nzAlign]="'center'">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (data of dataList(); track $index) {
+        <tr class="small-text" (dblclick)="onDoubleClick(data.id)">
+          <td>{{data.invoiceNumber}}</td>
+          <td>{{data.dateTime | datePipe}}</td>
+          <td>{{data.customerCuit | cuit}}</td>
+          <td>{{data.customerName}}</td>
+          <td [nzAlign]="'center'" >{{ this.currencyFormat( data.total)}}</td>
+          <td style="text-align: center">
+            <a>
+              <i nz-icon nzType="eye" nzTheme="outline" (click)="onDoubleClick(data.id)" 
+                  style="font-size: 17px; margin-right: 20px"></i>
+            </a>
+            @if (data.integrationSuccess == true && data.version == invoiceVersion.Arca) {
+            <a (click)="imprimirInvoiceArca(data.id)">
+                <i
+                  nz-icon
+                  nz-tooltip
+                  nzTooltipTitle="Descargar pdf"
+                  nzType="file-pdf"
+                  nzTheme="twotone"
+                  [nzTwotoneColor]="'#24acf2'"
+                  style="font-size: 16px; margin-right: 2px"
+                ></i>
+              </a>}
+          </td>
+        </tr>}
+      </tbody>
+    </nz-table>
+  </div>
+</nz-layout>

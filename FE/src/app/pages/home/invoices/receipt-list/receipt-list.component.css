@@ -1,0 +1,36 @@
+.list-header {
+    position: relative;
+    height: 64px;
+    padding: 10px;
+    background: #fff;
+
+    box-shadow: -1px 1px 5px 1px #a3a1a3;
+    margin-bottom: 10px;
+}
+
+.tabla th {
+    font-size: 12px;
+    position: sticky;
+    top: 0; 
+    padding: 6%;
+    z-index: 2;
+    background-color: rgb(240, 237, 237);
+}
+
+.tabla td {
+    font-size: 11px;
+    padding: 6%;
+}
+
+.table {
+    height: 55vh;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    border-collapse: collapse;
+    position: relative;
+}
+
+.tabla {
+    width: 100%;
+    table-layout: fixed;
+}

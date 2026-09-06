@@ -1,0 +1,14 @@
+.sticky {
+display: inline-block;
+padding: 10px 24px;
+width:  100%;
+background-color: #fff;
+z-index: 101;
+box-shadow: -1px 1px 5px 1px #a3a1a3;
+}
+
+.btnGreen {
+    background-color: #24ce41;
+    color: white;
+    /* text-shadow: black 0.1em 0.1em 0.2em */
+}

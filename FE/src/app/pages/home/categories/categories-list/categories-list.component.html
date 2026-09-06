@@ -1,0 +1,70 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title> Listado de Categorías </nz-page-header-title>
+    <nz-page-header-extra>
+      <button
+        *authPermission="[permissions.CreateCategory, permissions.EditCategory]"
+        nz-tooltip
+        nzTooltipTitle="Nuevo"
+        nz-button
+        nzType="primary"
+        nzShape="circle" [routerLink]="['/home/categories/new']" >
+        <i
+          nz-icon
+          nzType="plus"
+          nzTheme="outline"
+        ></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-content>
+    <!-- Busqueda -->
+    
+    <app-search-filter [title]="'Filtros'" [(model)]="queryParams.filter" [palceHolder]="'Ingrese categoría'" ></app-search-filter>
+
+    <!-- Tabla -->
+    <div class="table" >
+      <nz-table [nzPageIndex]="1" [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize"
+        class="tabla" (nzQueryParams)="onQueryParamsChange($event)" nzShowSizeChanger
+        [nzData]="categoryList()"
+        nzBordered="true"
+        [nzLoading]="loading()"
+        [nzSize]="'small'"
+        nzFrontPagination="false"
+        nzTableLayout="fixed"
+      >
+        <thead>
+          <tr>
+            <th nzEllipsis nzWidth="380px">#</th>
+            <th nzEllipsis nzWidth="380px">Categoría</th>
+            <th nzEllipsis nzWidth="45px" style="text-align: center;" *authPermission="[permissions.DeleteBrand]">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of categoryList(); track $index) {
+          <tr
+            class="small-text"
+            (dblclick)="onDoubleClicked(category.id)"
+          >
+            <td nzEllipsis>{{ category.id }}</td>
+            <td nzEllipsis>{{ category.description }}</td>
+            <td style="text-align: center;" *authPermission="[permissions.DeleteBrand]">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                </ng-template>                
+                <a *nzSpaceItem (click)="popup.showDeleteConfirmation(category.id)">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'"></i>
+                </a>
+              </nz-space>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar la categoría seleccionada?'"
+  [message]="'Esta acción no se puede revertir'" (handleOk)="handleOk()">
+</app-popup-confirmation>

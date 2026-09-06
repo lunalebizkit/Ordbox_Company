@@ -1,0 +1,110 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Usuarios'" [showSpinner]="isSaving()" [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'user'" (onSaveClick)="msjConfirmOk()" [showBack]="true" [showSave]="isEditMode()" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.EditUser">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" class="margin-top">
+    <nz-collapse>
+        <nz-collapse-panel nzHeader="Usuario" [nzActive]="true">
+            <nz-row [nzJustify]="'center'">
+                <nz-col nzSpan="12">
+                    <form nz-form [formGroup]="form" style="margin-top: 16px;">
+                        <!--Nombre-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="firstName">Nombre</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="firstName" nz-input id="firstName" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                
+                        <!--LastName-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="lastName">Apellido</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="lastName" nz-input id="lastName" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                
+                          <!--Username-->
+                          <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="userName">Usuario</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="userName" nz-input id="userName" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                
+                        <!--Email-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="email">Dirección de e-mail</nz-form-label>
+                            <nz-form-control nzErrorTip="Ingrese una dirección de email válida">
+                                <input   formControlName="email" nz-input id="email" type="email" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                
+                        <!--Contraseña-->
+                        @if (!showPasswordChange || id() == 0) {
+                            <nz-form-item [style.width.%]="75">
+                                <nz-form-label nzFor="password" nzRequired>Contraseña</nz-form-label>
+                                <nz-form-control>
+                                    <input nz-input type="password" id="password" formControlName="password" maxlength="250"
+                                        (ngModelChange)="updateConfirmValidator()" />
+                                </nz-form-control>
+                            </nz-form-item>
+                        }
+                
+                        <!--Repetir Contraseña-->
+                        @if (!showPasswordChange) {
+                        <nz-form-item [style.width.%]="75">
+                                <nz-form-label nzFor="checkpassword" nzRequired>Confirmar Contraseña</nz-form-label>
+                                <nz-form-control [nzErrorTip]="errorTpl">
+                                    <input nz-input type="password" formControlName="checkpassword" id="checkpassword" maxlength="250"
+                                        (ngModelChange)="updateConfirmValidator()" />
+                                    <ng-template #errorTpl let-control>
+                                        <ng-container>
+                                            Las contraseñas ingresadas no coinciden
+                                        </ng-container>
+                                    </ng-template>
+                                </nz-form-control>
+                            </nz-form-item>
+                        }
+                
+                        <!--Cambiar contraseña boton-->
+                        @if (showPasswordChange && this.id()) {
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzFor="resetPassword">Contraseña</nz-form-label>
+                            <nz-form-control>
+                                <button nz-button nzType="primary" (click)="showPasswordChangeBox()">
+                                    Cambiar contraseña <i nz-icon nzType="lock" nzTheme="outline"></i>
+                                </button>
+                            </nz-form-control>
+                        </nz-form-item>
+                        }
+                
+                        <!--Rol-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="roleId">Rol</nz-form-label>
+                            <nz-form-control>
+                         
+                                    <nz-select  formControlName="roleId" [nzId]="'roleId'"
+                            (ngModelChange)="rolSelectedChange($event)" [nzOptions]="permissionRol()">
+                            </nz-select>                      
+        
+                            </nz-form-control>
+                        </nz-form-item>
+                    </form>
+
+                </nz-col>
+            </nz-row>
+        </nz-collapse-panel>
+      
+    </nz-collapse>
+
+</nz-spin>
+
+<app-popup-confirmation
+  #pop
+  [title]="'Confirmar Usuario'"
+  [header]="'¿Está seguro que desea guardar Cliente?'"
+  [message]="'Esta acción no se puede revertir'"
+  (handleOk)="save()"
+  [disabled]="isSaving()"
+>
+</app-popup-confirmation>

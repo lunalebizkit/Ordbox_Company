@@ -1,0 +1,30 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Marcas'" [showSpinner]="isSaving()"  [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'tags'" (onSaveClick)=" msjConfirmOk()" [showSave]="isEditMode()" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.EditBrand"
+    [showBack]="true" >
+</app-header-op-buttons>
+<nz-spin [nzSpinning]="isLoading()" style="margin-top: 20px;">
+   <nz-collapse>
+        <nz-collapse-panel nzHeader="Marca" [nzActive]="true">
+            <form nz-form [formGroup]="form" style="margin-top: 26px">
+
+                <nz-form-item>
+                    <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="description">Descripción</nz-form-label>
+                    <nz-form-control [nzSm]="14" [nzXs]="24">
+                        <input formControlName="description" nz-input id="description" maxlength="250" autocomplete="off"/>
+                    </nz-form-control>
+                </nz-form-item>
+              
+            </form>
+        </nz-collapse-panel>
+    </nz-collapse>
+
+</nz-spin>
+
+<app-popup-confirmation
+  #pop
+  [title]="'Confirmar Guardado de Marcas'"
+  [header]="'¿Está seguro que desea guardar Marca?'"
+  [message]="'Esta acción no se puede revertir'"
+  (handleOk)="save()"
+  [disabled]="isSaving()"
+>
+</app-popup-confirmation>

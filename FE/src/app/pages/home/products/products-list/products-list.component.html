@@ -1,0 +1,186 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Productos</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateProduct, permissions.EditProduct]" nz-tooltip nzTooltipTitle="Nuevo"
+        nz-button nzType="primary" nzShape="circle" [routerLink]="['/home/products/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-collapse>
+    <nz-collapse-panel nzSize="small" nzHeader="Filtros" [nzActive]="true">
+      <form nz-form [formGroup]="formSearch">
+        <div nz-row style="margin-left:70px ;">
+          <div nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label nzFor="product">Producto</nz-form-label>
+              <nz-form-control>
+                <nz-input-wrapper nzSearch>
+                  <input formControlName="product" type="text" placeholder="Producto" nz-input />
+                </nz-input-wrapper>
+                <ng-template #clearProduct>
+                  @if (formSearch.get('product')?.value) {
+                  <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                    (click)="formSearch.get('product')?.setValue('')"></i>}
+                </ng-template>
+                <ng-template #suffixButton>
+                  <button nz-button nzType="primary" nzSearch (click)="search()">Buscar</button>
+                </ng-template>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="12">
+            <div style="margin-left:30px ;">
+              <button nz-button nzType="primary" (click)="search()">
+                <i nz-icon nzType="search"></i>
+                Buscar
+              </button>
+              <button *authPermission="[permissions.DeleteProduct]" nz-button nzType="primary"
+                (click)="searchInactive()" style="background-color: #912a49; border-color: #912a49; margin-left: 5px;">
+                <i nz-icon nzType="eye-invisible"></i>
+                Buscar inactivos
+              </button>
+              <button nz-button nzType="dashed" style="color: blueviolet; border-color: blueviolet; margin-left: 5px;"
+                [disabled]="!haveFilterData()" (click)="clearQueryAndSearch()">Limpiar búsqueda</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div nz-row style="margin-left:70px ;">
+          <div nz-col nzSpan="8">
+            <nz-form-item>
+              <nz-form-label nzFor="category">Categoría </nz-form-label>
+              <nz-form-control [nzSm]="24">
+                <nz-select nzPlaceHolder="Ingrese una categoria" nzAllowClear nzShowSearch nzServerSearch
+                  (nzOnSearch)="onSearchCategory($event)" formControlName="category" [nzId]="'category'"
+                  (valueChanges)="categorySelectedChange($event)">
+                  @for (o of categorieList(); track $index) {
+                  <ng-container>
+                    @if (!isLoading()) {
+                    <nz-option [nzValue]="o.id" [nzLabel]="o.description"></nz-option>}
+                  </ng-container>}
+                  @if (isLoading()) {
+                  <nz-option nzDisabled nzCustomContent>
+                    <span nz-icon nzType="loading" class="loading-icon"></span>
+                    Cargando ...
+                  </nz-option>}
+                </nz-select>
+
+                <ng-template #clearQuery>
+                  @if (formSearch.get('category')?.value) {
+                  <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                    (click)="formSearch.get('category')?.setValue(0)"></i>}
+                </ng-template>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="8" style="margin-left:30px ;">
+            <nz-form-item>
+              <nz-form-label nzFor="brand">Marca</nz-form-label>
+              <nz-form-control [nzSm]="24">
+                <nz-select nzPlaceHolder="Ingrese una marca" nzAllowClear nzShowSearch nzServerSearch
+                  (nzOnSearch)="onSearchBrand($event)" formControlName="brand"
+                  (valueChanges)="brandSelectedChange($event)" [nzId]="'brand'">
+                  @for (o of brandList(); track $index) {
+                  <ng-container>
+                    @if (!loadingBrands()) {
+                    <nz-option [nzValue]="o.id" [nzLabel]="o.description"></nz-option>}@else {
+                    <nz-option nzDisabled nzCustomContent>
+                      <span nz-icon nzType="loading" class="loading-icon"></span>
+                      Cargando ...
+                    </nz-option>
+                    }
+                  </ng-container>}
+                </nz-select>
+                <ng-template #clearQuery>
+                  @if (formSearch.get('brand')?.value) {
+                  <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                    (click)="formSearch.get('brand')?.setValue(0)"></i>}
+                </ng-template>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+        <div nz-row style="margin-left:70px ;">
+          <div nz-col nzSpan="8" class="mb-2">
+            <nz-form-item>
+              <nz-form-label nzFor="supplier">Proveedor</nz-form-label>
+              <nz-form-control>
+                <nz-select nzMode="tags" nzMode="multiple" nzPlaceHolder="Seleccione Proveedor" nzAllowClear
+                  nzShowSearch nzServerSearch (nzOnSearch)="onSearch($event)" formControlName="supplier"
+                  (valueChanges)="supplierSelectedChange($event)" [nzId]="'supplier'">
+                  @for (p of allSuppliers; track $index) {
+                  <nz-option [nzValue]="p.value" [nzLabel]="p.label"></nz-option>}
+                  @if (isLoading()) {
+                  <nz-option nzDisabled nzCustomContent>
+                    <span nz-icon nzType="loading" class="loading-icon"></span>
+                    Loading Data...
+                  </nz-option>}
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col nzSpan="6" style="margin-left:30px ;">
+            <nz-form-item>
+              <nz-form-label nzFor="code">Código</nz-form-label>
+              <nz-form-control>
+                <nz-input-wrapper>
+                  <input formControlName="code" type="text" placeholder="Código" nz-input />
+                </nz-input-wrapper>
+                <ng-template #clearCode>
+                  @if (formSearch.get('code')?.value) {
+                  <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                    (click)="formSearch.get('code')?.setValue('')"></i>}
+                </ng-template>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+        </div>
+      </form>
+    </nz-collapse-panel>
+  </nz-collapse>
+  <div class="table">
+    <nz-table class="tabla" [nzData]="productList()" nzBordered="true" [nzLoading]="loading()" [nzSize]="'small'"
+      [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" [nzTotal]="totalItems()" nzTableLayout="fixed"
+      [nzFrontPagination]="false" (nzQueryParams)="onQueryParamsChange($event)" nzShowSizeChanger>
+      <thead>
+        <tr>
+          <th nzEllipsis nzWidth="265px">Producto</th>
+          <th nzEllipsis nzWidth="125px" style="text-align: right">Código</th>
+          <th nzEllipsis nzWidth="75px">Categoría</th>
+          <th nzEllipsis nzWidth="70px">Marca</th>
+          <th nzEllipsis nzWidth="50px" style="text-align: center">Cantidad</th>
+          <th nzEllipsis nzWidth="70px" style="text-align: right">P.Costo</th>
+          <th nzEllipsis nzWidth="70px" style="text-align: right">P.Lista</th>
+          <th nzEllipsis nzWidth="70px" style="text-align: right;">P.Contado</th>
+          <th nzEllipsis nzWidth="70px" style="text-align: right">P.Tarjeta</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of productList(); track $index) {
+        <tr class="small-text" tabindex="-1" (dblclick)="onDoubleClicked(product.id)" autofocus>
+          <td nzEllipsis>{{ product.description }}</td>
+          <td style="text-align: right">{{ product.code }}</td>
+          <td nzEllipsis>{{ product.categoryName }}</td>
+          <td nzEllipsis>{{ product.brandName }}</td>
+          <td nzEllipsis style="text-align: center" [style.color]="product.quantity >= 0 ? '' : 'red' ">{{
+            product.quantity }}</td>
+          <td style="color: blue; text-align: right; font-weight: bold">
+            {{ this.currencyFormat(product.purchasePrice) }}
+          </td>
+          <td style="color: green; text-align: right; font-weight: bold">
+            {{ this.currencyFormat(product.salePrice) }}
+          </td>
+          <td style="color: rgb(194, 44, 44); text-align: right; font-weight: bold">
+            {{ this.currencyFormat(product.cashSalePrice) }}
+          </td>
+          <td style="text-align: right; font-weight: bold">
+            {{ this.currencyFormat(product.cardSalePrice) }}
+          </td>
+        </tr>}
+      </tbody>
+    </nz-table>
+  </div>
+</nz-layout>

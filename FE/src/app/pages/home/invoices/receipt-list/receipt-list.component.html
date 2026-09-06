@@ -1,0 +1,78 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title>Listado de Comprobantes de Compra</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateInvoice]" nz-tooltip nzTooltipTitle="Nuevo" nz-button nzType="primary"
+        nzShape="circle" [routerLink]="['/home/receipts/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"></i></button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <nz-content>
+    <app-search-custom-filter [customSearchForm]="customRSearchForm"
+      (onSearchCustomClick)="search()"></app-search-custom-filter>
+    <!-- Tabla -->
+
+    <div class="table">
+      <nz-table class="tabla " [nzPageIndex]="1" [nzTotal]="totalItems()" (nzQueryParams)="onQueryParamsChange($event)"
+        [nzPageSize]="queryParams.pageSize" nzShowSizeChanger [nzData]="receiptList()" nzBordered="false"
+        [nzSize]="'small'" [nzLoading]="loading()" [nzPaginationType]="'small'" nzFrontPagination="false">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Cuit</th>
+            <th>Nombre</th>
+            <th [nzAlign]="'center'">Total</th>
+            <th [nzAlign]="'center'">Tipo</th>
+            <th [nzAlign]="'center'">Creado por</th>
+            <th [nzAlign]="'center'">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of receiptList(); track $index) {
+          <tr class="small-text" (dblclick)="onDoubleClick(data.id)">
+            <td>{{ data.id | noComma }}</td>
+            <td>{{ data.dateTime | datePipe}}</td>
+            <td>{{ data.supplierCuit | cuit }}</td>
+            <td>{{ data.supplierName }}</td>
+            <td [nzAlign]="'right'">
+              <b>{{ this.currencyFormat(data.total) }}</b>
+            </td>
+
+            <td [nzAlign]="'center'">{{ data.type | invoiceTypeFilter }}</td>
+            <td>{{ data.createdBy }}</td>
+            <td style="text-align: center">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a>
+                  <i nz-icon nzType="eye" nzTheme="outline" style="font-size: 16px; margin-right: 20px"
+                    (click)="onDoubleClick(data.id)"></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a (click)="reimprimirReceipt(data.id)">
+                  <i nz-icon nz-tooltip nzTooltipTitle="Descargar pdf" nzType="file-pdf" nzTheme="twotone"
+                    [nzTwotoneColor]="'#f5222d'" style="font-size: 16px; margin-right: 20px"></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a *nzSpaceItem (click)="popup.showDeleteConfirmation(data.id)">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'" style="font-size: 16px;"></i>
+                </a>
+
+              </nz-space>
+            </td>
+          </tr>}
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar el comprobante seleccionado?'"
+  [message]="'Esta acción no se puede revertir'" (handleOk)="handleOk()">
+</app-popup-confirmation>

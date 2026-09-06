@@ -1,0 +1,109 @@
+<nz-content>
+  <nz-collapse class="list-header">
+    <form nz-form>
+
+      <div nz-col nzSpan="24" style="margin-bottom: -20px;">
+        <nz-form-item>
+          <nz-form-label nzFor="busqueda">Búsqueda</nz-form-label>
+          <nz-form-control>
+            <nz-input-wrapper nzSearch>
+              <input [ngModelOptions]="{standalone: true}" type="text" placeholder="Ingrese producto"
+                nz-input (keydown.enter)="search()" [(ngModel)]="queryParams.filter.product" />
+            </nz-input-wrapper>
+             <ng-template #suffixButton>
+                <button nz-button nzType="primary" nzSearch><i nz-icon nzType="search" (click)="search()"></i></button>
+            </ng-template>
+            @if (queryParams.filter.product) {
+            <ng-template #clearQuery>
+              <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                (click)="queryParams.filter.product= ''; search()"></i>
+            </ng-template>}
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+
+      <div nz-col nzSpan="24" style="margin: 25px;">
+        <nz-form-item>
+          <nz-form-label nzFor="marca">Marca</nz-form-label>
+          <nz-form-control [nzSm]="18">
+            <nz-select nzPlaceHolder="Ingrese una marca" nzAllowClear nzShowSearch nzServerSearch
+              (nzOnSearch)="onSearchBrand($event)" [(ngModel)]="queryParams.filter.brand"
+              (ngModelChange)="brandSelectedChange($event)" [ngModelOptions]="{standalone: true}">
+              @for (o of brandList(); track $index) {
+              <ng-container>
+                @if (loadingBrands()) {
+                  <nz-option nzDisabled nzCustomContent>
+                    <span nz-icon nzType="loading" class="loading-icon"></span>
+                    Cargando ...
+                  </nz-option>}
+                  @else {
+                  <nz-option [nzValue]="o.id" [nzLabel]="o.description"></nz-option>}
+              </ng-container>}
+            </nz-select>
+            @if (queryParams.filter.brand > 0) {
+            <ng-template #clearBrand>
+              <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                (click)="queryParams.filter.brand = 0"></i>
+            </ng-template>}
+          </nz-form-control>
+
+          <nz-form-item style="margin-left: 10px;">
+            <nz-form-label nzFor="codigo">Código</nz-form-label>
+            <nz-form-control [nzSm]="18">
+              <nz-input-wrapper>
+                <input [ngModelOptions]="{standalone: true}" type="text" placeholder="Ingrese código"
+                  nz-input [(ngModel)]="queryParams.filter.code" />
+              </nz-input-wrapper>
+              @if (queryParams.filter.code) {
+              <ng-template #clearCode>
+                <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                  (click)="queryParams.filter.code= '';"></i>
+              </ng-template>}
+            </nz-form-control>
+          </nz-form-item>
+
+          <button class="btn-excel-export" nz-button nzType="primary" style="margin-left: 30px;" [disabled]="setOfCheckedId.size == 0" (click)="selecccion()">
+            <i nz-icon nzType="check"></i>
+            Aceptar
+          </button>
+        </nz-form-item>
+      </div>
+
+    </form>
+  </nz-collapse>
+
+  <!-- Tabla -->
+
+  <div>
+    <nz-table #rowSelectionTable class="tablaProduct" nzShowSizeChanger [nzData]="productList()" nzBordered=true [nzSize]="'small'"
+      [nzLoading]="loading()" [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize" [nzPageIndex]="1"
+      [nzFrontPagination]="false" [nzPaginationType]="'small'" (nzQueryParams)="onQueryParamsChange($event)">
+      <thead>
+        <tr>
+          <th [nzChecked]="checked"
+            [nzIndeterminate]="indeterminate"
+            nzLabel="Select all"
+            (nzCheckedChange)="onAllChecked($event)"></th>
+          <th>Código</th>
+          <th>Marca</th>
+          <th>Producto</th>
+          <th>Precio Costo</th>
+          <th>Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (data of productList(); track $index) {
+        <tr class="small-text" id="{{data.id}}">
+          <td [nzChecked]="setOfCheckedId.has(data.id)"
+          (nzCheckedChange)="onItemChecked(data.id, $event)"></td>
+          <td>{{data.code}}</td>
+          <td>{{data.brandName}}</td>
+          <td nzBreakWord>{{data.description}}</td>
+          <td>{{this.currencyFormat(data.purchasePrice)}}</td>
+          <td [style.color]="data.quantity >= 0 ? '' : ' brown' ">{{data.quantity}}
+          </td>
+        </tr>}
+      </tbody>
+    </nz-table>
+  </div>
+</nz-content>

@@ -1,0 +1,45 @@
+
+<div class="login">
+    <div nz-row class="card">
+      <div nz-col class="login-sidebar" nzLg="12"> <!-- nzXs="0" -->
+        <div class="overlay">
+          <img src="assets/img/OrdboXLogo.png" alt="logo" />
+          <img src="assets/img/OrdboXLogo.png" alt="logo1" class="logo1"/> 
+          
+        </div>
+      </div>
+      <div nz-col class="login-container" nzXs="24" nzLg="12">       
+        <div>
+          <h1>Bienvenido</h1>
+          <h3>Por favor, inicie sesión en su cuenta.</h3>
+          <form nz-form [formGroup]="form" class="form" name="login" >
+            <nz-form-item>
+              <nz-form-control nzErrorTip="Debe ingresar el nombre de usuario.">
+                <nz-input-wrapper>
+                  <nz-icon nzPrefixIcon="user"></nz-icon>
+                  <input type="text" nz-input formControlName="userName" placeholder="Nombre de usuario" required/>
+                </nz-input-wrapper>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-control nzErrorTip="Debe ingresar la contraseña.">
+                <nz-input-wrapper>
+                  <nz-icon nzPrefixIcon="lock"></nz-icon>
+                  <input type="password" nz-input formControlName="password" placeholder="Contraseña" required/>
+                </nz-input-wrapper>
+              </nz-form-control>
+            </nz-form-item>
+            <button nz-button nzType="primary" (click)="executeImportantAction()"
+            [disabled]="form.invalid" [nzLoading]="isSaving()">Iniciar sesión</button>
+          </form>
+        </div>
+      </div>
+      <p class="copyright">
+        <a href="" target="_blank" rel="noreferrer">
+            Ordbox ©{{getYear() }} 
+        </a><span style="padding-left: 4px;">
+          - v{{ getVersion() }}
+        </span>
+      </p>
+    </div>
+  </div>

@@ -1,0 +1,160 @@
+<nz-page-header>
+  <nz-page-header-extra style=" margin-top: 1rem;">
+    <!-- <img class="img" style=" margin-right:5px;" nz-image width="60px" nzSrc="../../../assets/img/dantesLogo1.png" alt="ordbox" 
+    />
+    <img class="img1" nz-image width="65px" style=" margin-right:5px; margin-top: 10px;" nzSrc="../../../assets/img/ordbox.png" alt="logoDantes" 
+    /> -->
+   
+  </nz-page-header-extra>
+
+  <nz-page-header-extra class="menu">
+    <ul nz-menu nzMode="horizontal">
+      <li nz-submenu nzPlacement="bottomLeft" nzTitle="Persona" nzIcon="user">
+        <ul>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon nzType="idcard" nzTheme="twotone" [nzTwotoneColor]="'#66B9D9'"></span>
+            <a [routerLink]="['/home/users']" style="padding-left: 5%;">Usuarios</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon nzType="contacts" nzTheme="twotone" [nzTwotoneColor]="'#66D9A6'"></span>
+            <a [routerLink]="['/home/customers']" style="padding-left: 5%;">Clientes</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon nzType="contacts" nzTheme="twotone" [nzTwotoneColor]="'#EC1111'"></span>
+            <a [routerLink]="['/home/suppliers']" style="padding-left: 5%;">Proveedores</a>
+          </li>
+        </ul>
+      </li>
+      <li nz-submenu nzPlacement="bottomCenter" nzTitle="Productos" nzIcon="tag">
+        <ul>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'gold'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#EFF22D'"> </span>
+            <a [routerLink]="['/home/products']" style="padding-left: 5%;">Productos</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'project'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#CB2DF2'"> </span>
+            <a [routerLink]="['/home/categories']" style="padding-left: 5%;">Categorías</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'tags'" [nzTheme]="'twotone'"> </span>
+            <a [routerLink]="['/home/brands']" style="padding-left: 5%;">Marcas</a>
+          </li>
+        </ul>
+      </li>
+      <li nz-submenu nzPlacement="bottomRight" nzTitle="Pedidos" nzIcon="shopping-cart">
+        <ul>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'shopping'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#EFF22D'"> </span>
+            <a [routerLink]="['/home/orders']" style="padding-left: 5%;">Pedidos</a>
+          </li>
+
+        </ul>
+      </li>
+
+      <li nz-submenu nzPlacement="bottomRight" nzTitle="Comprobantes" nzIcon="file-excel">
+        <ul>
+          <ul>
+            <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+              <span nz-icon [nzType]="'file-excel'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#52c41a'"> </span>
+              <a [routerLink]="['/home/invoices']" style="padding-left: 5%;">Comp de Venta</a>
+            </li>
+            <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+              <span nz-icon [nzType]="'file-excel'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#52c41a'"> </span>
+              <a [routerLink]="['/home/receipts']" style="padding-left: 5%;">Comp de Compra</a>
+            </li>
+          </ul>
+            <ul>
+              <li nz-menu-item nzMatchRouter style="padding-left:5%;">
+                <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'"> </span>
+                <a [routerLink]="['/home/credits']" style="padding-left:5%;">Notas de Crédito</a>
+              </li>
+              <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+                <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'"> </span>
+                <a [routerLink]="['/home/debits']" style="padding-left: 5%;">Notas de Débito</a>
+              </li>
+            </ul>
+            <ul>
+              <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+                <span nz-icon [nzType]="'file-excel'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#ff7875'"> </span>
+                <a [routerLink]="['/home/budgets']" style="padding-left: 5%;">Presupuesto</a>
+      
+              </li>
+            </ul>
+            <ul>
+              <li nz-menu-item nzMatchRouter style="padding-left:5%;">
+                <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#36cfc9'"> </span>
+                <a [routerLink]="['/home/delivery-notes']" style="padding-left:5%;">Remitos</a>
+              </li>
+            </ul>
+            <ul>
+              <li nz-menu-item nzMatchRouter style="padding-left:5%;">
+                <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#FF69B4'"> </span>
+                <a [routerLink]="['/home/quittances']" style="padding-left:5%;">Recibos</a>
+              </li>
+            </ul>
+        </ul>
+      </li>
+
+      <!-- <li nz-submenu nzPlacement="topRight" nzTitle="Reportes" nzIcon="fund">
+        <ul>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'schedule'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#52c41a'"> </span>
+            <a [routerLink]="['/home/periods']" style="padding-left: 5%;"> Períodos</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'container'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#ff0000'"> </span>
+            <a [routerLink]="['/home/report']" style="padding-left: 8%;">Reporte Z</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#eb2f96'"> </span>
+            <a [routerLink]="['/home/products/report']" style="padding-left: 8%;">Reporte stock</a>
+          </li>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'file-text'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#CB2DF2'"> </span>
+            <a [routerLink]="['/home/invoices/report']" style="padding-left: 8%;">Reporte ventas</a>
+          </li>          
+        </ul>
+      </li> -->
+<!--Crear una lista presupuestro-->   
+      <li nz-submenu nzTitle="Sistema" nzIcon="setting">
+        <ul>
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+            <span nz-icon [nzType]="'setting'" [nzTheme]="'twotone'"> </span>
+            <a [routerLink]="['/home/permission']" style="padding-left: 8%;">Configuración</a>
+          </li>        
+          <li nz-menu-item style="padding-left: 5%;" (click)="createModal()">
+            <span nz-icon nzType="whats-app" nzTheme="outline" style="color: #25D366"> </span>
+            <a style="padding-left: 5%;">Whatsapp</a>
+          </li>         
+          <li nz-menu-item (click)="logOut()" style="padding-left: 5%;">
+            <span nz-icon [nzType]="'api'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#eb2f96'"> </span>
+            Salir del Sistema
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nz-page-header-extra>
+  <nz-page-header-extra class="avatar" style="margin-top: 1rem;">
+    <nz-avatar [nzGap]="2" ngStyle="{ 'background-color': color }" [nzText]="usuario" nzSize="large"
+    style="vertical-align: middle;">
+  </nz-avatar>
+  </nz-page-header-extra>
+
+  <nz-page-header-content>
+    <router-outlet></router-outlet>
+    @if (this.permiso.length == 0) {
+      <div style="height: 25em; position: absolute; width: 100vh;"></div>
+    }
+
+  </nz-page-header-content>  
+</nz-page-header>
+<ng-template #modalContent>
+    <form [formGroup]="formModal">
+     <span>Ingrese código de área seguido de número sin 15</span>
+    <div style="margin: 10px;">
+      <input nz-input value="+54 9" disabled [style.width.%]="20" />
+      <input nz-input id="nombre" formControlName="number" onkeypress="if (!(/[0-9]/.test(String.fromCharCode(event.keyCode)))) return false" [style.width.%]="80" />
+    </div>
+    </form>
+</ng-template>
+

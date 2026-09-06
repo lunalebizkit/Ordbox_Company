@@ -1,0 +1,106 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Proveedor'"
+    [showSpinner]="isSaving()" [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'tags'" (onSaveClick)="msjConfirmOk()"
+    [showBack]="true" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [showSave]="isEditMode()" [editPermission]="permissions.EditSupplier">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" style="margin-top: 20px;">
+    <form nz-form [formGroup]="form" style="margin-top: 16px">
+        <nz-collapse>
+            <nz-collapse-panel nzHeader="General" [nzActive]="true">
+                <nz-content>
+                    <!--Nombre-->
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="name">Nombre
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Ingrese un Nombre válido">
+                            <input formControlName="name" nz-input id="name" maxlength="250"/>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="cuit">CUIT </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input nz-input [(ngModel)]="demoCuit" formControlName="cuit" id="cuit" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="dni" >Dni
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Ingrese un DNI válido">
+                            <input formControlName="dni" nz-input id="dni" maxlength="10" pattern="^[1-9]\d*$" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="address">Dirección
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Ingrese un Dirección válida">
+                            <input formControlName="address" nz-input id="address" type="text" maxlength="250" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="observation">Observación
+                        </nz-form-label>
+                        <nz-form-control [nzSm]="14" [nzXs]="24">
+                            <input formControlName="observation" nz-input id="observation" maxlength="250" autocomplete="off" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+
+                    <ng-container formArrayName="phoneEntity">
+                        @for (ph of phoneNumberControls; track $index; let i = $index) {
+                        <ng-container>
+                            <nz-form-item>
+                                <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="phoneNumber">
+                                    Número Teléfono {{i + 1}}
+                                </nz-form-label>
+                                <nz-form-control [nzSm]="14" [nzXs]="24">
+                                    <input [formControl]="ph" nz-input />
+                                    <i nz-icon nzType="minus-circle-o" class="dynamic-delete-button" style="color: rgb(243, 79, 79); position: absolute; margin-top: -7x; margin-left: 4px;"
+                                    (click)="removePhoneField($event, i)"></i>
+                                </nz-form-control>
+                            </nz-form-item>                       
+                        </ng-container>}
+                        <button nz-button nzType="primary" nzShape="circle" style="margin-left: 146px;">
+                            <i nz-icon nzType="phone"
+                            (click)="addPhoneField($event)"></i>
+                        </button>
+                    </ng-container>
+
+                    <ng-container formArrayName="emailEntity">
+                        @for (e of emailsControls; track $index; let i = $index) {
+                        <ng-container>
+                            <nz-form-item>
+                                <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="email" >
+                                    Email  {{i + 1}}
+                                </nz-form-label>
+                                <nz-form-control [nzSm]="14" [nzXs]="24"  nzErrorTip="Ingrese una dirección de email válida">
+                                    <input [formControl]="e" nz-input type="email" id="email"/>
+                                    <i nz-icon nzType="minus-circle-o" class="dynamic-delete-button" style="color: rgb(243, 79, 79); position: absolute; margin-top: -7x; margin-left: 4px;"
+                                    (click)="removeEmailField($event, i)"></i>
+                                </nz-form-control>
+                            </nz-form-item>                       
+                        </ng-container>}
+                        <button nz-button nzType="primary" nzShape="circle" style="margin-left: 146px;">
+                            <i nz-icon nzType="mail"
+                            (click)="addEmailField($event)"></i>
+                        </button>
+                    </ng-container>                
+
+                </nz-content>
+            </nz-collapse-panel>
+        </nz-collapse>
+    </form>
+</nz-spin>
+
+<app-popup-confirmation
+  #pop
+  [title]="'Confirmar Proveedor'"
+  [header]="'¿Está seguro que desea guardar Proveedor?'"
+  [message]="'Esta acción no se puede revertir'"
+  (handleOk)="save()"
+  [disabled]="isSaving()"
+>
+</app-popup-confirmation>
