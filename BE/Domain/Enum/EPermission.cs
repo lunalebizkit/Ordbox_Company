@@ -71,6 +71,10 @@ namespace Ordbox.Domain.Enum
 
         //Quittance
         GetQuittance = 45,
-        CreateQuittance = 46
+        CreateQuittance = 46,
+
+        //Company
+        ViewCompany = 49,
+        CreateCompany = 50,
     }
 }

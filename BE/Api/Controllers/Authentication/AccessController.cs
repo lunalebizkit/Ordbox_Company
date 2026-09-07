@@ -1,6 +1,4 @@
-﻿
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -8,7 +6,6 @@ using Ordbox.Api.Extension;
 using Ordbox.Api.Model;
 using Ordbox.Domain.Model;
 using Ordbox.SDK.Jwt;
-using Ordbox.SDK.Security;
 using Ordbox.Services.Common;
 using Ordbox.Services.Services;
 using System.IdentityModel.Tokens.Jwt;

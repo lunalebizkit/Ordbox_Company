@@ -101,6 +101,7 @@ builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<QuittanceMapperProfile>();
     cfg.AddProfile<ReceiptMapperProfile>();
     cfg.AddProfile<RolMapperProfile>();
+    cfg.AddProfile<CompanyMapperProfile>();
 });
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RolService>();
@@ -124,6 +125,7 @@ builder.Services.AddScoped<QuittanceService>();
 builder.Services.AddDbContext<DBContext>(x => x.UseSqlServer(connectionString));
 builder.Services.AddScoped<ReimprimirDocService>();
 builder.Services.AddScoped<PdfService>();
+builder.Services.AddScoped<CompanyService>();
 
 builder.Services.AddEndpointsApiExplorer();
 

@@ -244,7 +244,20 @@ export class PermissionService {
           Permission.CreateProduct,
           Permission.EditProduct,],
       },
-
+      //#region Company
+      {
+        url: new RegExp('/home/companies'),
+        permissions: [Permission.CreateCompany, Permission.ViewCompany],
+      },
+      {
+        url: new RegExp('/home/companies/new'),
+        permissions: [Permission.CreateCompany, Permission.ViewCompany],
+      },
+      {
+        url: new RegExp('/home/companies/edit/:id'),
+        permissions: [Permission.CreateCompany, Permission.ViewCompany],
+      },
+      //#endrregion
   ];
 
   public hasPermission(url: string) {

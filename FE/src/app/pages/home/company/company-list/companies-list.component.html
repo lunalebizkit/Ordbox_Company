@@ -1,0 +1,58 @@
+<nz-layout>
+  <nz-page-header class="list-header">
+    <nz-page-header-title> Listado de Compañias</nz-page-header-title>
+    <nz-page-header-extra>
+      <button *authPermission="[permissions.CreateCompany]" nz-tooltip nzTooltipTitle="Nuevo"
+        nz-button nzType="primary" nzShape="circle" [routerLink]="['/home/companies/new']">
+        <i nz-icon nzType="plus" nzTheme="outline"></i>
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+  <nz-content>
+    <app-search-filter [title]="'Filtros'" [(model)]="queryParams.filter"
+      (onSearchClick)="search()"></app-search-filter>
+    <!-- Tabla -->
+    <div class="table">
+      <nz-table class="tabla" [nzData]="list()" nzBordered="true" [nzSize]="'small'" [nzLoading]="loading()"
+        nzFrontPagination="false" nzTableLayout="fixed" (nzQueryParams)="onQueryParamsChange($event)"
+        [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize" [nzPageIndex]="1" nzShowSizeChanger>
+        <thead>
+          <tr>
+            <th nzEllipsis nzWidth="45px">Id</th>
+            <th nzEllipsis nzWidth="45px">Nombre</th>
+            <th nzEllipsis nzWidth="45px">Dueño</th>
+            <th nzEllipsis nzWidth="45px" style="text-align: center;">Acción
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (data of list(); track data.id; let i = $index) {
+          <tr id="{{ i }}" class="small-text" (dblclick)="onDoubleClicked(data.id)">
+            <td nzEllipsis>{{ data.id }}</td>
+            <td nzEllipsis>{{ data.name }}</td>
+            <td nzEllipsis>{{ data.ownerName }}</td>
+            <td style="text-align: center;">
+              <nz-space [nzSplit]="spaceSplit">
+                <ng-template #spaceSplit></ng-template>
+                <a (click)="popup.showDeleteConfirmation(data.id)" *authPermission="[permissions.DeleteUser]">
+                  <i nz-tooltip nzTooltipTitle="Eliminar" nz-icon nzType="delete" [nzTheme]="'twotone'"
+                    [nzTwotoneColor]="'#FF0000'"></i>
+                </a>
+                <ng-template #spaceSplit>
+                </ng-template>
+                <a *nzSpaceItem [routerLink]="[`/home/companies/edit/${data.id}`]">
+                  <i nz-tooltip nzTooltipTitle="Editar" nz-icon nzType="edit"></i>
+                </a>
+              </nz-space>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </nz-table>
+    </div>
+  </nz-content>
+</nz-layout>
+<app-popup-confirmation #popup [title]="'Confirmar eliminación'"
+  [header]="'¿Está seguro de que desea eliminar la compañia seleccionado?'"
+  [message]="'Esta acción no se puede revertir'" (handleOk)="handleOk()">
+</app-popup-confirmation>

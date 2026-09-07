@@ -36,6 +36,10 @@ namespace Ordbox.Domain.Model
         [Column("company_point")]
         public required short CompanyPoint { get; set; }
 
+        [Required]
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; }
+
         public ICollection<User> Users { get; set; } = [];
 
     }

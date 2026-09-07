@@ -1,0 +1,141 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Usuarios'"
+    [showSpinner]="isSaving()" [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'user'"
+    (onSaveClick)="msjConfirmOk()" [showBack]="true" [showSave]="isEditMode()" (onEditClick)="toggleEdit()"
+    [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.EditUser">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" class="margin-top">
+    <nz-collapse>
+        <nz-collapse-panel nzHeader="Compañia" [nzActive]="true">
+            <nz-row [nzJustify]="'center'">
+                <nz-col nzSpan="12">
+                    <form nz-form [formGroup]="form" style="margin-top: 16px;">
+                        <!--Nombre-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyName">Nombre</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyName" nz-input id="companyName" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!--CompanyOwnerName-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyOwnerName">Dueño</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyOwnerName" nz-input id="companyOwnerName"
+                                    maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!--Description-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyDescription">Descripción</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyDescription" nz-input id="companyDescription" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                       
+                        <!--Cuit-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyCuit">CUIT</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyCuit" nz-input id="companyCuit" maxlength="13" />
+                            </nz-form-control>
+                        </nz-form-item>
+                       
+                        <!--Direccion-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyAddress">Dirección</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyAddress" nz-input id="companyAddress" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+                        
+                        <!--Punto de venta-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyPoint">Punto de venta</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="companyPoint" nz-input id="companyPoint" type="number" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!--Email-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyEmail">Dirección de e-mail</nz-form-label>
+                            <nz-form-control nzErrorTip="Ingrese una dirección de email válida">
+                                <input formControlName="companyEmail" nz-input id="companyEmail" type="email" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!--Contraseña-->
+                        @if (!showPasswordChange || id() == 0) {
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzFor="companyEmailPass" nzRequired>Contraseña</nz-form-label>
+                            <nz-form-control>
+                                <input nz-input type="password" id="companyEmailPass" formControlName="companyEmailPass" maxlength="250"
+                                    (ngModelChange)="updateConfirmValidator()" />
+                            </nz-form-control>
+                        </nz-form-item>
+                        }
+
+                        <!--Repetir Contraseña-->
+                        @if (!showPasswordChange) {
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzFor="checkpassword" nzRequired>Confirmar Contraseña</nz-form-label>
+                            <nz-form-control [nzErrorTip]="errorTpl">
+                                <input nz-input type="companyEmailPass" formControlName="checkpassword" id="checkpassword"
+                                    maxlength="250" (ngModelChange)="updateConfirmValidator()" />
+                                <ng-template #errorTpl let-control>
+                                    <ng-container>
+                                        Las contraseñas ingresadas no coinciden
+                                    </ng-container>
+                                </ng-template>
+                            </nz-form-control>
+                        </nz-form-item>
+                        }
+
+                        <!--Cambiar contraseña boton-->
+                        @if (showPasswordChange && this.id()) {
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzFor="resetPassword">Contraseña</nz-form-label>
+                            <nz-form-control>
+                                <button nz-button nzType="primary" (click)="showPasswordChangeBox()">
+                                    Cambiar contraseña <i nz-icon nzType="lock" nzTheme="outline"></i>
+                                </button>
+                            </nz-form-control>
+                        </nz-form-item>
+                        }
+
+                        <!--Rol-->
+                        <!-- <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="roleId">Rol</nz-form-label>
+                            <nz-form-control>
+                         
+                                    <nz-select  formControlName="roleId" [nzId]="'roleId'"
+                            (ngModelChange)="rolSelectedChange($event)" [nzOptions]="permissionRol()">
+                            </nz-select>                      
+        
+                            </nz-form-control>
+                        </nz-form-item> -->
+
+                        <div nzSpan="18" style="width: 240px">
+                            <nz-form-item>
+                                <nz-form-label nzRequired nzFor="isDeleted">Eliminado
+                                </nz-form-label>
+                                <nz-switch class="mb-2" formControlName="isDeleted" nzCheckedChildren="Si "
+                                    nzUnCheckedChildren="No" id="isDeleted"></nz-switch>
+                            </nz-form-item>
+                        </div>
+                    </form>
+
+                </nz-col>
+            </nz-row>
+        </nz-collapse-panel>
+
+    </nz-collapse>
+
+</nz-spin>
+
+<app-popup-confirmation #pop [title]="'Confirmar Usuario'" [header]="'¿Está seguro que desea guardar Cliente?'"
+    [message]="'Esta acción no se puede revertir'" (handleOk)="save()" [disabled]="isSaving()">
+</app-popup-confirmation>

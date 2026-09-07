@@ -52,16 +52,19 @@ export enum Permission {
   EditPeriod = 35,
   DeletePeriod = 36,
   GetMemo = 37,
-  CreateMemo=38,
-  RolControl= 39,
-  ReportZ=40,
+  CreateMemo = 38,
+  RolControl = 39,
+  ReportZ = 40,
   //Budget
-  GetBudget=41,
-  CreateBudget=42,
+  GetBudget = 41,
+  CreateBudget = 42,
   //Remito
   GetRemito = 43,
   CreateRemito = 44,
   //Recibo
-  GetQuittance= 45,
-  CreateQuittance=46
+  GetQuittance = 45,
+  CreateQuittance = 46,
+  //Company
+  ViewCompany = 49,
+  CreateCompany = 50,
 }

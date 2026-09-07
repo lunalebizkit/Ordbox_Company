@@ -271,6 +271,24 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/home/quittance/quittance-edit/quittance-edit.component').then((m) => m.QuittanceEditComponent),
       },
+      {
+        canActivate: [AuthGuard],
+        path: 'companies',
+        loadComponent: () =>
+          import('./pages/home/company/company-list/companies-list.component').then((m) => m.CompaniesListComponent),
+      },
+      {
+        canActivate: [AuthGuard],
+        path: 'companies/new',
+        loadComponent: () =>
+          import('./pages/home/company/company-edit/companies-edit.component').then((m) => m.CompaniesEditComponent),
+      },
+      {
+        canActivate: [AuthGuard],
+        path: 'companies/edit/:id',
+        loadComponent: () =>
+          import('./pages/home/company/company-edit/companies-edit.component').then((m) => m.CompaniesEditComponent),
+      },
     ]
   },
 ];
