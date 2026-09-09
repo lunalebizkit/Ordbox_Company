@@ -11,16 +11,17 @@ using Ordbox.Services.Scripts;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
     public class BrandService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration) : BaseService(logger, context, maper, configuration)
     {
-        public async Task<OperationResponse<DtoResponseBrand>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseBrand>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
-                var marca = GetBrandById(id);
+                var marca = GetBrandById(id, requestedBy);
                 if (marca == null)
                 {
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
@@ -38,19 +39,21 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> Add(DtoResponseBrand model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Add(DtoResponseBrand model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoResponseBrand model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoResponseBrand model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
+                model.CompanyId = requestedBy.CompanyId;
+
                 var countBrands = await _contextSql
                                     .Brands
                                     .AsNoTracking()
-                                    .CountAsync(p => p.Description.ToUpper() == model.Description.ToUpper() && p.Id != model.Id, ct);
+                                    .CountAsync(p => p.Description.ToUpper() == model.Description.ToUpper() && p.Id != model.Id && p.CompanyId == model.CompanyId, ct);
                 if (countBrands > 0)
                 {
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_009_ERROR_DUPLICATE));
@@ -86,7 +89,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoResponseBrand model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoResponseBrand model, RequestedBy requestedBy, CancellationToken ct = default)
         {
 
             try
@@ -97,7 +100,7 @@ namespace Ordbox.Services.Services
                     return Error<IdResponse<long>>(new OperationExceptions("000", "La Marca no tiene ID"));
                 }
 
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -106,14 +109,15 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<DtoPagination<DtoResponseBrand>>> ListBrands(RequestPaginatedData<string> request)
+
+        public async Task<OperationResponse<DtoPagination<DtoResponseBrand>>> ListBrands(RequestPaginatedData<string> request, RequestedBy requestedBy)
         {
             try
             {
                 var query = _contextSql
                                     .Brands
                                     .AsNoTracking()
-                                    .Where(p => ((p.Description.ToLower().Contains(request.Filter ?? "")) && p.Id > 0));
+                                    .Where(p => ((p.Description.ToLower().Contains(request.Filter ?? "")) && p.Id > 0 && p.CompanyId == requestedBy.CompanyId));
 
                 var count = await query.CountAsync().ConfigureAwait(false);
 
@@ -139,13 +143,13 @@ namespace Ordbox.Services.Services
             }
         }
         //Elimianr Marca
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
                 try
                 {
-                    var brand = connection.Query(SqlScripts.GetCountBrandById, new { @brandid = id }).FirstOrDefault();
+                    var brand = connection.Query(SqlScripts.GetCountBrandById, new { @brandid = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
 
                     if (brand != null)
                     {
@@ -154,7 +158,7 @@ namespace Ordbox.Services.Services
                     }
                     else
                     {
-                        var savedBrand = await _contextSql.Brands.FirstOrDefaultAsync(p => p.Id == id, ct).ConfigureAwait(false);
+                        var savedBrand = await _contextSql.Brands.FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId, ct).ConfigureAwait(false);
 
                         if (savedBrand != null)
                         {
@@ -183,11 +187,11 @@ namespace Ordbox.Services.Services
 
         #region Private
 
-        private Brand? GetBrandById(long id)
+        private Brand? GetBrandById(long id, RequestedBy requestedBy)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
-                return connection.Query<Brand>(SqlScripts.GetBrandById, new { @id = id }).FirstOrDefault();
+                return connection.Query<Brand>(SqlScripts.GetBrandById, new { @id = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
             }
         }
 

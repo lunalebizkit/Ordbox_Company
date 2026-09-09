@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using Ordbox.Api.Model;
+using Ordbox.Domain.Model.Extensions;
 using System.Security.Claims;
 
 namespace Ordbox.Api.Extension
@@ -7,6 +9,7 @@ namespace Ordbox.Api.Extension
     {
         public const string claimPermission = "Permisos";
         public const string CompanyId = "CompanyId";
+        public const string UserId = "UserId";
 
         public static int[] GetPermission(this ClaimsPrincipal user)
         {
@@ -38,6 +41,33 @@ namespace Ordbox.Api.Extension
                 }
             }
             return 0;
+        }
+        
+        public static long GetUserId(this ClaimsPrincipal user)
+        {
+            var claims = user.Claims.FirstOrDefault(p => p.Type == UserId);
+
+            if (claims != default)
+            {
+                var userId = JsonConvert.DeserializeObject<long?>(claims.Value);
+
+                if (userId.HasValue)
+                {
+                    return userId.Value;
+                }
+            }
+            return 0;
+        }
+
+        public static RequestedBy GetRequestedBy(this ClaimsPrincipal user)
+        {
+            return new RequestedBy
+            {
+                UserId = user.GetUserId(),
+                CompanyId = user.GetCompanyId(),
+                UserName = user.Identity?.Name ?? string.Empty,
+                UserRolId = (Ordbox.Domain.Enum.ERol)Convert.ToInt32(user.Claims.FirstOrDefault(p => p.Type == ClaimTypes.Role)?.Value ?? "0")
+            };
         }
     }
 }

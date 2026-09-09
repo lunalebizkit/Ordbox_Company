@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { BrandsService } from '../brands.services';
@@ -39,6 +39,7 @@ export class BrandsEditComponent extends BaseComponent implements OnInit {
     message: NzMessageService,
     private route: ActivatedRoute,
     private fb: FormBuilder,
+    private router: Router,
   ) {
     super(notificacionService, el, message);
     this.form = this.fb.group({
@@ -88,6 +89,7 @@ export class BrandsEditComponent extends BaseComponent implements OnInit {
           );
 
           this.isSaving.set(false);
+          this.router.navigate(['/home/brands']);
         },
         error: () => {
           this.isSaving.set(false);

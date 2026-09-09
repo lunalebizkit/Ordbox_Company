@@ -3,3 +3,4 @@
   ON P.brand_id = B.id
   WHERE B.id = @brandid
   AND P.[is_deleted] = 0
+  AND B.[company_id] = @companyid

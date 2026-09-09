@@ -1,11 +1,11 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Services;
-using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
-using Ordbox.Services.Models.Dtos.DtoResponse;
-using Ordbox.Domain.Model;
-using Ordbox.Domain.Enum;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
+using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoResponse;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.Brand
 {
@@ -26,7 +26,8 @@ namespace Ordbox.Api.Controllers.Brand
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewBrand })]
         public async Task<IActionResult> Get([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -38,7 +39,8 @@ namespace Ordbox.Api.Controllers.Brand
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateBrand })]
         public async Task<IActionResult> New([FromBody] DtoResponseBrand model)
         {
-            return Return(await _service.Add(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Add(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -50,7 +52,8 @@ namespace Ordbox.Api.Controllers.Brand
         [AllowAccess(Permission = new EPermission[] { EPermission.EditBrand })]
         public async Task<IActionResult> Edit([FromBody] DtoResponseBrand model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -63,7 +66,8 @@ namespace Ordbox.Api.Controllers.Brand
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewBrand })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<string> filter)
         {
-            return Return(await _service.ListBrands(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListBrands(filter, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Borra una Marca buscandolos por el ID.
@@ -75,7 +79,8 @@ namespace Ordbox.Api.Controllers.Brand
         [AllowAccess(Permission = new EPermission[] { EPermission.DeleteBrand })]
         public async Task<IActionResult> Delete(long id)
         {
-            return Return(await _service.Delete(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Delete(id, requestedBy).ConfigureAwait(false));
         }
     }
 }
