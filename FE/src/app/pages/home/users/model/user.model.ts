@@ -8,4 +8,5 @@ export interface UserModel {
   password: string | null;
   email: string;
   roleId: number;
+  companyId: number | null
 }

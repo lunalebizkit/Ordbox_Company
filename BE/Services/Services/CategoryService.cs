@@ -11,6 +11,7 @@ using Ordbox.Services.Scripts;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -21,11 +22,11 @@ namespace Ordbox.Services.Services
         { }
 
         //Get Categoria
-        public async Task<OperationResponse<DtoResponseCategory>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseCategory>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
-                var categoria = GetCategoryById(id);
+                var categoria = GetCategoryById(id, requestedBy);
                 if (categoria == null)
                 {
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
@@ -41,19 +42,19 @@ namespace Ordbox.Services.Services
             }
             
         }
-        public async Task<OperationResponse<IdResponse<long>>> Add(DtoResponseCategory model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Add(DtoResponseCategory model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoResponseCategory model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoResponseCategory model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var countCategory = await _contextSql
                                 .Category
                                 .AsNoTracking()
-                                .CountAsync(p => p.Description.ToUpper() == model.Description.ToUpper() && p.Id != model.Id, ct);
+                                .CountAsync(p => p.Description.ToUpper() == model.Description.ToUpper() && p.Id != model.Id && p.CompanyId == requestedBy.CompanyId, ct);
                 if (countCategory > 0)
                 {
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_009_ERROR_DUPLICATE));
@@ -63,7 +64,8 @@ namespace Ordbox.Services.Services
                 var categoryModel = new Category()
                 {
                     Id = model.Id,
-                    Description = model.Description
+                    Description = model.Description,
+                    CompanyId = requestedBy.CompanyId
                 };
                 if (categoryModel.Id == 0)
                 {
@@ -73,7 +75,7 @@ namespace Ordbox.Services.Services
                 {
                     var oldModel = await _contextSql
                                     .Category
-                                    .FirstAsync(p => p.Id == categoryModel.Id)
+                                    .FirstAsync(p => p.Id == categoryModel.Id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
 
                     _contextSql.Entry(oldModel).State = EntityState.Detached;
@@ -91,7 +93,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoResponseCategory model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoResponseCategory model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             if (model.Id <= 0)
             {
@@ -99,16 +101,16 @@ namespace Ordbox.Services.Services
                 return Error<IdResponse<long>>(new OperationExceptions("000", "La Categoria no tiene ID"));
             }
 
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
-        public async Task<OperationResponse<DtoPagination<DtoResponseCategory>>> ListCategory(RequestPaginatedData<string> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseCategory>>> ListCategory(RequestPaginatedData<string> request, RequestedBy requestedBy)
         {
             try
             {
                 var query = _contextSql
                                     .Category
                                     .AsNoTracking()
-                                    .Where(p => ((p.Description.ToLower().Contains(request.Filter ?? "")) && p.Id > 0));
+                                    .Where(p => ((p.Description.ToLower().Contains(request.Filter ?? "")) && p.Id > 0 && p.CompanyId == requestedBy.CompanyId));
 
                 var count = await query.CountAsync().ConfigureAwait(false);
 
@@ -134,13 +136,13 @@ namespace Ordbox.Services.Services
 
         }
         //Elimianr Categoría
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
                 try
                 {
-                    var category = connection.Query(SqlScripts.GetCountCategoryById, new { @categoryid = id }).FirstOrDefault();
+                    var category = connection.Query(SqlScripts.GetCountCategoryById, new { @categoryid = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
 
                     if (category != null)
                     {
@@ -149,7 +151,7 @@ namespace Ordbox.Services.Services
                     }
                     else
                     {
-                        var savedCategory = await _contextSql.Category.FirstOrDefaultAsync(p => p.Id == id, ct).ConfigureAwait(false);
+                        var savedCategory = await _contextSql.Category.FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId, ct).ConfigureAwait(false);
 
                         if (savedCategory != null)
                         {
@@ -177,11 +179,11 @@ namespace Ordbox.Services.Services
         }
         #region Private
 
-        private DtoResponseCategory? GetCategoryById(long id)
+        private DtoResponseCategory? GetCategoryById(long id, RequestedBy requestedBy)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
-                return connection.Query<DtoResponseCategory>(SqlScripts.GetCategoryById, new { @id = id }).FirstOrDefault();
+                return connection.Query<DtoResponseCategory>(SqlScripts.GetCategoryById, new { @id = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
             }
         }
 

@@ -10,7 +10,7 @@ import { PopupConfirmationComponent } from "../../../../common/components/popup-
 import { NzCollapseModule } from "ng-zorro-antd/collapse";
 import { NzFormModule } from "ng-zorro-antd/form";
 import { NzSpinModule } from "ng-zorro-antd/spin";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { NzInputModule } from "ng-zorro-antd/input";
 import { Permission } from "../../../../common/auth/models/permissions.enum";
 
@@ -58,6 +58,7 @@ export class CategoryEditComponent extends BaseComponent implements OnInit {
     message: NzMessageService,
     private fb: FormBuilder,
     private route: ActivatedRoute,
+    private router: Router,
   ) {
     super(notificacionService, el, message);
     this.form = this.fb.group({
@@ -106,6 +107,7 @@ export class CategoryEditComponent extends BaseComponent implements OnInit {
               `Se guardo correctamente la Categoria ${model.description}`
             );
             this.isSaving.set(false);
+            this.router.navigate(['/home/categories']);
           },
           error: () => {
             this.isSaving.set(false);

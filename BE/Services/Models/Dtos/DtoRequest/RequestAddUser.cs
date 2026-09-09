@@ -30,5 +30,7 @@ namespace Ordbox.Services.Models.Dtos.DtoRequest
 
         [Required]
         public long RoleId { get; set; }
+
+        public long? CompanyId { get; set; }
     }
 }
