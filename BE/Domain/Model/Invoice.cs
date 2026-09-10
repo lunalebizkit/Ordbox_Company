@@ -60,6 +60,13 @@ namespace Ordbox.Domain.Model
         [Column("version")]
         public byte Version { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new HashSet<InvoiceDetail>();
 
 

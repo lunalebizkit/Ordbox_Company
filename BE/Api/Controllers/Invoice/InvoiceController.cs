@@ -1,13 +1,14 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
 using Ordbox.Services.ImpresoraFiscal.Printer250F;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 using System.IO.Compression;
-using Ordbox.Api.Extension;
 
 namespace Ordbox.Api.Controllers.Invoice
 {
@@ -33,7 +34,8 @@ namespace Ordbox.Api.Controllers.Invoice
         [AllowAccess(Permission = new EPermission[] { EPermission.GetInvoice })]
         public async Task<IActionResult> Get(long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -120,7 +122,8 @@ namespace Ordbox.Api.Controllers.Invoice
         [AllowAccess(Permission = new EPermission[] { EPermission.GetInvoice })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.ListInvoices(filter, User.GetCompanyId()).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListInvoices(filter, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -133,13 +136,14 @@ namespace Ordbox.Api.Controllers.Invoice
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateInvoice })]
         public async Task<IActionResult> New([FromBody] DtoRequestInvoice model)
         {
-            var invoiceId = await _service.NewInvoice(model).ConfigureAwait(false);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var invoiceId = await _service.NewInvoice(model, requestedBy).ConfigureAwait(false);
 
             if (invoiceId.Success && invoiceId.Data != null)
             {
                 try
                 {
-                    await GetCAEInvoiceAsync(invoiceId.Data.Id);
+                    await GetCAEInvoiceAsync(invoiceId.Data.Id, requestedBy);
                 }
                 catch (Exception)
                 {
@@ -186,19 +190,20 @@ namespace Ordbox.Api.Controllers.Invoice
         [AllowAccess(Permission = new EPermission[] { EPermission.GetInvoice })]
         public async Task<IActionResult> GetCAEInvoice(long id, string? observacion)
         {
-           return await GetCAEInvoiceAsync(id, DateTime.Now, observacion);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return await GetCAEInvoiceAsync(id, requestedBy, DateTime.Now, observacion);
         }
 
         #region PRIVATE
 
-        private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, DateTime? dateTime = null, string? observacion = null)
+        private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
         {
             if (_printerStatus.InvoiceStatus)
             {
                 return BadRequest("La impresora esta activada, desactive para realizar el llamado a ARCA");
             }
 
-            var invoice = await _service.GetById(invoiceId).ConfigureAwait(false);
+            var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
 
             if (invoice.Success && invoice.Data != null)
             {
@@ -210,7 +215,7 @@ namespace Ordbox.Api.Controllers.Invoice
 
                 if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
                 {
-                  return Return(await _service.Update(invoice.Data, responseCAE).ConfigureAwait(false));
+                  return Return(await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false));
                 }
             }
             return BadRequest("No se encontro número de factura");

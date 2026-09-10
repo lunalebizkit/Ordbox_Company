@@ -1,21 +1,20 @@
 ﻿using AutoMapper;
 using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.ARCA.Dto.Response;
 using Ordbox.Services.Common;
-using Ordbox.Services.ImpresoraFiscal;
-using Ordbox.Services.ImpresoraFiscal.Printer250F;
 using Ordbox.Services.LibroIvaDigital;
 using Ordbox.Services.LibrosIvaDigital;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Scripts;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,16 +23,12 @@ namespace Ordbox.Services.Services
 {
     public class InvoiceService : BaseService
     {
-        private readonly PrinterStatus _config;
-        private readonly IPrinter _printer;
 
-        public InvoiceService(ErrorManager logger, DBContext context, IMapper maper, IPrinter printer, PrinterStatus config, IConfiguration configuration) :
+        public InvoiceService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration) :
             base(logger, context, maper, configuration)
         {
-            _config = config;
-            _printer = printer;
         }
-        public async Task<OperationResponse<DtoRequestInvoice>> GetById(long id)
+        public async Task<OperationResponse<DtoRequestInvoice>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -41,7 +36,7 @@ namespace Ordbox.Services.Services
                                    .Invoices
                                    .Include(x => x.InvoiceDetails)
                                    .AsNoTracking()
-                                   .FirstOrDefaultAsync(p => p.Id == id)
+                                   .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId)
                                    .ConfigureAwait(false);
                 if (factura == null)
                 {
@@ -69,12 +64,12 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> NewInvoice(DtoRequestInvoice model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> NewInvoice(DtoRequestInvoice model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
-                model.Id = 0;                
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                model.Id = 0;
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -83,15 +78,15 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoRequestListInvoice>>> ListInvoices(RequestPaginatedData<SpecificFilter> request, long companyId)
+        public async Task<OperationResponse<DtoPagination<DtoRequestListInvoice>>> ListInvoices(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
             try
             {
                 var query = _contextSql
                                     .Invoices
                                     .AsNoTracking()
-                                    .Include(y => y.User).ThenInclude(x => x.Company)
-                                    .Where(p => p.User.CompanyId == companyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
+                                    .Include(y => y.User)
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
                                      && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.InvoiceNumber == request.Filter.Number : true)
                                      &&
                                      ((!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
@@ -124,11 +119,12 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestInvoice model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestInvoice model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             var invoiceModel = _mapper.Map<Invoice>(model);
             invoiceModel.DateTime = DateTime.Now;
+            invoiceModel.CompanyId = requestedBy.CompanyId;
 
             var newProduct = new Product();
             try
@@ -186,41 +182,6 @@ namespace Ordbox.Services.Services
                         }
                     }
 
-                    if (_config.InvoiceStatus)
-                    {
-                        var error = await PrintInvoice(invoiceModel, ct);
-
-                        #region ERRORES
-
-                        if (error == "ErrorCliente")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al cargar cliente, compruebe el CUIT/DNI"));
-                        }
-
-                        if (error == "ErrorAbrir")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al abrir documento , intente nuevamente"));
-                        }
-
-                        if (error == "ErrorImprimir")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al imprimir item, intente con un cierre Z"));
-                        }
-
-                        if (error == "ErrorCerrar")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al cerrar documento, intente con un cierre Z"));
-                        }
-
-                        #endregion
-
-                        invoiceModel.InvoiceNumber = long.Parse(error);
-                    }
-
                     await _contextSql.Invoices.AddAsync(invoiceModel, ct).ConfigureAwait(false);
                 }
 
@@ -235,10 +196,11 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestInvoice model, DtoResponseARCAInvoice responseARCAInvoice,CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestInvoice model, DtoResponseARCAInvoice responseARCAInvoice, RequestedBy requestedBy, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             var invoiceModel = _mapper.Map<Invoice>(model);
+            invoiceModel.CompanyId = requestedBy.CompanyId;
             var newProduct = new Product();
             try
             {
@@ -249,7 +211,7 @@ namespace Ordbox.Services.Services
                         invoiceModel.CustomerId = GetUserAdminId();
                     }      
                     
-                    Invoice invoice = await _contextSql.Invoices.FirstAsync(p => p.Id == invoiceModel.Id).ConfigureAwait(false);
+                    Invoice invoice = await _contextSql.Invoices.FirstAsync(p => p.Id == invoiceModel.Id && p.CompanyId == invoiceModel.CompanyId).ConfigureAwait(false);
 
                     invoiceModel.CAE = string.IsNullOrEmpty(responseARCAInvoice.Cae) ? null : responseARCAInvoice.Cae;
                     invoiceModel.CAEExpirationDate = responseARCAInvoice.FechaVencimientoCae.HasValue ? responseARCAInvoice.FechaVencimientoCae.Value : null;
@@ -739,62 +701,7 @@ namespace Ordbox.Services.Services
         }
         #endregion 
 
-
-        #region Imprimir Factura En impresora Fiscal
-        public async Task<string> PrintInvoice(Invoice model, CancellationToken ct = default)
-        {
-            string? closeFactura = null;
-            //MANEJO DE ERRORES
-            var cargarCliente = await _printer.CargarDatosCliente(model.CustomerName, model.CustomerCuit, model.CustomerAddress, (ETypeReceipt)model.Type).ConfigureAwait(false);
-
-            if (cargarCliente == null)
-            {
-                await _printer.CerrarJornadaFiscal();
-                return "ErrorCliente";
-            }
-            //Contiene loop de reintentos en consultar Estado
-            var openDoc = await _printer.OpenInvoice((ETypeReceipt)model.Type, model.CustomerName, eTypeDocumentClient.Cuil, model.CustomerAddress).ConfigureAwait(false);
-
-            if (openDoc == null)
-            {
-                await _printer.CloseFactura(1, "").ConfigureAwait(false);
-                return "ErrorAbrir";                
-            }
-
-            //TODO por cada item mandar a imprimir
-            foreach (var item in model.InvoiceDetails)
-            {
-                //Contiene loop de reintentos en consultar Estado
-                var imprimir = await _printer.PrintItem(item.ProductName, item.Quantity, item.Price, item.Iva, item.ProductCode.ToString()).ConfigureAwait(false);
-
-                if (imprimir == null)
-                {
-                    //Intento recuperar numero de comprobante mediante Status
-                    closeFactura = await _printer.CloseFactura(1, "", true).ConfigureAwait(false);
-
-                    if (closeFactura == null)
-                    {
-                        return "ErrorImprimir";
-                    }
-                }
-            }
-            if (string.IsNullOrEmpty(closeFactura))
-            {
-                closeFactura = await _printer.CloseFactura(1, "").ConfigureAwait(false);
-            }
-
-            if (closeFactura == null)
-            {
-                Thread.Sleep(1000);
-                await _printer.CerrarJornadaFiscal();
-                return "ErrorCerrar";
-            }
-
-            return closeFactura;
-
-        }
-
-        #endregion
+              
 
         #region Private
                
