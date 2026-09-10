@@ -8,6 +8,7 @@ using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -53,10 +54,10 @@ namespace Ordbox.Services.Services
 
         }
         //Agregar usuario nuevo
-        public async Task<OperationResponse<IdResponse<long>>> Add(RequestAddUser model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Add(RequestAddUser model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
         //Get usuario
         public async Task<OperationResponse<DtoResponseUser>> GetById(long id)
@@ -121,7 +122,7 @@ namespace Ordbox.Services.Services
         }
 
         //Agregar o actualizar usuario
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(RequestAddUser model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(RequestAddUser model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -161,6 +162,9 @@ namespace Ordbox.Services.Services
                     {
                         usermodel.Password = oldUser.Password;
                     }
+
+                    usermodel.CompanyId = requestedBy.UserRolId == Domain.Enum.ERol.Admin ? usermodel.CompanyId : oldUser.CompanyId;                    
+
                      _contextSql.Entry(oldUser).CurrentValues.SetValues(usermodel);
 
                 }
@@ -178,7 +182,7 @@ namespace Ordbox.Services.Services
 
         }
         //Actualizar usuario
-        public async Task<OperationResponse<IdResponse<long>>> Update(RequestAddUser model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(RequestAddUser model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -188,7 +192,7 @@ namespace Ordbox.Services.Services
                     return Error<IdResponse<long>>(new OperationExceptions("000", "El usuario no tiene ID"));
                 }
 
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -198,7 +202,7 @@ namespace Ordbox.Services.Services
             }
         }
         //Elimianr usuario
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {

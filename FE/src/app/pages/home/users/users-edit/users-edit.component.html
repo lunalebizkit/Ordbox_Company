@@ -89,6 +89,19 @@
         
                             </nz-form-control>
                         </nz-form-item>
+
+                        @if(isAdminRol()){
+                        <!--Company-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyId">Compañía</nz-form-label>
+                            <nz-form-control>
+                         
+                                <nz-select  formControlName="companyId" [nzId]="'companyId'" [nzOptions]="companyList()">
+                            </nz-select>                      
+        
+                            </nz-form-control>
+                        </nz-form-item>}
+
                     </form>
 
                 </nz-col>

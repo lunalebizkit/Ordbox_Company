@@ -1,10 +1,12 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
+using Ordbox.Api.Model;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ordbox.Api.Controllers.User
 {
@@ -25,7 +27,8 @@ namespace Ordbox.Api.Controllers.User
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateUser })]
         public async Task<IActionResult> New([FromBody] RequestAddUser model)
         {
-            return Return(await _service.Add(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Add(model, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Devuelve un Usuario buscando en la BASE DE DATOS por ID.
@@ -48,7 +51,8 @@ namespace Ordbox.Api.Controllers.User
         [AllowAccess(Permission = new EPermission[] { EPermission.EditUser })]
         public async Task<IActionResult> Edit([FromBody] RequestAddUser model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -61,7 +65,8 @@ namespace Ordbox.Api.Controllers.User
         [AllowAccess(Permission = new EPermission[] { EPermission.DeleteUser })]
         public async Task<IActionResult> Delete(long id)
         {
-            return Return(await _service.Delete(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Delete(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>

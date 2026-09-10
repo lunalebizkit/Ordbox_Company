@@ -18,6 +18,8 @@ import { NzButtonModule } from "ng-zorro-antd/button";
 import { NzInputModule } from "ng-zorro-antd/input";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Permission } from "../../../../common/auth/models/permissions.enum";
+import { AuthService } from "../../../../common/auth/interceptors/auth.service";
+import { CompanyService } from "../../company/companies.services";
 @Component({
     selector: 'app-users.edit',
     templateUrl: './users-edit.component.html',
@@ -25,7 +27,7 @@ import { Permission } from "../../../../common/auth/models/permissions.enum";
 })
 
 export class UsersEditComponent extends BaseComponent implements OnInit {
-    
+
     permissions = Permission;
 
     @ViewChild('header') headerComponent!: HeaderOperationsButtonsComponent;
@@ -35,12 +37,9 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
    ** Determina si esta en proceso de guardado
    */
     isSaving = signal<boolean>(false);
-    isEditMode= signal<boolean>(false);
-
-    /*
-     ** Determina si esta buscando el usuario
-     */
+    isEditMode = signal<boolean>(false);
     isLoading = signal<boolean>(false);
+    isAdminRol = signal<boolean>(false);
 
     /*
      ** id del usuario a editar, si es nuevo...
@@ -69,8 +68,15 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
     rolSelected: any;
     list: TransferItem[] = [];
     listComplete: TransferItem[] = [];
-    permissionRol= signal<[]>([]);
-    permissionRolList= signal<Permissions[]>([]);
+    permissionRol = signal<[]>([]);
+    companyList = signal<[]>([]);
+    permissionRolList = signal<Permissions[]>([]);
+
+    queryParams = {
+        filter: '',
+        page: 0,
+        pageSize: 100,
+    };
 
     constructor(
         private service: UserService,
@@ -81,21 +87,24 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
         private fb: FormBuilder,
         private route: ActivatedRoute,
         private router: Router,
+        private user: AuthService,
+        private companyService: CompanyService
     ) {
         super(notificacionService, el, message);
         this.form = this.fb.group({
-            firstName: [{ value: '',disabled: true}, [Validators.required]],
-            lastName: [{ value: '',disabled: true},[Validators.required]],
-            userName: [{ value: '',disabled: true}, [Validators.required]],
-            password: [{ value: '',disabled: true},],
-            checkpassword: [{ value: '',disabled: true},],
-            email: [{ value: '',disabled: true}, [Validators.email]],
-            roleId: [{ value: '',disabled: true}, [Validators.required]],
-
+            firstName: [{ value: '', disabled: true }, [Validators.required]],
+            lastName: [{ value: '', disabled: true }, [Validators.required]],
+            userName: [{ value: '', disabled: true }, [Validators.required]],
+            password: [{ value: '', disabled: true },],
+            checkpassword: [{ value: '', disabled: true },],
+            email: [{ value: '', disabled: true }, [Validators.email]],
+            roleId: [{ value: '', disabled: true }, [Validators.required]],
+            companyId: [{ value: null, disabled: true }, [Validators.required]],
         })
     }
 
     ngOnInit(): void {
+        this.isAdminRol.set(this.user.currentUser.rol == "1");
         this.route.params.subscribe({
             next: (p) => {
                 if (p['id']) {
@@ -105,13 +114,19 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
             },
             error: () => { }
         });
-        
+
         this.getPermission();
         this.getPermissionRol();
+
+        if (this.isAdminRol()) {
+            this.getData(this.queryParams);
+        }
     };
+
     getRolName(id: number) {
         return eRol[id];
     }
+
     getPermission(): void {
         this.servicePermission.permissionList().subscribe({
             next: (r) => {
@@ -127,6 +142,7 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
             error: () => { }
         })
     }
+
     getPermissionRol(): void {
         this.servicePermission.permissionRolList().subscribe({
             next: (r) => {
@@ -173,6 +189,7 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
                 password: this.form.controls['password'].value,
                 email: this.form.controls['email'].value,
                 roleId: this.form.controls['roleId'].value,
+                companyId: this.form.controls['companyId'].value
             };
             this.isSaving.set(true);
             this.service.saveUser(model)
@@ -237,12 +254,22 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
     }
 
     toggleEdit() {
-    this.isEditMode.set(!this.isEditMode());
-    if (this.isEditMode()) {
-        this.form.enable();
-    } else {
-        this.form.disable();
-    }
+        this.isEditMode.set(!this.isEditMode());
+        if (this.isEditMode()) {
+            this.form.enable();
+        } else {
+            this.form.disable();
+        }
     }
 
+    getData(params: any): void {
+    this.companyService.getByFilter(params).subscribe({
+      next: (r) => {
+        this.companyList.set(r.data.map((company: { id: number, name: string }) => { return { value: company.id, label: company.name } }));
+      },
+      error: () => {
+        this.companyList.set([]);
+      },
+    });
+  }
 }
