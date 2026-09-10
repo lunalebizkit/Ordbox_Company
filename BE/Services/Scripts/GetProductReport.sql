@@ -12,4 +12,5 @@ JOIN [brand] [B]
 ON [B].[id] = [p].[brand_id]
 
 WHERE [quantity] > 0 AND [is_deleted] = 0
+AND [company_id] = @companyid
 ORDER BY [p].[description]

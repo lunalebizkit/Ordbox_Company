@@ -12,6 +12,7 @@ using Ordbox.Services.Scripts;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -22,14 +23,14 @@ namespace Ordbox.Services.Services
 
         { }
 
-        public async Task<OperationResponse<DtoResponseProduct>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseProduct>> GetById(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 using (var connection = new SqlConnection(ConnectionString))
                 {
 
-                    var product = connection.QuerySingle<DtoResponseProduct>(SqlScripts.GetCompleteProductById, new { @productid = id });
+                    var product = connection.QuerySingle<DtoResponseProduct>(SqlScripts.GetCompleteProductById, new { @productid = id, @companyid = requestedBy.CompanyId });
 
                     if (product == null)
                     {
@@ -52,12 +53,12 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> Add(DtoRequestAddProduct model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Add(DtoRequestAddProduct model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 model.Id = 0;
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -67,7 +68,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestAddProduct model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestAddProduct model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -78,6 +79,7 @@ namespace Ordbox.Services.Services
                 if (model.Id == 0)
                 {
                     var productModel = _mapper.Map<Product>(model);
+                    productModel.CompanyId = requestedBy.CompanyId;
                     await _contextSql.Products.AddAsync(productModel, ct).ConfigureAwait(false);
                 }
                 else
@@ -88,6 +90,7 @@ namespace Ordbox.Services.Services
                         if (oldProduct.IsDeleted) { model.IsDeleted = true; }
                         oldProduct = _mapper.Map(model, oldProduct);
                         oldProduct.Id = model.Id;
+                        oldProduct.CompanyId = requestedBy.CompanyId;
                     }
                 }
 
@@ -102,7 +105,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoResponseProduct>>> List(RequestPaginatedData<ProductFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseProduct>>> List(RequestPaginatedData<ProductFilter> request, RequestedBy requestedBy)
         {
             try
             {
@@ -113,7 +116,7 @@ namespace Ordbox.Services.Services
                                     .Include(p => p.Brand)
                                     .Include(p => p.Supplier)
                                     .Where(p => !p.IsDeleted && p.Id > 0)
-                                    .Where(p =>
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId &&
                                      (string.IsNullOrEmpty(request.Filter.Product) || p.Description.ToLower().Contains(request.Filter.Product.ToLower())) &&
                                     (!request.Filter.Brand.HasValue || request.Filter.Brand == 0 || p.BrandId == request.Filter.Brand) &&
                                     (!request.Filter.Category.HasValue || request.Filter.Category == 0 || p.CategoryId == request.Filter.Category) &&
@@ -148,7 +151,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoResponseProduct>>> ListInactive(RequestPaginatedData<ProductFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseProduct>>> ListInactive(RequestPaginatedData<ProductFilter> request, RequestedBy requestedBy)
         {
             try
             {
@@ -158,7 +161,7 @@ namespace Ordbox.Services.Services
                                       .Include(p => p.Category)
                                     .Include(p => p.Brand)
                                     .Include(p => p.Supplier)
-                                    .Where(p => (!string.IsNullOrEmpty(request.Filter.Product) ? p.Description.ToLower().Contains(request.Filter.Product) : true) &&
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Product) ? p.Description.ToLower().Contains(request.Filter.Product) : true) &&
                                     ((request.Filter.Brand.HasValue && request.Filter.Brand != 0) ? p.BrandId == request.Filter.Brand : true) &&
                                      ((request.Filter.Category.HasValue && request.Filter.Category != 0) ? p.CategoryId == request.Filter.Category : true) &&
                                      (!string.IsNullOrEmpty(request.Filter.Product) ? p.Description.ToLower().Contains(request.Filter.Product) : true) &&
@@ -193,17 +196,17 @@ namespace Ordbox.Services.Services
         }
 
         //Elimianr Producto
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
                 try
                 {
-                    var product = connection.Query(SqlScripts.GetProductById, new { @productid = id }).FirstOrDefault();
+                    var product = connection.Query(SqlScripts.GetProductById, new { @productid = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
 
                     if (product != null)
                     {
-                        var savedProduct = await _contextSql.Products.FirstOrDefaultAsync(p => p.Id == id, ct).ConfigureAwait(false);
+                        var savedProduct = await _contextSql.Products.FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId, ct).ConfigureAwait(false);
 
                         if (savedProduct != null)
                         {
@@ -236,17 +239,17 @@ namespace Ordbox.Services.Services
         }
 
         //Activar Producto
-        public async Task<OperationResponse<IdResponse<long>>> Active(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Active(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
                 try
                 {
-                    var product = connection.Query(SqlScripts.GetProductById, new { @productid = id }).FirstOrDefault();
+                    var product = connection.Query(SqlScripts.GetProductById, new { @productid = id, @companyid = requestedBy.CompanyId }).FirstOrDefault();
 
                     if (product != null)
                     {
-                        var savedProduct = await _contextSql.Products.FirstOrDefaultAsync(p => p.Id == id, ct).ConfigureAwait(false);
+                        var savedProduct = await _contextSql.Products.FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId, ct).ConfigureAwait(false);
 
                         if (savedProduct != null)
                         {
@@ -319,7 +322,7 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestAddProduct model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestAddProduct model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -328,7 +331,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "El prodcuto no tiene ID"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -387,7 +390,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoResponseProductReportTotal>> GetProductReport()
+        public async Task<OperationResponse<DtoResponseProductReportTotal>> GetProductReport(RequestedBy requestedBy)
         {
             DtoResponseProductReportTotal productReportTotal = new DtoResponseProductReportTotal();
             IEnumerable<DtoResponseProductReport> productReport = new List<DtoResponseProductReport>();
@@ -395,7 +398,7 @@ namespace Ordbox.Services.Services
             {
                 using (var connection = new SqlConnection(ConnectionString))
                 {
-                    productReport = await connection.QueryAsync<DtoResponseProductReport>(SqlScripts.GetProductReport);
+                    productReport = await connection.QueryAsync<DtoResponseProductReport>(SqlScripts.GetProductReport, new { @companyid = requestedBy.CompanyId });
                 }
                 if (productReport != null && productReport.Count() > 0)
                 {
@@ -414,12 +417,14 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task UpdateProductStockById(long productId, int stock)
+        public async Task UpdateProductStockById(long productId, int stock, RequestedBy requestedBy)
         {
             var parameters = new
             {
                 recievedquantity = stock,
-                productid = productId
+                productid = productId,
+                companyid = requestedBy.CompanyId,
+            
             };
 
             using (var connection = new SqlConnection(ConnectionString))

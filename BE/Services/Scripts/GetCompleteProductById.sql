@@ -16,6 +16,7 @@
       ,[e].[name] AS [supplierName]
       ,[p].[bar_code] AS [barCode]
       ,[p].[is_deleted] AS [isDeleted]
+      ,[p].[company_id] AS [companyId]
   FROM [product] [p]
   LEFT JOIN [category] [c]
   ON [c].[id] = [p].[category_id]
@@ -26,4 +27,5 @@
   LEFT JOIN [brand] [b]
   ON [b].[id] = [p].[brand_id]
 
-  WHERE [p].[id] = @productid;
+  WHERE [p].[id] = @productid
+  AND [p].[company_id] = @companyid;

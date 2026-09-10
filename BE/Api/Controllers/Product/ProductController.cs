@@ -1,11 +1,11 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Services;
-using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.Product
 {
@@ -26,7 +26,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewProduct })]
         public async Task<IActionResult> GetById(long id)
         {
-            return Return(await _service.GetById(id));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -38,7 +39,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateProduct })]
         public async Task<IActionResult> New([FromBody] DtoRequestAddProduct model)
         {
-            return Return(await _service.Add(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Add(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -51,7 +53,8 @@ namespace Ordbox.Api.Controllers.Product
         [Route("[action]")]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<ProductFilter> filter)
         {
-            return Return(await _service.List(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.List(filter, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Devuelve un listado de Productos creados, con paginado.
@@ -63,7 +66,8 @@ namespace Ordbox.Api.Controllers.Product
         [Route("ListInactive")]
         public async Task<IActionResult> ListInactive([FromBody] RequestPaginatedData<ProductFilter> filter)
         {
-            return Return(await _service.ListInactive(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListInactive(filter, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -75,7 +79,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.EditProduct })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestAddProduct model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Devuelve un listado de Facturas creadas, con paginado.
@@ -87,7 +92,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewProduct })]
         public async Task<IActionResult> ProductReport()
         {
-            return Return(await _service.GetProductReport().ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetProductReport(requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Borra un producto buscandolos por el ID.
@@ -99,7 +105,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.DeleteProduct })]
         public async Task<IActionResult> Delete(long id)
         {
-            return Return(await _service.Delete(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Delete(id, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
@@ -107,7 +114,8 @@ namespace Ordbox.Api.Controllers.Product
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateProduct })]
         public async Task<IActionResult> Activate(long id)
         {
-            return Return(await _service.Active(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Active(id, requestedBy).ConfigureAwait(false));
         }
     }
 }

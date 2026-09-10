@@ -68,6 +68,12 @@ namespace Ordbox.Domain.Model
         [ForeignKey(nameof(SupplierId))]
         public Supplier Supplier { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
 
     }
 }
