@@ -1,9 +1,11 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ordbox.Api.Controllers.DebitMemo
 {
@@ -25,7 +27,8 @@ namespace Ordbox.Api.Controllers.DebitMemo
         [AllowAccess(Permission = new EPermission[] { EPermission.GetMemo })]
         public async Task<IActionResult> GetById([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -37,7 +40,8 @@ namespace Ordbox.Api.Controllers.DebitMemo
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateMemo })]
         public async Task<IActionResult> New([FromBody] DtoRequestDebitMemo model)
         {
-            return Return(await _service.Add(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Add(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -49,7 +53,8 @@ namespace Ordbox.Api.Controllers.DebitMemo
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateMemo })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestDebitMemo model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -62,7 +67,8 @@ namespace Ordbox.Api.Controllers.DebitMemo
         [AllowAccess(Permission = new EPermission[] { EPermission.GetMemo })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.List(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.List(filter, requestedBy).ConfigureAwait(false));
         }
     }
 }

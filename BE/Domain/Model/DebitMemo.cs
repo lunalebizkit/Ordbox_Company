@@ -59,6 +59,14 @@ namespace Ordbox.Domain.Model
 
         [Column("type")]
         public int Type { get; set; }
+
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<DebitMemoDetails> DebitMemoDetails { get; set; } = new HashSet<DebitMemoDetails>();
     }
    
