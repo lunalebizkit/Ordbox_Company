@@ -35,6 +35,13 @@ namespace Ordbox.Domain.Model
         [Column("cash")]
         public decimal? Cash { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<QuittanceDetails> QuittanceDetails { get; set; } = new HashSet<QuittanceDetails>();
         public ICollection<QuittanceProductDetails> QuittanceProductDetails { get; set; } = new HashSet<QuittanceProductDetails>();
     }

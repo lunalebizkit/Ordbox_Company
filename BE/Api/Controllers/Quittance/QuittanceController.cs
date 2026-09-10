@@ -1,9 +1,11 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ordbox.Api.Controllers.Quittance
 {
@@ -20,7 +22,8 @@ namespace Ordbox.Api.Controllers.Quittance
         [AllowAccess(Permission = new EPermission[] { EPermission.GetQuittance })]
         public async Task<IActionResult> Get(long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
@@ -28,21 +31,24 @@ namespace Ordbox.Api.Controllers.Quittance
         [AllowAccess(Permission = new EPermission[] { EPermission.GetQuittance })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.ListQuittance(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListQuittance(filter, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateQuittance })]
         public async Task<IActionResult> New([FromBody] DtoRequestQuittance model)
         {
-            return Return(await _service.NewQuittance(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.NewQuittance(model, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPut]
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateQuittance })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestQuittance model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
     }
 }

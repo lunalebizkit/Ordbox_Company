@@ -10,6 +10,7 @@ using Ordbox.Services.Scripts;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -19,7 +20,7 @@ namespace Ordbox.Services.Services
         {
         }
 
-        public async Task<OperationResponse<DtoResponseQuittance>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseQuittance>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -29,7 +30,7 @@ namespace Ordbox.Services.Services
                                .Include(x => x.QuittanceDetails)
                                .Include(x => x.QuittanceProductDetails)
                                .AsNoTracking()
-                               .FirstOrDefaultAsync(p => p.Id == id)
+                               .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId)
                                .ConfigureAwait(false);
 
                 if (model == null)
@@ -50,7 +51,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoResponseQuittance>>> ListQuittance(RequestPaginatedData<SpecificFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseQuittance>>> ListQuittance(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
 
             try
@@ -58,7 +59,7 @@ namespace Ordbox.Services.Services
                 var query = _contextSql
                                     .Quittance
                                     .AsNoTracking()
-                                    .Where(p => (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
                                      && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.Id == request.Filter.Number : true)
                                      && ( (!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
                                      && (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.CustomerName.ToLower().Contains(request.Filter.CustomerName) : true)
@@ -88,17 +89,18 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> NewQuittance(DtoRequestQuittance model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> NewQuittance(DtoRequestQuittance model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestQuittance model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestQuittance model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var newModel = _mapper.Map<Quittance>(model);
+                newModel.CompanyId = requestedBy.CompanyId;
 
                 if (newModel.Id == 0)
                 {
@@ -121,7 +123,7 @@ namespace Ordbox.Services.Services
                                     .Quittance
                                     .Include(x => x.QuittanceDetails)
                                     .Include(x => x.QuittanceProductDetails)
-                                    .FirstAsync(p => p.Id == model.Id)
+                                    .FirstAsync(p => p.Id == model.Id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
 
                     _contextSql.QuittanceDetails.RemoveRange(oldQuittance.QuittanceDetails);
@@ -145,7 +147,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestQuittance model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestQuittance model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -154,7 +156,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "El remito no tiene ID"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
