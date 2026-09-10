@@ -1,11 +1,11 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Services;
-using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.DeliveryNotes
 {
@@ -21,7 +21,8 @@ namespace Ordbox.Api.Controllers.DeliveryNotes
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
@@ -29,14 +30,16 @@ namespace Ordbox.Api.Controllers.DeliveryNotes
         [AllowAccess(Permission = new EPermission[] { EPermission.GetRemito })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.ListDeliveryNotes(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListDeliveryNotes(filter, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateRemito })]
         public async Task<IActionResult> New([FromBody] DtoRequestDeliveryNotes model)
         {
-            return Return(await _service.NewDeliveryNotes(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.NewDeliveryNotes(model, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPut]
@@ -44,7 +47,8 @@ namespace Ordbox.Api.Controllers.DeliveryNotes
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateMemo })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestDeliveryNotes model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
     }

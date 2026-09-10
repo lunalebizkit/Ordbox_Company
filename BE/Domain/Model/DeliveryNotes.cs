@@ -41,6 +41,13 @@ namespace Ordbox.Domain.Model
         [Column("import_total")]
         public decimal ImportTotal { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<DeliveryNotesDetails> DeliveryNotesDetails { get; set; } = new HashSet<DeliveryNotesDetails>();
     }
 }

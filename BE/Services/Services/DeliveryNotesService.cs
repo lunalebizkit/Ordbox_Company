@@ -6,6 +6,7 @@ using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -14,7 +15,7 @@ namespace Ordbox.Services.Services
         public DeliveryNotesService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration) :
             base(logger, context, maper, configuration)
         { }
-        public async Task<OperationResponse<DtoRequestDeliveryNotes>> GetById(long id)
+        public async Task<OperationResponse<DtoRequestDeliveryNotes>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -22,7 +23,7 @@ namespace Ordbox.Services.Services
                                    .DeliveryNotes
                                    .Include(x => x.DeliveryNotesDetails)
                                    .AsNoTracking()
-                                   .FirstOrDefaultAsync(p => p.Id == id)
+                                   .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId)
                                    .ConfigureAwait(false);
                 if ( remitos == null)
                 {
@@ -42,20 +43,20 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> NewDeliveryNotes(DtoRequestDeliveryNotes model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> NewDeliveryNotes(DtoRequestDeliveryNotes model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoRequestDeliveryNotes>>> ListDeliveryNotes(RequestPaginatedData<SpecificFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoRequestDeliveryNotes>>> ListDeliveryNotes(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
             try
             {
                 var query = _contextSql
                                     .DeliveryNotes
                                     .AsNoTracking()
-                                    .Where(p => (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.SupplierCuit.ToLower().Contains(request.Filter.Cuit) : true)
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.SupplierCuit.ToLower().Contains(request.Filter.Cuit) : true)
                                         && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.Id == request.Filter.Number : true)
                                         && ((!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
                                         &&  (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.SupplierName.ToLower().Contains(request.Filter.CustomerName) : true)
@@ -86,12 +87,13 @@ namespace Ordbox.Services.Services
             } 
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestDeliveryNotes model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestDeliveryNotes model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
 
                 var newModel = _mapper.Map<DeliveryNotes>(model);
+                newModel.CompanyId = requestedBy.CompanyId;
 
                 foreach (DeliveryNotesDetails item in newModel.DeliveryNotesDetails) { if (item.ProductId <= 0) { item.ProductId = -1; } }
 
@@ -103,7 +105,7 @@ namespace Ordbox.Services.Services
                 {
                     var oldModel = await _contextSql
                                     .DeliveryNotes.Include(y => y.DeliveryNotesDetails)
-                                    .FirstAsync(p => p.Id == model.Id)
+                                    .FirstAsync(p => p.Id == model.Id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
 
                     _contextSql.DeliveryNotesDetails.RemoveRange(oldModel.DeliveryNotesDetails);
@@ -123,7 +125,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestDeliveryNotes model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestDeliveryNotes model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -132,7 +134,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "El remito no tiene ID"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
