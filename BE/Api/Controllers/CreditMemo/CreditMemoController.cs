@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
@@ -29,7 +31,8 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         [AllowAccess(Permission = new EPermission[] { EPermission.GetMemo })]
         public async Task<IActionResult> GetById([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Devuelve un listado de NC creadas, con paginado y filtrado por CUIT.
@@ -41,7 +44,8 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         [Route("[action]")]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.List(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.List(filter, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Agrega una nueva NC a la BASE DE DATOS.
@@ -52,7 +56,8 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateMemo })]
         public async Task<IActionResult> Post([FromBody] DtoRequestCreditMemo model)
         {
-            return Return(await _service.NewMemo(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.NewMemo(model, requestedBy).ConfigureAwait(false));
         }
         /// <summary>
         /// Edita una NC ya creada y la guarda modificada en la BASE DE DATOS.
@@ -63,7 +68,8 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateMemo })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestCreditMemo model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
 
@@ -87,8 +93,9 @@ namespace Ordbox.Api.Controllers.CreditMemoController
             {
                 return BadRequest("La impresora esta activada, desactive para realizar el llamado a ARCA");
             }
+            RequestedBy requestedBy = User.GetRequestedBy(); //ojo acaaa
 
-            var data = await _service.GetById(id).ConfigureAwait(false);
+            var data = await _service.GetById(id, requestedBy).ConfigureAwait(false);
 
             if (data.Success && data.Data != null)
             {

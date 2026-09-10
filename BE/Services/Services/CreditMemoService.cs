@@ -4,12 +4,10 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
-using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.Common;
-using Ordbox.Services.ImpresoraFiscal;
-using Ordbox.Services.ImpresoraFiscal.Printer250F;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Scripts;
@@ -19,17 +17,13 @@ namespace Ordbox.Services.Services
 {
     public class CreditMemoService : BaseService
     {
-        private readonly PrinterStatus _config;
-        private readonly IPrinter _printer;
-        public CreditMemoService(ErrorManager logger, DBContext context, IMapper mapper, IPrinter printer, PrinterStatus config, IConfiguration configuration) :
+        public CreditMemoService(ErrorManager logger, DBContext context, IMapper mapper, IConfiguration configuration) :
           base(logger, context, mapper, configuration)
         {
-            _config = config;
-            _printer = printer;
         }
 
         //Metodo Get By Id
-        public async Task<OperationResponse<DtoRequestCreditMemo>> GetById(long id)
+        public async Task<OperationResponse<DtoRequestCreditMemo>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -37,7 +31,7 @@ namespace Ordbox.Services.Services
                                     .CreditMemo
                                     .Include(x => x.CreditMemoDetail)
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(c => c.Id == id)
+                                    .FirstOrDefaultAsync(c => c.Id == id && c.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
 
                 if (creditMemo == null)
@@ -66,20 +60,20 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> NewMemo(DtoRequestCreditMemo model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> NewMemo(DtoRequestCreditMemo model, RequestedBy requestedBy, CancellationToken ct = default)
         {
                 model.Id = 0;
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoRequestCreditMemo>>> List(RequestPaginatedData<SpecificFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoRequestCreditMemo>>> List(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
             try
             {
                 var query = _contextSql
                                     .CreditMemo                                 
                                     .AsNoTracking()
-                                    .Where(p => (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
                                      && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.InvoiceNumber == request.Filter.Number : true) &&
                                      ((!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
                                        &&
@@ -111,7 +105,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestCreditMemo model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestCreditMemo model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             CreditMemo creditModel = null;
@@ -122,6 +116,7 @@ namespace Ordbox.Services.Services
                 {
         
                     creditModel = _mapper.Map<CreditMemo>(model);
+                    creditModel.CompanyId = requestedBy.CompanyId;
 
                     if (creditModel.CustomerId == 0)
                     {
@@ -169,36 +164,6 @@ namespace Ordbox.Services.Services
                         return Error<IdResponse<long>>(new OperationExceptions("000", "Error al cargar cliente, verifique DNI"));
                     }
 
-                    if (_config.Status)
-                    {
-                        var error = await PrintCreditMemo(model, ct);
-
-                        if (error == "ErrorCliente")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al cargar cliente, compruebe el CUIT/DNI"));
-                        }
-
-                        if (error == "ErrorAbrir")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al abrir documento , intente con un cierre Z"));
-                        }
-
-                        if (error == "ErrorImprimir")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al imprimir item, intente con un cierre Z"));
-                        }
-
-                        if (error == "ErrorCerrar")
-                        {
-                            _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
-                            return Error<IdResponse<long>>(new OperationExceptions("000", "Error al cerrar documento, intente con un cierre Z"));
-                        }
-
-                        creditModel.CreditMemoNumber = long.Parse(error);
-                    }
                     await _contextSql.CreditMemo.AddAsync(creditModel, ct).ConfigureAwait(false);
                 }
                 
@@ -214,7 +179,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestCreditMemo model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestCreditMemo model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -223,7 +188,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "La nota de credito no tiene ID"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -231,50 +196,7 @@ namespace Ordbox.Services.Services
                 _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
                 throw;
             }
-        }
-
-        public async Task<string> PrintCreditMemo(DtoRequestCreditMemo model, CancellationToken ct = default)
-        {
-
-            //MANEJO DE ERRORES
-            var cargarCliente = await _printer.CargarDatosCliente(model.CustomerName, model.CustomerCuit, model.CustomerAddress, (ETypeReceipt)model.Type).ConfigureAwait(false);
-
-            if (cargarCliente == null)
-            {
-                await _printer.CerrarJornadaFiscal();
-                return "ErrorCliente";
-            }
-
-            var openDoc = await _printer.OpenNC((ETypeReceipt)model.Type, model.CustomerName, eTypeDocumentClient.Cuil, model.CustomerAddress).ConfigureAwait(false);
-
-            if (openDoc == null)
-            {
-                await _printer.CloseFactura(1).ConfigureAwait(false);
-                return "ErrorAbrir";
-            }
-            //TODO por cada item mandar a imprimir
-            foreach (var item in model.CreditMemoDetail)
-            {
-                var imprimir = await _printer.PrintItem(item.ProductName, item.Quantity, item.Price, item.Iva, item.ProductCode.ToString()).ConfigureAwait(false);
-
-                if (imprimir == null)
-                {
-                    await _printer.CloseFactura(1).ConfigureAwait(false);
-                    return "ErrorImprimir";
-                }
-            }
-
-            var closeFactura = await _printer.CloseFactura(1).ConfigureAwait(false);
-
-            if (closeFactura == null)
-            {
-                await _printer.CerrarJornadaFiscal();
-                return "ErrorCerrar";
-            }
-
-            return closeFactura;
-
-        }
+        }        
 
         public async Task<OperationResponse<IEnumerable<DtoResponseIntegrationLogCredit>>> GetIntegrationLogById(long Id, CancellationToken ct = default)
         {
