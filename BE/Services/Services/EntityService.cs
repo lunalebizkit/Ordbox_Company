@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoResponse;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace Ordbox.Services.Services
 {
@@ -277,7 +278,7 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<DtoEntity>> GetById(long id)
+        public async Task<OperationResponse<DtoEntity>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -286,7 +287,7 @@ namespace Ordbox.Services.Services
                                     .Include(x => x.EmailEntities)
                                     .Include(x => x.PhoneEntities)
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive)
+                                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
                 if (entidad == null)
                 {
@@ -318,14 +319,14 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<DtoEntity>> GetCustomerByCuit(string cuit)
+        public async Task<OperationResponse<DtoEntity>> GetCustomerByCuit(string cuit, RequestedBy requestedBy)
         {
             try
             {
                 var entidad = await _contextSql
                                     .Customers
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(p => p.Cuit == cuit && !p.IsInactive)
+                                    .FirstOrDefaultAsync(p => p.Cuit == cuit && !p.IsInactive && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
                 if (entidad == null)
                 {
@@ -345,7 +346,7 @@ namespace Ordbox.Services.Services
         }
 
 
-        public async Task<OperationResponse<IdResponse<long>>> Add(DtoEntity model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Add(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -355,7 +356,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "Datos incompletos"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -364,11 +365,12 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoEntity model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var entityModel = _mapper.Map<Customer>(model);
+                entityModel.CompanyId = requestedBy.CompanyId;
 
                 var email = new EmailEntity();
                 var phones = new PhoneEntity();
@@ -477,7 +479,7 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoEntityList>>> List(RequestPaginatedData<string> request)
+        public async Task<OperationResponse<DtoPagination<DtoEntityList>>> List(RequestPaginatedData<string> request, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -486,10 +488,10 @@ namespace Ordbox.Services.Services
                                     .AsNoTracking()
                                     .Include(p => p.EmailEntities)
                                     .Include(p => p.PhoneEntities)
-                                    .Where(p => p.Name.ToLower().Contains(request.Filter ?? "")
-                                    || p.Dni.ToString().Contains(request.Filter ?? "")
-                                    || p.Cuit.ToLower().Contains(request.Filter ?? ""));
-
+                                     .Where(p => p.CompanyId == requestedBy.CompanyId &&
+                                       (p.Name.ToLower().Contains(request.Filter ?? "")
+                                     || p.Dni.ToString().Contains(request.Filter ?? "")
+                                     || p.Cuit.ToLower().Contains(request.Filter ?? "")));
 
 
                 var count = await query.CountAsync().ConfigureAwait(false);
@@ -516,7 +518,7 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoEntity model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -530,7 +532,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_S001_TOKEN_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("001", "Datos incompletos"));
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -539,7 +541,7 @@ namespace Ordbox.Services.Services
             }
         }
         //Elimianr usuario
-        public async Task<OperationResponse<IdResponse<long>>> DeleteEntity(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> DeleteEntity(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {

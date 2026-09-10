@@ -16,5 +16,7 @@
 
         public List<string> EmailEntity { get; set; }
         public string? Observation { get; set; }
+
+        public long? CompanyId { get; set; }
     }
 }

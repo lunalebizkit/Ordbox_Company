@@ -1,11 +1,10 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Services;
-using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Models.Dtos.DtoResponse;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.Entity
 {
@@ -25,7 +24,8 @@ namespace Ordbox.Api.Controllers.Entity
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewEntity })]
         public async Task<IActionResult> Get([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -37,7 +37,8 @@ namespace Ordbox.Api.Controllers.Entity
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateEntity })]
         public async Task<IActionResult> New([FromBody] DtoEntity model)
         {
-            return Return(await _service.Add(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Add(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -49,7 +50,8 @@ namespace Ordbox.Api.Controllers.Entity
         [AllowAccess(Permission = new EPermission[] { EPermission.EditEntity })]
         public async Task<IActionResult> Edit([FromBody] DtoEntity model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -62,7 +64,8 @@ namespace Ordbox.Api.Controllers.Entity
         [AllowAccess(Permission = new EPermission[] { EPermission.DeleteUser })]
         public async Task<IActionResult> DeleteEntity(long id)
         {
-            return Return(await _service.DeleteEntity(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.DeleteEntity(id, requestedBy).ConfigureAwait(false));
         }
     }
 }

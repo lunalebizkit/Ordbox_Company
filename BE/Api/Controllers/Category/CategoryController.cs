@@ -2,7 +2,6 @@
 using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
 using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoResponse;
