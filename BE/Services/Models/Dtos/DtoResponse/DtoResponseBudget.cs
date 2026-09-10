@@ -1,11 +1,4 @@
-﻿using Ordbox.Services.Models.Dtos.DtoRequest;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ordbox.Services.Models.Dtos.DtoResponse
+﻿namespace Ordbox.Services.Models.Dtos.DtoResponse
 {
     public class DtoResponseBudget
     {
@@ -25,6 +18,8 @@ namespace Ordbox.Services.Models.Dtos.DtoResponse
         public DateTime DateTime { get; set; }
 
         public decimal Total { get; set; }
+
+        public long CompanyId { get; set; }
 
         public List<DtoResponseBudgetDetail> BudgetDetails { get; set; }
         

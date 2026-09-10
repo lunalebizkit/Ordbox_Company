@@ -1,6 +1,4 @@
-﻿
-
-using AutoMapper;
+﻿using AutoMapper;
 using Dapper;
 using Ordbox.Domain;
 using Ordbox.Domain.Model;

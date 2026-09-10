@@ -1,9 +1,11 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ordbox.Api.Controllers.Budget
 {
@@ -21,7 +23,8 @@ namespace Ordbox.Api.Controllers.Budget
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateBudget })]
         public async Task<IActionResult> New([FromBody] DtoRequestBudget model)
         {
-            return Return(await _service.New(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.New(model, requestedBy).ConfigureAwait(false));
         }
 
         [HttpGet]
@@ -29,7 +32,8 @@ namespace Ordbox.Api.Controllers.Budget
         [AllowAccess(Permission = new EPermission[] { EPermission.GetBudget })]
         public async Task<IActionResult> Get(long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPut]
@@ -37,7 +41,8 @@ namespace Ordbox.Api.Controllers.Budget
         [AllowAccess(Permission = new EPermission[] { EPermission.GetBudget })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestBudget model)
         {
-            return Return(await _service.Update(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Update(model, requestedBy).ConfigureAwait(false));
         }
 
         [HttpPost]
@@ -45,7 +50,8 @@ namespace Ordbox.Api.Controllers.Budget
         [AllowAccess(Permission = new EPermission[] { EPermission.GetBudget })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.ListBudget(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListBudget(filter, requestedBy).ConfigureAwait(false));
         }
 
         [HttpDelete]
@@ -53,7 +59,8 @@ namespace Ordbox.Api.Controllers.Budget
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateBrand })]
         public async Task<IActionResult> Delete(long id)
         {
-            return Return(await _service.Delete(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Delete(id, requestedBy).ConfigureAwait(false));
         }
      
     }

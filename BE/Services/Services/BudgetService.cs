@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
@@ -20,12 +21,12 @@ namespace Ordbox.Services.Services
         {
         }
 
-        public async Task<OperationResponse<DtoResponseBudget>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseBudget>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
 
-                var model = GetBudgetById(id);
+                var model = GetBudgetById(id, requestedBy);
 
                 if (model == null)
                 {
@@ -41,23 +42,19 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> New(DtoRequestBudget model, CancellationToken ct = default)
+
+        public async Task<OperationResponse<IdResponse<long>>> New(DtoRequestBudget model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
-        }
+            return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
+        }       
 
-        public async Task<OperationResponse<IdResponse<long>>> Add(DtoRequestBudget model, CancellationToken ct = default)
-        {
-            model.Id = 0;
-            return await AddOrUpdate(model, ct).ConfigureAwait(false);
-        }
-
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestBudget model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestBudget model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var newModel = _mapper.Map<Budget>(model);
+                newModel.CompanyId = requestedBy.CompanyId;
 
                 foreach (BudgetDetail budgetDetail in newModel.BudgetDetails)
                 {
@@ -74,7 +71,7 @@ namespace Ordbox.Services.Services
                     var oldModel = await _contextSql
                                     .Budgets
                                     .Include(x => x.BudgetDetails)
-                                    .FirstAsync(p => p.Id == model.Id)
+                                    .FirstAsync(p => p.Id == model.Id && p.CompanyId == requestedBy.CompanyId, ct)
                                     .ConfigureAwait(false);
 
                     _contextSql.BudgetDetails.RemoveRange(oldModel.BudgetDetails);
@@ -109,7 +106,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestBudget model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestBudget model, RequestedBy requestedBy, CancellationToken ct = default)
         {
 
             try
@@ -120,7 +117,7 @@ namespace Ordbox.Services.Services
                     return Error<IdResponse<long>>(new OperationExceptions("000", "La Marca no tiene ID"));
                 }
 
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
 
             }
             catch (Exception ex)
@@ -130,7 +127,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoResponseBudget>>> ListBudget(RequestPaginatedData<SpecificFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseBudget>>> ListBudget(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
 
             try
@@ -142,7 +139,8 @@ namespace Ordbox.Services.Services
                                     .Where(p => !p.IsInactive &&
                                     (request.Filter.Number.HasValue && request.Filter.Number != 0 ? p.BudgetNumber == request.Filter.Number : true) &&
                                     (!string.IsNullOrEmpty(request.Filter.Date) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true) &&
-                                    (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.CustomerName.ToLower().Contains(request.Filter.CustomerName.ToLower()) : true)
+                                    (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.CustomerName.ToLower().Contains(request.Filter.CustomerName.ToLower()) : true) &&
+                                    p.CompanyId == requestedBy.CompanyId
                                      );
 
                 var count = await query.CountAsync().ConfigureAwait(false);
@@ -169,13 +167,13 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id,RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var model = await _contextSql
                                              .Budgets
-                                             .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive, ct)
+                                             .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive && p.CompanyId == requestedBy.CompanyId , ct)
                                               .ConfigureAwait(false);
 
                 if (model != null)
@@ -202,7 +200,7 @@ namespace Ordbox.Services.Services
 
         #region Private
 
-        private DtoResponseBudget? GetBudgetById(long Id)
+        private DtoResponseBudget? GetBudgetById(long Id, RequestedBy requestedBy)
         {
             using var connection = new SqlConnection(ConnectionString);
 
@@ -225,7 +223,7 @@ namespace Ordbox.Services.Services
                     }
 
                     return budgetEntry;
-                }, param: new { @id = Id }, splitOn: "Id");
+                }, param: new { @id = Id, @companyid = requestedBy.CompanyId }, splitOn: "Id");
 
             return budgetDictionary.Values.SingleOrDefault();
         }

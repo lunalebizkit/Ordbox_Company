@@ -38,6 +38,13 @@ namespace Ordbox.Domain.Model
         [Column("is_inactive")]
         public bool IsInactive { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<BudgetDetail> BudgetDetails { get; set; } = new HashSet<BudgetDetail>();
     }
 }

@@ -8,6 +8,7 @@
       ,[b].[total]
       ,[b].[payment]
       ,[b].[is_inactive] AS [IsInactive]
+      ,[b].[company_id] AS [CompanyId]
 	  ,[bd].[id]
       ,[bd].[budget_id] AS [BudgetId]
       ,[bd].[product_id] AS [ProductId]
@@ -19,4 +20,5 @@
   INNER JOIN 
   [budget_detail] [bd] ON [b].[id] = [bd].[budget_id]
   LEFT JOIN [user] [u] ON [u].[id] = [b].[user_id]
-  WHERE [b].[id] = @id;
+  WHERE [b].[id] = @id
+  AND [b].[company_id] = @companyid;
