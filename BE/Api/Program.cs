@@ -12,9 +12,6 @@ using Ordbox.SDK.Error;
 using Ordbox.Services.ARCA;
 using Ordbox.Services.ARCA.Dto;
 using Ordbox.Services.ARCA.Interface;
-using Ordbox.Services.ImpresoraFiscal;
-using Ordbox.Services.ImpresoraFiscal.Printer250F;
-using Ordbox.Services.ImpresoraFiscal.PrinterF250F;
 using Ordbox.Services.Mapper;
 using Ordbox.Services.Services;
 using Serilog;
@@ -76,9 +73,6 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<IPrinter, PrinterF250F>();
-builder.Services.AddSingleton<PrinterStatus>(p => builder.Configuration.GetSection("PrinterStatus").Get<PrinterStatus>());
-builder.Services.AddSingleton<PrinterConfig>(p => builder.Configuration.GetSection("PrinterConfig").Get<PrinterConfig>());
 builder.Services.AddSingleton<ArcaConfig>(p => builder.Configuration.GetSection("ArcaConfig").Get<ArcaConfig>());
 builder.Services.AddScoped<IArcaIntegracion, ArcaIntegracionService>();
 builder.Services.AddAutoMapper(cfg => {
@@ -118,12 +112,10 @@ builder.Services.AddScoped<IvaService>();
 builder.Services.AddScoped<DebitMemoService>();
 builder.Services.AddScoped<CreditMemoService>();
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<ReporteZService>();
 builder.Services.AddScoped<DeliveryNotesService>();
 builder.Services.AddScoped<BudgetService>();
 builder.Services.AddScoped<QuittanceService>();
 builder.Services.AddDbContext<DBContext>(x => x.UseSqlServer(connectionString));
-builder.Services.AddScoped<ReimprimirDocService>();
 builder.Services.AddScoped<PdfService>();
 builder.Services.AddScoped<CompanyService>();
 

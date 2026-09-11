@@ -5,7 +5,6 @@ using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
-using Ordbox.Services.ImpresoraFiscal.Printer250F;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Services;
 using System.IO.Compression;
@@ -16,13 +15,11 @@ namespace Ordbox.Api.Controllers.Invoice
     {
         private readonly InvoiceService _service;
         private readonly IArcaIntegracion _arcaIntegracionService;
-        private readonly PrinterStatus _printerStatus;
 
-        public InvoiceController(InvoiceService service, IArcaIntegracion arcaIntegracionService, PrinterStatus printerStatus)
+        public InvoiceController(InvoiceService service, IArcaIntegracion arcaIntegracionService)
         {
             _service = service;
             _arcaIntegracionService = arcaIntegracionService;
-            _printerStatus = printerStatus;
         }
 
         /// <summary>
@@ -197,12 +194,7 @@ namespace Ordbox.Api.Controllers.Invoice
         #region PRIVATE
 
         private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
-        {
-            if (_printerStatus.InvoiceStatus)
-            {
-                return BadRequest("La impresora esta activada, desactive para realizar el llamado a ARCA");
-            }
-
+        { 
             var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
 
             if (invoice.Success && invoice.Data != null)
