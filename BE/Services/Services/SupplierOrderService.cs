@@ -8,6 +8,7 @@ using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
@@ -22,7 +23,7 @@ namespace Ordbox.Services.Services
             this._emailService = emailService;
             this._productService = productService;
         }
-        public async Task<OperationResponse<DtoResponseSupplierOrderById>> GetById(long id)
+        public async Task<OperationResponse<DtoResponseSupplierOrderById>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -33,7 +34,7 @@ namespace Ordbox.Services.Services
                                     .Include(p => p.SupplierOrderDetail)
                                     .ThenInclude(p => p.Product)
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(p => p.Id == id)
+                                    .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
                 if (order == null)
                 {
@@ -51,10 +52,13 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdateEmail(DtoRequestSupplierOrder model, CancellationToken ct = default)
+
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdateEmail(DtoRequestSupplierOrder model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             var newOrder = _mapper.Map<SupplierOrder>(model);
+            newOrder.CompanyId = requestedBy.CompanyId;
+
             var productDetail = new Product();
             try
             {
@@ -80,7 +84,7 @@ namespace Ordbox.Services.Services
                     {
                         foreach (var product in newOrder.SupplierOrderDetail)
                         {
-                            _productService.UpdateProductStockById(product.ProductId, product.RecievedQuantity);
+                            await _productService.UpdateProductStockById(product.ProductId, product.RecievedQuantity, requestedBy);
                         }
 
                     }
@@ -95,7 +99,7 @@ namespace Ordbox.Services.Services
                     await SendOrderEmail(new DtoSendOrderEmail { 
                         Id = newOrder.Id,
                         Emails = model.SupplierEmail
-                    });
+                    }, requestedBy);
                 }
                 return Ok(new IdResponse<long>(newOrder.Id));
             }
@@ -107,10 +111,13 @@ namespace Ordbox.Services.Services
            
             
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestSupplierOrder model, bool sendEmail = false, CancellationToken ct = default)
+
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestSupplierOrder model, RequestedBy requestedBy, bool sendEmail = false, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             var newOrder = _mapper.Map<SupplierOrder>(model);
+            newOrder.CompanyId = requestedBy.CompanyId;
+
             var productDetail = new Product();
             try
             {
@@ -153,7 +160,7 @@ namespace Ordbox.Services.Services
                     {
                         foreach (var product in newOrder.SupplierOrderDetail)
                         {
-                          await _productService.UpdateProductStockById(product.ProductId, product.RecievedQuantity);
+                          await _productService.UpdateProductStockById(product.ProductId, product.RecievedQuantity, requestedBy);
                         }
 
                     }
@@ -174,7 +181,7 @@ namespace Ordbox.Services.Services
                         {
                             Id = newOrder.Id,
                             Emails = model.SupplierEmail
-                        });
+                        }, requestedBy);
                     }
                 }
                 
@@ -190,7 +197,7 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<bool>> SendOrderEmail(DtoSendOrderEmail model)
+        public async Task<OperationResponse<bool>> SendOrderEmail(DtoSendOrderEmail model, RequestedBy requestedBy)
         {
             try
             {
@@ -200,7 +207,7 @@ namespace Ordbox.Services.Services
                                     .Include(p => p.SupplierOrderDetail)
                                     .ThenInclude(p => p.Product)
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(p => p.Id == model.Id)
+                                    .FirstOrDefaultAsync(p => p.Id == model.Id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
                 if (order == null)
                 {
@@ -234,7 +241,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoResponseSupplierOrder>>> List(RequestPaginatedData<ProductFilter> request)
+        public async Task<OperationResponse<DtoPagination<DtoResponseSupplierOrder>>> List(RequestPaginatedData<ProductFilter> request, RequestedBy requestedBy)
         {
             try
             {
@@ -244,7 +251,7 @@ namespace Ordbox.Services.Services
                                 .Include(p => p.SupplierOrderDetail)
                                 .ThenInclude(p => p.Product)
                                 .Include(p => p.Supplier)
-                                .Where(p =>
+                                .Where(p => p.CompanyId == requestedBy.CompanyId &&
                                     ((request.Filter.Category.HasValue && request.Filter.Category.Value > 0) ?
                                         p.SupplierOrderDetail.Any(x => x.Product.CategoryId == request.Filter.Category) : true)
                                         &&

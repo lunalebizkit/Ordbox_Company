@@ -1,11 +1,11 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Services;
-using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.SupplierOrder
 {
@@ -26,7 +26,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewOrderSupplier })]
         public async Task<IActionResult> GetById(long id)
         {
-            return Return(await _service.GetById(id));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -38,7 +39,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateOrderSupplier })]
         public async Task<IActionResult> New([FromBody] DtoRequestSupplierOrder model)
         {
-            return Return(await _service.AddOrUpdate(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.AddOrUpdate(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -51,7 +53,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [Route("orderAndEmail")]
         public async Task<IActionResult> NewWithEmail([FromBody] DtoRequestSupplierOrder model)
         {
-            return Return(await _service.AddOrUpdate(model, true).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.AddOrUpdate(model, requestedBy, true).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -63,7 +66,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [AllowAccess(Permission = new EPermission[] { EPermission.EditOrderSupplier })]
         public async Task<IActionResult> Edit([FromBody] DtoRequestSupplierOrder model)
         {
-            return Return(await _service.AddOrUpdate(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.AddOrUpdate(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -76,7 +80,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [Route("[action]")]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<ProductFilter> filter)
         {
-            return Return(await _service.List(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.List(filter, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -89,7 +94,8 @@ namespace Ordbox.Api.Controllers.SupplierOrder
         [Route("email")]
         public async Task<IActionResult> SendOrderEmail(DtoSendOrderEmail model)
         {
-            return Return(await _service.SendOrderEmail(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.SendOrderEmail(model, requestedBy).ConfigureAwait(false));
         }
     }
 }

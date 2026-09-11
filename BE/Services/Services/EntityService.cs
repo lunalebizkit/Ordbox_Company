@@ -16,7 +16,7 @@ namespace Ordbox.Services.Services
           base(logger, context, maper, configuration)
 
         { }
-        public async Task<OperationResponse<DtoEntity>> GetSupplierById(long id)
+        public async Task<OperationResponse<DtoEntity>> GetSupplierById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -25,7 +25,7 @@ namespace Ordbox.Services.Services
                                  .Include(x => x.EmailEntities)
                                  .Include(x => x.PhoneEntities)
                                  .AsNoTracking()
-                                 .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive)
+                                 .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId && !p.IsInactive)
                                  .ConfigureAwait(false);
                 if (proveedor == null)
                 {
@@ -56,14 +56,14 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<DtoEntity>> GetSupplierByCuit(string cuit)
+        public async Task<OperationResponse<DtoEntity>> GetSupplierByCuit(string cuit, RequestedBy requestedBy)
         {
             try
             {
                 var entidad = await _contextSql
                                     .Suppliers
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync(p => p.Cuit == cuit && !p.IsInactive)
+                                    .FirstOrDefaultAsync(p => p.Cuit == cuit && p.CompanyId == requestedBy.CompanyId && !p.IsInactive)
                                     .ConfigureAwait(false);
                 if (entidad == null)
                 {
@@ -81,7 +81,7 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<DtoPagination<DtoEntityList>>> ListSupplier(RequestPaginatedData<string> request)
+        public async Task<OperationResponse<DtoPagination<DtoEntityList>>> ListSupplier(RequestPaginatedData<string> request, RequestedBy requestedBy)
         {
             try
             {
@@ -90,9 +90,10 @@ namespace Ordbox.Services.Services
                                     .AsNoTracking()
                                     .Include(p => p.EmailEntities)
                                     .Include(p => p.PhoneEntities)
-                                    .Where(p => p.Name.ToLower().Contains(request.Filter ?? "") ||
-                                        p.Dni.ToString().Contains(request.Filter ?? "") ||
-                                       p.Cuit.ToLower().Contains(request.Filter ?? "") && !p.IsInactive);
+                                    .Where(p => p.CompanyId == requestedBy.CompanyId && 
+                                        (p.Name.ToLower().Contains(request.Filter ?? "") ||
+                                         p.Dni.ToString().Contains(request.Filter ?? "") ||
+                                         p.Cuit.ToLower().Contains(request.Filter ?? "")) && !p.IsInactive);
 
                 var count = await query.CountAsync().ConfigureAwait(false);
 
@@ -121,7 +122,8 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddSupplier(DtoEntity model, CancellationToken ct = default)
+
+        public async Task<OperationResponse<IdResponse<long>>> AddSupplier(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -131,7 +133,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "Datos incompletos"));
                 }
-                return await AddOrUpdateSupplier(model, ct).ConfigureAwait(false);
+                return await AddOrUpdateSupplier(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -140,7 +142,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> UpdateSupplier(DtoEntity model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> UpdateSupplier(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -155,7 +157,7 @@ namespace Ordbox.Services.Services
                     return Error<IdResponse<long>>(new OperationExceptions("001", "Datos incompletos"));
                 }
 
-                return await AddOrUpdateSupplier(model, ct).ConfigureAwait(false);
+                return await AddOrUpdateSupplier(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -163,11 +165,13 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdateSupplier(DtoEntity model, CancellationToken ct = default)
+
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdateSupplier(DtoEntity model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var entityModel = _mapper.Map<Supplier>(model);
+                entityModel.CompanyId = requestedBy.CompanyId;
 
                 var email = new EmailEntity();
                 var phones = new PhoneEntity();

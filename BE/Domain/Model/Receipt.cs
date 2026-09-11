@@ -1,5 +1,6 @@
 ﻿
 using Ordbox.Domain.Enum;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 
@@ -61,6 +62,13 @@ namespace Ordbox.Domain.Model
 
         [Column("is_inactive")]
         public bool IsInactive { get; set; }
+
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
 
         public ICollection<ReceiptDetails> ReceiptDetails { get; set; } = new HashSet<ReceiptDetails>();
 

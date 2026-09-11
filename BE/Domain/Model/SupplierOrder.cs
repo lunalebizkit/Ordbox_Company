@@ -37,6 +37,13 @@ namespace Ordbox.Domain.Model
         [Column("scheduled_date")]
         public DateTime ScheduledDate { get; set; }
 
+        [Required]
+        [Column("company_id")]
+        public long CompanyId { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company Company { get; set; }
+
         public ICollection<SupplierOrderDetail> SupplierOrderDetail { get; set; } = new HashSet<SupplierOrderDetail>();
 
         [NotMapped]

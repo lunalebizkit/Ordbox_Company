@@ -1,12 +1,11 @@
-﻿using Ordbox.Api.Filter;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
-using Ordbox.SDK.Error;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
-using Ordbox.Api.Extension;
 
 namespace Ordbox.Api.Controllers.Receipt
 {
@@ -28,7 +27,8 @@ namespace Ordbox.Api.Controllers.Receipt
         [AllowAccess(Permission = new EPermission[] { EPermission.GetReceipt })]
         public async Task<IActionResult> GetById([FromQuery] long id)
         {
-            return Return(await _service.GetById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -40,7 +40,8 @@ namespace Ordbox.Api.Controllers.Receipt
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateReceipt })]
         public async Task<IActionResult> New([FromBody] DtoRequestReceipt model )
         {
-            return Return(await _service.NewReceipt(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.NewReceipt(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -53,7 +54,8 @@ namespace Ordbox.Api.Controllers.Receipt
         [AllowAccess(Permission = new EPermission[] { EPermission.GetReceipt })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<SpecificFilter> filter)
         {
-            return Return(await _service.ListReceipt(filter, User.GetCompanyId()).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListReceipt(filter, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -66,7 +68,8 @@ namespace Ordbox.Api.Controllers.Receipt
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateReceipt })]
         public async Task<IActionResult> Delete(long id)
         {
-            return Return(await _service.Delete(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.Delete(id, requestedBy).ConfigureAwait(false));
         }
     }
 }

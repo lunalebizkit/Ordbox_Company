@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
@@ -19,7 +20,7 @@ namespace Ordbox.Services.Services
         { }
 
         //Get Receipt
-        public async Task<OperationResponse<DtoRequestReceipt>> GetById(long id)
+        public async Task<OperationResponse<DtoRequestReceipt>> GetById(long id, RequestedBy requestedBy)
         {
             try
             {
@@ -27,7 +28,7 @@ namespace Ordbox.Services.Services
                                     .Receipts
                                     .Include(x => x.ReceiptDetails)
                                     .AsNoTracking()
-                                    .FirstOrDefaultAsync( c => c.Id == id)
+                                    .FirstOrDefaultAsync( c => c.Id == id && c.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
 
                 if(receipt == null)
@@ -57,7 +58,7 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> NewReceipt(DtoRequestReceipt model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> NewReceipt(DtoRequestReceipt model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
@@ -67,7 +68,7 @@ namespace Ordbox.Services.Services
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
                     return Error<IdResponse<long>>(new OperationExceptions("000", "Datos incompletos")); ;
                 }
-                return await AddOrUpdate(model, ct).ConfigureAwait(false);
+                return await AddOrUpdate(model, requestedBy, ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -76,7 +77,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<DtoPagination<DtoRequestListReceipt>>> ListReceipt(RequestPaginatedData<SpecificFilter> request, long companyId)
+        public async Task<OperationResponse<DtoPagination<DtoRequestListReceipt>>> ListReceipt(RequestPaginatedData<SpecificFilter> request, RequestedBy requestedBy)
         {
 
             try
@@ -87,7 +88,7 @@ namespace Ordbox.Services.Services
                 {
                     dtoRequests = connection.Query<DtoRequestListReceipt>(SqlScripts.GetReceiptList, new
                     {
-                        companyid = companyId,
+                        companyid = requestedBy.CompanyId,
                         cuit = request.Filter.Cuit,
                         number = request.Filter.Number,
                         date = request.Filter.Date,
@@ -98,7 +99,7 @@ namespace Ordbox.Services.Services
 
                     count = connection.QuerySingle<int>(SqlScripts.GetReceiptListCount, new
                     {
-                        companyid = companyId,
+                        companyid = requestedBy.CompanyId,
                         cuit = request.Filter.Cuit,
                         number = request.Filter.Number,
                         date = request.Filter.Date,
@@ -144,10 +145,12 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestReceipt model, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> AddOrUpdate(DtoRequestReceipt model, RequestedBy requestedBy, CancellationToken ct = default)
         {
             var transaction = _contextSql.Database.BeginTransaction();
             var receiptModel = _mapper.Map<Receipt>(model);
+            receiptModel.CompanyId = requestedBy.CompanyId;
+
             var productDetail = new Product();
 
             try
@@ -193,13 +196,13 @@ namespace Ordbox.Services.Services
             return Ok(new IdResponse<long>(receiptModel.Id));
         }
 
-        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, CancellationToken ct = default)
+        public async Task<OperationResponse<IdResponse<long>>> Delete(long id, RequestedBy requestedBy, CancellationToken ct = default)
         {
             try
             {
                 var model = await _contextSql
                                              .Receipts
-                                             .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive, ct)
+                                             .FirstOrDefaultAsync(p => p.Id == id && !p.IsInactive && p.CompanyId == requestedBy.CompanyId, ct)
                                               .ConfigureAwait(false);
                 
                 if (model != null)

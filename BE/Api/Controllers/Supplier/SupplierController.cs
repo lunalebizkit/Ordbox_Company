@@ -1,11 +1,13 @@
-﻿using Ordbox.Services.Common;
-using Ordbox.Services.Services;
+﻿using Microsoft.AspNetCore.Mvc;
 using Ordbox.Api.Controllers;
-using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoResponse;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.Supplier
 {
@@ -26,7 +28,8 @@ namespace Ordbox.Api.Controllers.Supplier
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewSupplier })]
         public async Task<IActionResult> Get([FromQuery] long id)
         {
-            return Return(await _service.GetSupplierById(id).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetSupplierById(id, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -39,7 +42,8 @@ namespace Ordbox.Api.Controllers.Supplier
         [AllowAccess(Permission = new EPermission[] { EPermission.ViewSupplier })]
         public async Task<IActionResult> List([FromBody] RequestPaginatedData<string> filter)
         {
-            return Return(await _service.ListSupplier(filter).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.ListSupplier(filter, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -51,7 +55,8 @@ namespace Ordbox.Api.Controllers.Supplier
         [AllowAccess(Permission = new EPermission[] { EPermission.CreateSupplier })]
         public async Task<IActionResult> New([FromBody] DtoEntity model)
         {
-            return Return(await _service.AddSupplier(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.AddSupplier(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -63,7 +68,8 @@ namespace Ordbox.Api.Controllers.Supplier
         [AllowAccess(Permission = new EPermission[] { EPermission.EditSupplier })]
         public async Task<IActionResult> Edit([FromBody] DtoEntity model)
         {
-            return Return(await _service.UpdateSupplier(model).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.UpdateSupplier(model, requestedBy).ConfigureAwait(false));
         }
 
         /// <summary>
@@ -76,7 +82,8 @@ namespace Ordbox.Api.Controllers.Supplier
         [Route("[action]")]
         public async Task<IActionResult> GetSupplierByCuit([FromQuery] string cuit)
         {
-            return Return(await _service.GetSupplierByCuit(cuit).ConfigureAwait(false));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetSupplierByCuit(cuit, requestedBy).ConfigureAwait(false));
         }
     }
 }

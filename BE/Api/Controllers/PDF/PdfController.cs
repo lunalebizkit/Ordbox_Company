@@ -1,10 +1,12 @@
 ﻿
 using iTextSharp.text;
-using Ordbox.Domain.Enum;
-using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model.Extensions;
+using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.PDF
 {
@@ -26,7 +28,8 @@ namespace Ordbox.Api.Controllers.PDF
         [AllowAnonymous]
         public async Task<IActionResult> PdfComprobanteVenta(long id, [FromServices] InvoiceService service)
         {
-            var factura = await service.GetById(id);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var factura = await service.GetById(id, requestedBy);
             var dtoEncabezado = new DtoRequestEncabezadoPDF()
             {
                 TituloComprobante = "Factura Proforma",
@@ -84,7 +87,8 @@ namespace Ordbox.Api.Controllers.PDF
         [AllowAnonymous]
         public async Task<IActionResult> PdfComprobanteCompra(long id, [FromServices] ReceiptService service)
         {
-            var factura = await service.GetById(id);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var factura = await service.GetById(id, requestedBy);
             var dtoEncabezado = new DtoRequestEncabezadoPDF()
             {
                 TituloComprobante = "Comprobante De Compra",
@@ -140,7 +144,8 @@ namespace Ordbox.Api.Controllers.PDF
         [AllowAnonymous]
         public async Task<IActionResult> PdfPresupuesto(long id, [FromServices] BudgetService service)
         {
-            var factura = await service.GetById(id);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var factura = await service.GetById(id, requestedBy);
             var dtoEncabezado = new DtoRequestEncabezadoPDF()
             {
                 TituloComprobante = "Presupuesto",
@@ -184,7 +189,8 @@ namespace Ordbox.Api.Controllers.PDF
         [AllowAnonymous]
         public async Task<IActionResult> PdfRemito(long id, [FromServices] DeliveryNotesService service)
         {
-            var factura = await service.GetById(id);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var factura = await service.GetById(id, requestedBy);
             var dtoEncabezado = new DtoRequestEncabezadoPDF()
             {
                 TituloComprobante = "Remito",
@@ -229,7 +235,8 @@ namespace Ordbox.Api.Controllers.PDF
         [AllowAnonymous]
         public async Task<IActionResult> PdfRecibo(long id, [FromServices] QuittanceService service)
         {
-            var factura = await service.GetById(id);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            var factura = await service.GetById(id, requestedBy);
             var dtoEncabezado = new DtoRequestEncabezadoPDF()
             {
                 TituloComprobante = "Recibo",
@@ -273,8 +280,9 @@ namespace Ordbox.Api.Controllers.PDF
         [Route("pdfcomprobanteventaarca")]
         [AllowAnonymous]
         public async Task<IActionResult> PdfComprobanteARCA(long id, [FromServices] InvoiceService invoiceService)
-        { 
-            return File(await GenerarPdfFactura(id, invoiceService), "application/pdf", $"Factura_{DateTime.Now:dd-MM-yyyy}.pdf");
+        {
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return File(await GenerarPdfFactura(id, invoiceService, requestedBy), "application/pdf", $"Factura_{DateTime.Now:dd-MM-yyyy}.pdf");
         }
 
         /// <summary>
@@ -292,14 +300,14 @@ namespace Ordbox.Api.Controllers.PDF
             {
                 return BadRequest("Email address is required.");
             }
-
-            return Return(await _emailservice.SendEmailInvoice(emailTo, await GenerarPdfFactura(id, invoiceService)));
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _emailservice.SendEmailInvoice(emailTo, await GenerarPdfFactura(id, invoiceService, requestedBy)));
         }
 
         #region Private Method
-        private async Task<byte[]> GenerarPdfFactura(long id, InvoiceService invoiceService)
+        private async Task<byte[]> GenerarPdfFactura(long id, InvoiceService invoiceService, RequestedBy requestedBy)
         {
-            var factura = await invoiceService.GetById(id);
+            var factura = await invoiceService.GetById(id, requestedBy);
             if (factura.Data == null) return null;
 
             var contenido = await _service.PrintInvoiceARCA(factura.Data);
