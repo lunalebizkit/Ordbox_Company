@@ -18,3 +18,9 @@ export interface CompanyModel {
   companyPoint: number,
   isDeleted: boolean,
 }
+
+export interface CompanyCertificateModel {
+  companyId: number,
+  password: string,
+  certificateData: File | null
+}

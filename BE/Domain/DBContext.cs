@@ -229,5 +229,7 @@ namespace Ordbox.Domain
         public virtual DbSet<AuthRefresh> AuthRefreshes { get; set; }
 
         public virtual DbSet<Company> Companies { get; set; }
+
+        public virtual DbSet<CompanyCertificate> CompanyCertificates { get; set; }
     }
 }

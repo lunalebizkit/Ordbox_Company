@@ -127,6 +127,9 @@
                             </nz-form-item>
                         </div>
                     </form>
+                    @if (isEditMode() && id()) {
+                        <button nz-button nzType="primary" (click)="addCertificate()">Agregar certificado</button>
+                    }
 
                 </nz-col>
             </nz-row>

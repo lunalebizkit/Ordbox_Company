@@ -207,4 +207,10 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
         }
     }
 
+    addCertificate() {
+        if (this.id()>0){
+            this.router.navigate([`/home/companycertificate/edit/${this.id()}`]);
+        }
+    }
+
 }
