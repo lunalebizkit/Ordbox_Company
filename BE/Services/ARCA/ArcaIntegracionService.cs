@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model;
 using Ordbox.SDK.Error;
+using Ordbox.SDK.Security;
 using Ordbox.Services.ARCA.Dto;
 using Ordbox.Services.ARCA.Dto.Response;
 using Ordbox.Services.ARCA.Enum;
@@ -10,9 +14,6 @@ using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -39,12 +40,13 @@ namespace Ordbox.Services.ARCA
             _Env = env;
         }
         #endregion
-        public async Task<FEParamGetTiposDocResponseDto> ObtenerTiposDocumentoAsync(CancellationToken ct = default)
+
+        public async Task<FEParamGetTiposDocResponseDto> ObtenerTiposDocumentoAsync(DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                var auth = await ObtenerLoginTicketAsync(ct);
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
                 string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, _configuration.GetSection("Pdf:Cuit").Value, "FEParamGetTiposDoc");
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
                 httpContent.Headers.Clear();
@@ -62,12 +64,12 @@ namespace Ordbox.Services.ARCA
             }
         }
 
-        public async Task<FEParamGetTiposDocResponseDto> ObtenerTiposIvaAsync(CancellationToken ct = default)
+        public async Task<FEParamGetTiposDocResponseDto> ObtenerTiposIvaAsync(DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                var auth = await ObtenerLoginTicketAsync(ct);
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
                 string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, _configuration.GetSection("Pdf:Cuit").Value, "FEParamGetTiposIva");
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
                 httpContent.Headers.Clear();
@@ -87,7 +89,7 @@ namespace Ordbox.Services.ARCA
             }
         }
 
-        public async Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, CancellationToken ct = default)
+        public async Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
 
             IntegrationLogInvoice integrationLog = new IntegrationLogInvoice
@@ -99,7 +101,7 @@ namespace Ordbox.Services.ARCA
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                var auth = await ObtenerLoginTicketAsync(ct);
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
 
                 var ultimoComprobante = await ConsultarUltimoComprobanteAsync(invoice.Type, auth.Token, auth.Sign, ct);
 
@@ -214,12 +216,10 @@ namespace Ordbox.Services.ARCA
             }
         }
 
-        public async Task<LoginTicketResponseDto> ObtenerLoginTicketAsync(CancellationToken ct = default)
+        public async Task<LoginTicketResponseDto> ObtenerLoginTicketAsync(DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
-            DtoRequestIntegrationLog integrationLog = new();
+            DtoRequestIntegrationLog integrationLog = new();            
 
-            string pfxPassword = _arcaConfig.PfxPassword;
-            string pfxPath = Path.Combine(_Env.ContentRootPath, "Assets", _arcaConfig.PfxPath);
             string wsaaUrl = _arcaConfig.URLLogin;
             string service = "wsfe";
 
@@ -247,7 +247,7 @@ namespace Ordbox.Services.ARCA
             DateTimeOffset expirationTime = ahora.AddHours(12);
 
             var xmlRequest = BuildLoginTicketRequestXml(uniqueId, generationTime, expirationTime, service);
-            var cmsFirmadoBase64 = SignXmlCmsBase64(xmlRequest, pfxPath, pfxPassword);
+            var cmsFirmadoBase64 = SignXmlCmsBase64(xmlRequest, companyCertificate.CertificateData, companyCertificate.PasswordEncrypted);
 
             integrationLog = CreateLog(wsaaUrl, xmlRequest, uniqueId, generationTime, expirationTime);
 
@@ -651,9 +651,15 @@ namespace Ordbox.Services.ARCA
         #endregion
 
 
-        private static string SignXmlCmsBase64(string xml, string pfxPath, string pfxPassword)
+        private static string SignXmlCmsBase64(string xml, byte[] encryptedCert, byte[] encryptedPassword)
         {
-            var cert = new X509Certificate2(File.ReadAllBytes(pfxPath), pfxPassword, X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
+
+            byte[]? pfxPassword = EncryptDecryptWithSeed.AESDecrypt(encryptedPassword, passByted);
+            byte[] decryptedCert = EncryptDecryptWithSeed.AESDecrypt(encryptedCert, passByted);
+            string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
+
+            var cert = new X509Certificate2(decryptedCert, decryptedPassword, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.EphemeralKeySet);
 
             if (!cert.HasPrivateKey) throw new InvalidOperationException("El certificado no contiene clave privada.");
             if (DateTime.UtcNow < cert.NotBefore.ToUniversalTime() || DateTime.UtcNow > cert.NotAfter.ToUniversalTime())

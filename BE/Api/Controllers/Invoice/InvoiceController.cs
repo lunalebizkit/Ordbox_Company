@@ -6,6 +6,7 @@ using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Services;
 using System.IO.Compression;
 
@@ -14,11 +15,13 @@ namespace Ordbox.Api.Controllers.Invoice
     public class InvoiceController : ApiBaseController
     {
         private readonly InvoiceService _service;
+        private readonly CompanyService _companyService;
         private readonly IArcaIntegracion _arcaIntegracionService;
 
-        public InvoiceController(InvoiceService service, IArcaIntegracion arcaIntegracionService)
+        public InvoiceController(InvoiceService service, CompanyService companyService, IArcaIntegracion arcaIntegracionService)
         {
             _service = service;
+            _companyService = companyService;
             _arcaIntegracionService = arcaIntegracionService;
         }
 
@@ -197,13 +200,15 @@ namespace Ordbox.Api.Controllers.Invoice
         { 
             var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
 
-            if (invoice.Success && invoice.Data != null)
+            DtoResponseCompanyCertificate? certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
+
+            if (invoice.Success && invoice.Data != null && certificate != null && certificate.IsActive)
             {
                 invoice.Data.DateTime = dateTime == null ? invoice.Data.DateTime : DateTime.Now;
 
                 if (!string.IsNullOrEmpty(observacion)) { invoice.Data.Observation = observacion; }
 
-                var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data).ConfigureAwait(false);
+                var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
                 {

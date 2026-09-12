@@ -174,7 +174,7 @@ export class PermissionService {
     }, 
     
     //#endregion
-    //permission rol
+    //region Permission rol
     {
       url: new RegExp('/home/permission'),
       permissions: [
@@ -182,7 +182,7 @@ export class PermissionService {
       ],
     },
 
-    //#regionIva
+    //#region Iva
     {
       url: new RegExp('/home/iva/ivaCompra'),
       permissions: [
@@ -196,7 +196,7 @@ export class PermissionService {
     },
     //#endrregion
 
-      //#regionReporteZ
+      //#region ReporteZ
       {
         url: new RegExp('/home/report'),
         permissions: [
@@ -211,14 +211,14 @@ export class PermissionService {
       },
       //#endrregion
 
-      //#regionBudget
+      //#region Budget
       {
         url: new RegExp('/home/budgets'),
         permissions: [Permission.GetBudget, Permission.CreateBudget],
       },
       //#endrregion
 
-      //#regionDeliveryNote
+      //#region DeliveryNote
       {
         url: new RegExp('/home/delivery-notes'),
         permissions: [Permission.GetRemito, Permission.CreateRemito],
@@ -232,7 +232,7 @@ export class PermissionService {
         permissions: [Permission.GetRemito, Permission.CreateRemito],
       },
       //#endrregion
-      //#regionQuittance
+      //#region Quittance
       {
         url: new RegExp('/home/quittance'),
         permissions: [Permission.GetQuittance, Permission.CreateQuittance],
@@ -257,7 +257,11 @@ export class PermissionService {
         url: new RegExp('/home/companies/edit/:id'),
         permissions: [Permission.CreateCompany, Permission.ViewCompany],
       },
-      //#endrregion
+      {
+        url: new RegExp('/home/companycertificate/edit/'),
+        permissions: [Permission.CreateCompanyCertificate, Permission.GetCompanyCertificate],
+      },
+      //#endregion
   ];
 
   public hasPermission(url: string) {

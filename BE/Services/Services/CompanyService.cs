@@ -8,18 +8,17 @@ using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Ordbox.Domain.Model.Extensions;
 
 namespace Ordbox.Services.Services
 {
     public class CompanyService : BaseService
 
     {
-        private readonly EmailService _emailService;
         public CompanyService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration, EmailService emailService) :
             base(logger, context, maper, configuration)
 
         {
-            this._emailService = emailService;
         }
 
         //Agregar Compañia nuevo
@@ -183,7 +182,61 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
-       
+
+        public async Task<OperationResponse<IdResponse<long>>> AddCertificate(DtoRequestCompanyCertificate model, byte[] fileBytes, RequestedBy requestedBy, CancellationToken ct = default)
+        {
+            try
+            {
+                var newModel = _mapper.Map<CompanyCertificate>(model);
+
+                byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
+                byte[] encryptedCert = EncryptDecryptWithSeed.AESEncrypt(fileBytes, passByted);
+
+                newModel.PasswordEncrypted = EncryptDecryptWithSeed.AESEncrypt(System.Text.Encoding.UTF8.GetBytes(model.Password), passByted);
+                newModel.CertificateData = EncryptDecryptWithSeed.AESEncrypt(fileBytes, passByted);
+
+                if (newModel.Id == 0)
+                {
+                    await _contextSql.CompanyCertificates.AddAsync(newModel, ct).ConfigureAwait(false);
+
+                }
+                else
+                {
+                    var oldModel = await _contextSql
+                                .CompanyCertificates
+                                .FirstAsync(p => p.Id == newModel.Id, ct)
+                                .ConfigureAwait(false);
+
+                    _contextSql.Entry(oldModel).CurrentValues.SetValues(newModel);
+
+                }
+                await _contextSql.SaveChangesAsync(ct).ConfigureAwait(false);
+
+                return Ok(new IdResponse<long>(newModel.Id));
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex);
+                throw;
+            }
+        }
+
+        public async Task<DtoResponseCompanyCertificate> GetCompanyCertificateAsync(long companyId)
+        {
+            var certificate = await _contextSql.CompanyCertificates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CompanyId == companyId && c.IsActive)
+                .ConfigureAwait(false);
+
+            if (certificate == null)
+            {
+                _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_004_ELEMENT_NOT_FOUND));
+                return null;
+            }
+            return _mapper.Map<DtoResponseCompanyCertificate>(certificate);
+        }
 
     }
 }

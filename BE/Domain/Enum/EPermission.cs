@@ -76,5 +76,9 @@ namespace Ordbox.Domain.Enum
         //Company
         ViewCompany = 49,
         CreateCompany = 50,
+
+        //CompanyCertificate
+        GetCompanyCertificate = 51,
+        CreateCompanyCertificate = 52,
     }
 }

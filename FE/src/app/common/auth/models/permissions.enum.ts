@@ -67,4 +67,6 @@ export enum Permission {
   //Company
   ViewCompany = 49,
   CreateCompany = 50,
+  GetCompanyCertificate = 51,
+  CreateCompanyCertificate = 52,
 }

@@ -289,6 +289,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/home/company/company-edit/companies-edit.component').then((m) => m.CompaniesEditComponent),
       },
+      {
+        canActivate: [AuthGuard],
+        path: 'companycertificate/edit/:id',
+        loadComponent: () =>
+          import('./pages/home/company/company-certificate-edit/company-certificate-edit.component').then((m) => m.CompanyCertificateEditComponent),
+      },
     ]
   },
 ];

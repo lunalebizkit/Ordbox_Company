@@ -1,12 +1,27 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 namespace Ordbox.SDK.Security
 {
     public static class EncryptDecryptWithSeed
     {
+        private const string DefaultKey = "E6t187^D43%F";
         public static RijndaelManaged AES = null;
+
+        private const int Iterations = 10000;
+
+        private static byte[] GenerateSalt()
+        {
+            var salt = new byte[16];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
+            return salt;
+        }
+
+        public static byte[] GetPasswordBytes(string? keyOverride = null)
+        {
+            string key = keyOverride ?? DefaultKey;
+            return SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
+        }
 
         public static byte[] saltBytes = new byte[8]
         {
@@ -20,7 +35,7 @@ namespace Ordbox.SDK.Security
             8
         };
 
-        public static byte[] AESEncrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes, int iterations = 10)
+        public static byte[] AESEncrypt(byte[] bytesToBeEncrypted, byte[] passwordBytes, int iterations = Iterations)
         {
             if (AES == null)
             {
@@ -46,7 +61,7 @@ namespace Ordbox.SDK.Security
             }
         }
 
-        public static byte[] AESDecrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes, int iterations = 10)
+        public static byte[] AESDecrypt(byte[] bytesToBeDecrypted, byte[] passwordBytes, int iterations = Iterations)
         {
             if (AES == null)
             {
