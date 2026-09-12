@@ -1,8 +1,6 @@
-import { Injectable, EventEmitter, Output } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from "rxjs";
+import { Injectable, signal, computed } from '@angular/core';
+import { Observable, tap } from "rxjs";
 import { AuthUserModel } from "../models/auth-user.model";
-import { HttpClient } from '@angular/common/http';
-import { ApiService } from '../../services/api.base.service';
 import { SecurityAuthService } from '../../../pages/auth/security-auth.service';
 
 @Injectable({
@@ -11,50 +9,32 @@ import { SecurityAuthService } from '../../../pages/auth/security-auth.service';
 
 export class AuthService {
 
-  /* Modal para log in de usuario */
-  // @Output() activateAuthModal = new EventEmitter();
+  private userSignal = signal<AuthUserModel | null>(
+    JSON.parse(localStorage.getItem('auth-user')!)
+  );
 
-  /** Usuario de la aplicacion*/
-  public user: BehaviorSubject<AuthUserModel>;
+  isLoggedIn = computed(() => !!this.userSignal());
 
   /**
    * Constructor
    */
   constructor(
-    private http: HttpClient,
-    private service: SecurityAuthService
-  ) {
-    this.user = new BehaviorSubject<AuthUserModel>(JSON.parse(localStorage.getItem('auth-user')!));
-
-  }
-  /* Medtodo para setear Token y Obtener */
-  public set tokenLS(token: string) {
-    localStorage.setItem('token', JSON.stringify(token));
-  }
+    private service: SecurityAuthService,
+  ) { }
+  
   public get tokenLS(): string {
     return JSON.parse(localStorage.getItem('token')!);
-  }
-  /* Medtodo para setear RefreshToken y Obtener */
-  public set refreshTokenLS(refreshtoken: string) {
-    localStorage.setItem('refreshtoken', JSON.stringify(refreshtoken));
-  }
+  }  
 
   public get refreshTokenLS(): string {
     return JSON.parse(localStorage.getItem('refreshtoken')!);
   }
-  /* Metodo para setea usuario y obtener */
-  public get currentUser(): AuthUserModel {
-    return this.user.value;
-  }
-  public set currentUser(user: AuthUserModel) {
-    localStorage.setItem('auth-user', JSON.stringify(user));
-    this.user = new BehaviorSubject<AuthUserModel>(user);
-  }
-
+  
   private saveTokens(response: AuthUserModel): void {
-    this.tokenLS = response.token;
-    this.refreshTokenLS = response.refreshToken;
-    this.currentUser = response;
+    localStorage.setItem('token', JSON.stringify(response.token));
+    localStorage.setItem('refreshtoken', JSON.stringify(response.refreshToken));
+    localStorage.setItem('auth-user', JSON.stringify(response));
+    this.userSignal.set(response);
   }
 
   /**
@@ -64,10 +44,18 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshtoken');
     localStorage.removeItem('auth-user');
+    this.userSignal.set(null);
+  }
+
+  login(model: { userName: string; password: string }) {
+    return this.service.login(model).pipe(
+      tap((r: AuthUserModel) => {
+        this.saveTokens(r);
+      })
+    );
   }
 
   refreshToken(): Observable<AuthUserModel> {
-
     const refreshToken = this.refreshTokenLS;
 
     if (!refreshToken) {
@@ -81,4 +69,7 @@ export class AuthService {
       ));
   }
 
+  currentUser() {
+    return this.userSignal();
+  }
 }

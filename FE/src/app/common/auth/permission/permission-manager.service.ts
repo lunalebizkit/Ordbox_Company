@@ -269,7 +269,7 @@ export class PermissionService {
       return this.router.navigate(['auth/login']);
     }
 
-    let permissions = this.auth.currentUser.permission;
+    let permissions = this.auth.currentUser()?.permission;
 
     let hasPermission = this.checkPermissions(url, permissions);
     if (!hasPermission) {
@@ -279,21 +279,18 @@ export class PermissionService {
     return hasPermission;
   }
 
-  private checkPermissions(url: string, permissions: Permission[]): boolean {
+  private checkPermissions(url: string, permissions: Permission[] | undefined): boolean {
     let permissionUrl = this.permission.find((p) =>
       p.url.test(url)
     )?.permissions;
     if (!permissionUrl) return false;
 
-    return permissions.findIndex((i) => permissionUrl?.includes(i)) !== -1;
+    return permissions?.findIndex((i) => permissionUrl?.includes(i)) !== -1;
   }
 
   public validatePermissionKey(permissionKey: Permission[]): boolean {
-    let userPerms = this.auth.currentUser.permission;
+    let userPerms = this.auth.currentUser()?.permission ?? [];
 
-    let valid =
-      userPerms && permissionKey.findIndex((i) => userPerms.includes(i)) !== -1;
-
-    return valid;
+    return permissionKey?.some(p => userPerms.includes(p)) ?? false;
   }
 }

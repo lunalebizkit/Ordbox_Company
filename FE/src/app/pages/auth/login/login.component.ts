@@ -1,7 +1,6 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NzMessageService } from 'ng-zorro-antd/message';
 import { Subscription } from 'rxjs';
 import { SecurityAuthService } from '../security-auth.service';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -10,6 +9,7 @@ import { AuthService } from '../../../common/auth/interceptors/auth.service';
 import myData from '../../../../../package.json'
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzImageModule } from 'ng-zorro-antd/image';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -39,12 +39,12 @@ export class LoginComponent implements OnInit, OnDestroy {
    * Constructor
    */
   constructor(
-    private message: NzMessageService,
     private fb: FormBuilder,
     private router: Router,
     private token: AuthService,
     private route: ActivatedRoute,
-    private service: SecurityAuthService
+    private service: SecurityAuthService,
+    private notification: NzNotificationService
   ) {}
   //   /**
   //    * Init event
@@ -63,22 +63,24 @@ export class LoginComponent implements OnInit, OnDestroy {
   /**
    * Evento de login
    */
-  login(token?: string) {
+  login() {
     let model = this.getModel();
     this.isSaving.set(true);
 
-    this.service.login(model).subscribe({
+    this.token.login(model).subscribe({
       next: (r) => {
         this.isSaving.set(false);
-        this.token.tokenLS = r.token;
-        this.token.refreshTokenLS = r.refreshToken;
-        this.token.currentUser = r;
         this.router.navigate(['/home/products'], { relativeTo: this.route });
-        this.message.success('Bienvenido' + ' ' + r.userName);
+        this.notification.success(
+          `Bienvenido ${r.userName}`,'',
+          { nzPlacement: 'bottomRight' }
+        );
       },
       error: () => {
         this.isSaving.set(false);
-        this.message.error('Usuario o Contraseña invalido!!!');
+        this.notification.error('Usuario o Contraseña invalido!', '',
+          { nzPlacement: 'bottomRight' }
+        );
       },
     });
   }

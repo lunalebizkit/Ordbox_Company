@@ -176,7 +176,7 @@ export class InvoicesEditComponent extends BaseComponent implements OnInit {
 
     this.paymentSelected = Object.entries(ePayment).find(([key, value]) => value === 'Contado')?.[0];
 
-    this.userId.set(this.serviceUser.currentUser.id);
+    this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
 
     this.formInvoice.get('customerCuit')?.valueChanges.subscribe(value => {
       if (typeof value === 'string') {

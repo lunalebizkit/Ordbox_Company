@@ -171,7 +171,7 @@ export class CreditsEditComponent extends BaseComponent implements OnInit {
           this.isInvoiceEditable.set(true);
           this.formCreditMemo.enable();
           this.formProductSearch.enable();
-          this.userId.set(this.serviceUser.currentUser.id);
+          this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
         }
       },
       error: () => {
@@ -463,7 +463,7 @@ export class CreditsEditComponent extends BaseComponent implements OnInit {
       this.formCreditMemo.controls['customerAddress'].setValue('S/D');
       this.formCreditMemo.controls['customerCuit'].setValue('99999999995');
       this.formCreditMemo.controls['customerName'].setValue('-');
-      this.customerId.set(this.serviceUser.currentUser.id);
+      this.customerId.set(this.serviceUser.currentUser()?.id ?? 0);
       return;
     } else {
       if (this.cuit.length >= 6) {

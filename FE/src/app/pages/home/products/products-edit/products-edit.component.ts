@@ -393,7 +393,7 @@ export class ProductsEditComponent extends BaseComponent implements OnInit {
   }
 
   hasPermission(permissionId: Permission): boolean {
-    return this.permissionService.currentUser.permission.includes(permissionId);
+    return this.permissionService.currentUser()?.permission.includes(permissionId) ?? false;
   }
   
   toggleEdit() {

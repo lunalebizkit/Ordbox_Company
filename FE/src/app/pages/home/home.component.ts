@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, signal, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterOutlet, RouterLinkWithHref, RouterModule } from '@angular/router';
 import { NzModalService, NzModalModule } from 'ng-zorro-antd/modal';
@@ -9,6 +9,7 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzImageModule } from 'ng-zorro-antd/experimental/image';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { Permission } from '../../common/auth/models/permissions.enum';
 
 @Component({
   selector: 'app-home',
@@ -19,8 +20,8 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 export class HomeComponent implements OnInit {
   @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
   
-  usuario!: string;
-  permiso:any;
+  usuario= signal<string | undefined>(undefined);
+  permiso= signal<Permission [] | undefined>(undefined);
   color!: string;
   formModal!: FormGroup;
   
@@ -47,8 +48,8 @@ export class HomeComponent implements OnInit {
     return new Date().getFullYear();
   }
   getUser(){
-    this.usuario=this.token.currentUser.userName;
-    this.permiso= this.token.currentUser.permission;
+    this.usuario.set(this.token.currentUser()?.userName);
+    this.permiso.set(this.token.currentUser()?.permission);
   }
 
   logOut() {

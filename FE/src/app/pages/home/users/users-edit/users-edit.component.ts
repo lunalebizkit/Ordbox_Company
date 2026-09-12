@@ -104,7 +104,7 @@ export class UsersEditComponent extends BaseComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.isAdminRol.set(this.user.currentUser.rol == "1");
+        this.isAdminRol.set(this.user.currentUser()?.rol == "1");
         this.route.params.subscribe({
             next: (p) => {
                 if (p['id']) {

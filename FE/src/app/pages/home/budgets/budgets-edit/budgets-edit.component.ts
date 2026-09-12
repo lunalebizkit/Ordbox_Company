@@ -143,7 +143,7 @@ export class BudgetsEditComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userId.set(this.serviceUser.currentUser.id);
+    this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
     this.route.params.subscribe({
       next: (p) => {
         if (p['id']) {
@@ -351,7 +351,7 @@ export class BudgetsEditComponent extends BaseComponent implements OnInit {
       this.form.controls['customerAddress'].setValue('S/D');
       this.form.controls['customerCuit'].setValue('99999999995');
       this.form.controls['customerName'].setValue('-');
-      this.customerId.set(this.serviceUser.currentUser.id);
+      this.customerId.set(this.serviceUser.currentUser()?.id ?? 0);
       return;
     } else {
       if (this.cuit.length >= 6) {

@@ -72,7 +72,6 @@ export class AuthModalComponent extends BaseComponent implements OnInit {
       .subscribe({
           next: (r) => {
             this.authService.currentUser = r;
-            this.authService.tokenLS = r.token;
             this.modal.triggerOk();
           },
           error: e => {

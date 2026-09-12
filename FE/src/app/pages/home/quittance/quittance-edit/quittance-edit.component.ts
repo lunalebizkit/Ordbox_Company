@@ -136,7 +136,7 @@ export class QuittanceEditComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.userId.set(this.serviceUser.currentUser.id);
+    this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
     this.route.params.subscribe({
       next: (p) => {
         if (p['id']) {

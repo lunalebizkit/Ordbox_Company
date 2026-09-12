@@ -170,7 +170,7 @@ export class DebitsEditComponent extends BaseComponent implements OnInit {
           this.isInvoiceEditable.set(true);
           this.formDebitMemo.enable();
           this.formProductSearch.enable();
-          this.userId.set(this.serviceUser.currentUser.id);
+          this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
         }
       },
       error: () => {
@@ -482,7 +482,7 @@ export class DebitsEditComponent extends BaseComponent implements OnInit {
       this.formDebitMemo.controls['customerAddress'].setValue('S/D');
       this.formDebitMemo.controls['customerCuit'].setValue('99999999995');
       this.formDebitMemo.controls['customerName'].setValue('-');
-      this.customerId.set(this.serviceUser.currentUser.id);
+      this.customerId.set(this.serviceUser.currentUser()?.id ?? 0);
       return;
     } else {
       if (this.cuit.length >= 6) {

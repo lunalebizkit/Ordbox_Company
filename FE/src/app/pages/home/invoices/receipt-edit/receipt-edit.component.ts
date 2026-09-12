@@ -182,7 +182,7 @@ export class ReceiptEditComponent extends BaseComponent implements OnInit {
     formatCurrency(data, this.locale, '$', 'ARS', '1.1-2');
 
   ngOnInit(): void {
-    this.userId.set(this.serviceUser.currentUser.id);
+    this.userId.set(this.serviceUser.currentUser()?.id ?? 0);
     this.route.params.subscribe({
       next: (p) => {
         if (p['id']) {
