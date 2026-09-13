@@ -14,7 +14,7 @@
 
         public required string CompanyEmail { get; set; }
 
-        public required string CompanyEmailPass { get; set; }
+        public required byte[] CompanyEmailPass { get; set; }
 
         public string? CompanyDescription { get; set; }
 

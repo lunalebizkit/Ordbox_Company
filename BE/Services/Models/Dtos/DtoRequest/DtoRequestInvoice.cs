@@ -19,6 +19,8 @@ namespace Ordbox.Services.Models.Dtos.DtoRequest
 
         public string CustomerAddress { get; set; }
 
+        public string? CustomerEmail { get; set; }
+
         public string? Observation { get; set; }
 
         public DateTime DateTime { get; set; }

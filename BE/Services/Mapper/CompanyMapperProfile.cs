@@ -11,7 +11,9 @@ namespace Ordbox.Services.Mapper
         {
 
             CreateMap<Company, DtoResponseCompany>();
+
             CreateMap<DtoRequestCompany, Company>()
+                .ForMember(destination => destination.CompanyEmailPass, opt => opt.Ignore())
                .AfterMap((o, d, c) => { d.CompanyName = d.CompanyName.ToUpper(); })
                .AfterMap((o, d, c) => { d.CompanyOwnerName = d.CompanyOwnerName.ToUpper(); });
 

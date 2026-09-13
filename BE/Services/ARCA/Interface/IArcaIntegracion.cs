@@ -8,5 +8,8 @@ namespace Ordbox.Services.ARCA.Interface
     {
         Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, DtoResponseCompanyCertificate certificate, CancellationToken ct = default);
 
+        Task<DtoResponseARCAInvoice> CreateDebitNoteAsync(DtoRequestDebitMemo invoice, DtoResponseCompanyCertificate certificate, CancellationToken ct = default);
+
+        Task<DtoResponseARCAInvoice> CreateCreditNoteAsync(DtoRequestCreditMemo invoice, DtoResponseCompanyCertificate certificate,  CancellationToken ct = default);
     }
 }

@@ -17,7 +17,8 @@ namespace Ordbox.Services.Mapper
                     d.IvaTotal = o.InvoiceDetails.Sum(e => (e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + (e.Iva / 100.00m)) ));
                 });
 
-            CreateMap<Invoice, DtoRequestInvoice>();
+            CreateMap<Invoice, DtoRequestInvoice>()
+                .ForMember(destination => destination.CustomerEmail, option => option.MapFrom(source => source.Customer.EmailEntities.FirstOrDefault().Email));
 
             CreateMap<InvoiceDetail, DtoResponseInvoiceDetail>().ReverseMap();
 

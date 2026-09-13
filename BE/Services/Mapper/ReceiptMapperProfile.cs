@@ -14,7 +14,7 @@ namespace Ordbox.Services.Mapper
                 .AfterMap((o, d, c) =>
                 {
                     d.Total = o.ConcNoGravado + o.PercIngBrutos + o.PercIva + o.ReceiptDetails.Sum(p => (p.Quantity * p.Price) );
-                    d.IvaTotal = o.ReceiptDetails.Sum(e => e.Quantity *( e.Price - (e.Price /( 1 + e.Iva / 100.00m))) );
+                    d.IvaTotal = o.ReceiptDetails.Sum(e => (e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + (e.Iva / 100.00m))));
                     d.IsInactive = false;
                 });
 

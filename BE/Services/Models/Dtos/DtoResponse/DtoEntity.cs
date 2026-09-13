@@ -12,6 +12,8 @@
 
         public string? Address { get; set; }
 
+        public string? Email { get; set; }
+
         public List<string> PhoneEntity { get; set; }
 
         public List<string> EmailEntity { get; set; }

@@ -159,6 +159,138 @@ namespace Ordbox.Services.ARCA
             }
         }
 
+        public async Task<DtoResponseARCAInvoice> CreateCreditNoteAsync(DtoRequestCreditMemo data, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
+        {
+
+            IntegrationLogCredit integrationLog = new()
+            {
+                CreatedOn = DateTimeOffset.Now,
+                Endpoint = _arcaConfig.URLCAEBase,
+                CreditId = data.Id
+            };
+            try
+            {
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
+
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+
+                var ultimoComprobante = await ConsultarUltimoComprobanteAsync(MapCreditDocumentType(data.Type), auth.Token, auth.Sign, company, ct);
+
+                if (ultimoComprobante.CbteNro != null && ultimoComprobante.Errores.Any() == false)
+                {
+                    data.CreditMemoNumber = int.Parse(ultimoComprobante.CbteNro) + 1;
+                }
+                else
+                {
+                    integrationLog.Request = _requestUltimoComprobante;
+                    integrationLog.Success = false;
+                    integrationLog.Response = _responseUltimoComprobante;
+                    return new DtoResponseARCAInvoice
+                    {
+                        Resultado = "Error",
+                        Errores = new List<string> { "No se pudo obtener el último número de comprobante autorizado." }
+                    };
+                }
+
+                string soapRequest = BuildCreditSoapRequest(data, auth.Token, auth.Sign, company);
+
+                integrationLog.Request = soapRequest;
+
+                var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
+                httpContent.Headers.Clear();
+                httpContent.Headers.Add("Content-Type", "text/xml; charset=utf-8");
+                httpContent.Headers.Add("SOAPAction", "http://ar.gov.afip.dif.FEV1/FECAESolicitar");
+                var response = await _httpClient.PostAsync(_arcaConfig.URLCAEBase, httpContent, ct);
+                string soapResponse = await response.Content.ReadAsStringAsync();
+
+                integrationLog.Success = response.IsSuccessStatusCode;
+                integrationLog.Response = soapResponse;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    integrationLog.Success = false;
+                    throw new Exception($"AFIP devolvió error {response.StatusCode}: {soapResponse}");
+                }
+
+                return ParseSoapResponse(soapResponse, data.CreditMemoNumber);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+                throw;
+            }
+            finally
+            {
+                SaveIntegrationLog(integrationLog);
+            }
+        }
+
+        public async Task<DtoResponseARCAInvoice> CreateDebitNoteAsync(DtoRequestDebitMemo data, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
+        {
+            IntegrationLogDebit integrationLog = new()
+            {
+                CreatedOn = DateTimeOffset.Now,
+                Endpoint = _arcaConfig.URLCAEBase,
+                DebitId = data.Id
+            };
+            try
+            {
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
+
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+
+                var ultimoComprobante = await ConsultarUltimoComprobanteAsync(MapDebitDocumentType(data.Type), auth.Token, auth.Sign, company, ct);
+
+                if (ultimoComprobante.CbteNro != null && ultimoComprobante.Errores.Any() == false)
+                {
+                    data.DebitMemoNumber = int.Parse(ultimoComprobante.CbteNro) + 1;
+                }
+                else
+                {
+                    integrationLog.Request = _requestUltimoComprobante;
+                    integrationLog.Success = false;
+                    integrationLog.Response = _responseUltimoComprobante;
+                    return new DtoResponseARCAInvoice
+                    {
+                        Resultado = "Error",
+                        Errores = new List<string> { "No se pudo obtener el último número de comprobante autorizado." }
+                    };
+                }
+
+                string soapRequest = BuildDebitSoapRequest(data, auth.Token, auth.Sign, company);
+
+                integrationLog.Request = soapRequest;
+
+                var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
+                httpContent.Headers.Clear();
+                httpContent.Headers.Add("Content-Type", "text/xml; charset=utf-8");
+                httpContent.Headers.Add("SOAPAction", "http://ar.gov.afip.dif.FEV1/FECAESolicitar");
+                var response = await _httpClient.PostAsync(_arcaConfig.URLCAEBase, httpContent, ct);
+                string soapResponse = await response.Content.ReadAsStringAsync();
+
+                integrationLog.Success = response.IsSuccessStatusCode;
+                integrationLog.Response = soapResponse;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    integrationLog.Success = false;
+                    throw new Exception($"AFIP devolvió error {response.StatusCode}: {soapResponse}");
+                }
+
+                return ParseSoapResponse(soapResponse, data.DebitMemoNumber);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+                throw;
+            }
+            finally
+            {
+                SaveIntegrationLog(integrationLog);
+            }
+        }
+
+
         public async Task<DtoResponseArcaUltimoComprobante> ConsultarUltimoComprobanteAsync(int docType, string token, string sign, Company company, CancellationToken ct = default)
         {
             try
@@ -532,6 +664,144 @@ namespace Ordbox.Services.ARCA
             return doc.ToString(SaveOptions.DisableFormatting);
         }
 
+        private string BuildCreditSoapRequest(DtoRequestCreditMemo dto, string token, string sign, Company company)
+        {
+            XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
+            XNamespace ar = "http://ar.gov.afip.dif.FEV1/";
+            string cuitEmisor = company.CompanyCuit.Replace("-", "");
+
+            var doc = new XDocument(
+                new XElement(soapenv + "Envelope",
+                    new XAttribute(XNamespace.Xmlns + "soapenv", soapenv),
+                    new XAttribute(XNamespace.Xmlns + "ar", ar),
+                    new XElement(soapenv + "Header"),
+                    new XElement(soapenv + "Body",
+                        new XElement(ar + "FECAESolicitar",
+                            new XElement(ar + "Auth",
+                                new XElement(ar + "Token", token),
+                                new XElement(ar + "Sign", sign),
+                                new XElement(ar + "Cuit", cuitEmisor)
+                            ),
+                            new XElement(ar + "FeCAEReq",
+                                new XElement(ar + "FeCabReq",
+                                    new XElement(ar + "CantReg", 1),
+                                    new XElement(ar + "PtoVta", company.CompanyPoint),
+                                    new XElement(ar + "CbteTipo", MapCreditDocumentType(dto.Type))
+                                ),
+                                new XElement(ar + "FeDetReq",
+                                    new XElement(ar + "FECAEDetRequest",
+                                        new XElement(ar + "Concepto", (int)company.CompanyConcept),
+                                        new XElement(ar + "DocTipo", MapPersonIdentificationType(dto.CustomerCuit)),
+                                        new XElement(ar + "DocNro", dto.CustomerCuit),
+                                        new XElement(ar + "CbteDesde", dto.CreditMemoNumber),
+                                        new XElement(ar + "CbteHasta", dto.CreditMemoNumber),
+                                        new XElement(ar + "CbteFch", dto.DateTime.ToString("yyyyMMdd")),
+                                        new XElement(ar + "ImpTotal", (dto.Total)),
+                                        new XElement(ar + "ImpTotConc", 0),
+                                        new XElement(ar + "ImpNeto", (dto.Total - dto.IvaTotal)),
+                                        new XElement(ar + "ImpOpEx", 0),
+                                        new XElement(ar + "ImpTrib", 0),
+                                        new XElement(ar + "ImpIVA", dto.IvaTotal),
+                                        new XElement(ar + "MonId", CustomizationConstant.TipoMoneda),
+                                        new XElement(ar + "MonCotiz", CustomizationConstant.MonCotiz),
+                                        new XElement(ar + "CondicionIVAReceptorId", MapCondicionFrenteIvaReceptor(dto.Type)),
+                                        new XElement(ar + "Iva",
+                                            dto.CreditMemoDetail
+                                            .GroupBy(y => y.Iva)
+                                            .Select(g =>
+                                                new XElement(ar + "AlicIva",
+                                                    new XElement(ar + "Id", MapIVAType(g.Key)),
+                                                    new XElement(ar + "BaseImp", g.Sum(i => (i.Price * i.Quantity) - Math.Round(CalculateIvaAmount(i), 2))),
+                                                    new XElement(ar + "Importe", g.Sum(i => Math.Round(CalculateIvaAmount(i), 2))))
+                                                )
+                                        ),
+                                        new XElement(ar + "CbtesAsoc",
+                                                new XElement(ar + "CbteAsoc",
+                                                    new XElement(ar + "Tipo", MapDocumentType(dto.Type)),
+                                                    new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                                                    new XElement(ar + "Nro", dto.InvoiceNumber)
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+            );
+
+            return doc.ToString(SaveOptions.DisableFormatting);
+        }
+
+        private string BuildDebitSoapRequest(DtoRequestDebitMemo dto, string token, string sign, Company company)
+        {
+            XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
+            XNamespace ar = "http://ar.gov.afip.dif.FEV1/";
+            string cuitEmisor = company.CompanyCuit.Replace("-", "");
+
+            var doc = new XDocument(
+                new XElement(soapenv + "Envelope",
+                    new XAttribute(XNamespace.Xmlns + "soapenv", soapenv),
+                    new XAttribute(XNamespace.Xmlns + "ar", ar),
+                    new XElement(soapenv + "Header"),
+                    new XElement(soapenv + "Body",
+                        new XElement(ar + "FECAESolicitar",
+                            new XElement(ar + "Auth",
+                                new XElement(ar + "Token", token),
+                                new XElement(ar + "Sign", sign),
+                                new XElement(ar + "Cuit", cuitEmisor)
+                            ),
+                            new XElement(ar + "FeCAEReq",
+                                new XElement(ar + "FeCabReq",
+                                    new XElement(ar + "CantReg", 1),
+                                    new XElement(ar + "PtoVta", company.CompanyPoint),
+                                    new XElement(ar + "CbteTipo", MapDebitDocumentType(dto.Type))
+                                ),
+                                new XElement(ar + "FeDetReq",
+                                    new XElement(ar + "FECAEDetRequest",
+                                        new XElement(ar + "Concepto", (int)company.CompanyConcept),
+                                        new XElement(ar + "DocTipo", MapPersonIdentificationType(dto.CustomerCuit)),
+                                        new XElement(ar + "DocNro", dto.CustomerCuit),
+                                        new XElement(ar + "CbteDesde", dto.DebitMemoNumber),
+                                        new XElement(ar + "CbteHasta", dto.DebitMemoNumber),
+                                        new XElement(ar + "CbteFch", dto.DateTime.ToString("yyyyMMdd")),
+                                        new XElement(ar + "ImpTotal", (dto.Total)),
+                                        new XElement(ar + "ImpTotConc", 0),
+                                        new XElement(ar + "ImpNeto", (dto.Total - dto.IvaTotal)),
+                                        new XElement(ar + "ImpOpEx", 0),
+                                        new XElement(ar + "ImpTrib", 0),
+                                        new XElement(ar + "ImpIVA", dto.IvaTotal),
+                                        new XElement(ar + "MonId", CustomizationConstant.TipoMoneda),
+                                        new XElement(ar + "MonCotiz", CustomizationConstant.MonCotiz),
+                                        new XElement(ar + "CondicionIVAReceptorId", MapCondicionFrenteIvaReceptor(dto.Type)),
+                                        new XElement(ar + "Iva",
+                                            dto.DebitMemoDetails
+                                            .GroupBy(y => y.Iva)
+                                            .Select(g =>
+                                                new XElement(ar + "AlicIva",
+                                                    new XElement(ar + "Id", MapIVAType(g.Key)),
+                                                    new XElement(ar + "BaseImp", g.Sum(i => (i.Price * i.Quantity) - Math.Round(CalculateIvaAmount(i), 2))),
+                                                    new XElement(ar + "Importe", g.Sum(i => Math.Round(CalculateIvaAmount(i), 2))))
+                                                )
+                                        ),
+                                        new XElement(ar + "CbtesAsoc",
+                                                new XElement(ar + "CbteAsoc",
+                                                    new XElement(ar + "Tipo", MapDocumentType(dto.Type)),
+                                                    new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                                                    new XElement(ar + "Nro", dto.InvoiceNumber)
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+            );
+
+            return doc.ToString(SaveOptions.DisableFormatting);
+        }
+
         private string BuildGetTipoDocumentoRequestXml(string token, string sign, string cuit, string operation)
         {
             XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
@@ -783,6 +1053,32 @@ namespace Ordbox.Services.ARCA
             }
         }
 
+        private void SaveIntegrationLog(IntegrationLogCredit log)
+        {
+            try
+            {
+                _contextSql.IntegrationLogCredits.Add(log);
+                _contextSql.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+            }
+        }
+
+        private void SaveIntegrationLog(IntegrationLogDebit log)
+        {
+            try
+            {
+                _contextSql.IntegrationLogDebits.Add(log);
+                _contextSql.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+            }
+        }
+
         private static DtoRequestIntegrationLog CreateLog(string url, string xmlRequest, long? uniqueId, DateTimeOffset generationTime, DateTimeOffset expirationTime)
         {
             return new DtoRequestIntegrationLog
@@ -867,6 +1163,16 @@ namespace Ordbox.Services.ARCA
             return ((e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + e.Iva / 100.00m)));
         }
 
+        private static decimal CalculateIvaAmount(DtoResponseDebitMemoDetails e)
+        {
+            return ((e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + e.Iva / 100.00m)));
+        }
+
+        private static decimal CalculateIvaAmount(DtoResponseCreditMemoDetails e)
+        {
+            return ((e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + e.Iva / 100.00m)));
+        }
+
         private static int MapCondicionFrenteIvaReceptor(int invoiceType)
         {
             return (ETypeReceipt)invoiceType switch
@@ -875,6 +1181,26 @@ namespace Ordbox.Services.ARCA
                 ETypeReceipt.EXENTO => (int)ECondFrenteIvaReceptor.IvaSujetoExento,
                 ETypeReceipt.B => (int)ECondFrenteIvaReceptor.ConsumidorFinal,
                 ETypeReceipt.ResponsableMonotrinuto => (int)ECondFrenteIvaReceptor.ResponsableMonotributo,
+                _ => invoiceType,
+            };
+        }
+
+        private static int MapCreditDocumentType(int invoiceType)
+        {
+            return (ETypeReceipt)invoiceType switch
+            {
+                ETypeReceipt.A or ETypeReceipt.ResponsableMonotrinuto => (int)EInvoiceType.NotaCreditoA,
+                ETypeReceipt.EXENTO or ETypeReceipt.B => (int)EInvoiceType.NotaCreditoB,
+                _ => invoiceType,
+            };
+        }
+
+        private static int MapDebitDocumentType(int invoiceType)
+        {
+            return (ETypeReceipt)invoiceType switch
+            {
+                ETypeReceipt.A or ETypeReceipt.ResponsableMonotrinuto => (int)EInvoiceType.NotaDebitoA,
+                ETypeReceipt.EXENTO or ETypeReceipt.B => (int)EInvoiceType.NotaDebitoB,
                 _ => invoiceType,
             };
         }

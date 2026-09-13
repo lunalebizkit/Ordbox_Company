@@ -13,7 +13,7 @@ namespace Ordbox.Services.Mapper
                  .AfterMap((o, d, c) =>
                  {
                      d.Total = o.DebitMemoDetails.Sum(p => (p.Quantity * p.Price));
-                     d.IvaTotal = o.DebitMemoDetails.Sum(e => e.Quantity * (e.Price - (e.Price / (1 + e.Iva / 100.00m))));
+                     d.IvaTotal = o.DebitMemoDetails.Sum(e => (e.Quantity * e.Price) - ((e.Quantity * e.Price) / (1 + (e.Iva / 100.00m))));
                      d.DateTime = o.DateTime = DateTime.Now;
                  });
             CreateMap<DebitMemo, DtoRequestDebitMemo>();
