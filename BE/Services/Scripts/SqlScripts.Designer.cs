@@ -63,8 +63,11 @@ namespace Ordbox.Services.Scripts {
         /// <summary>
         ///   Busca una cadena traducida similar a SELECT [b].[id]
         ///      ,[b].[description]
+        ///      ,[b].[company_id] AS [companyId]
         ///  FROM [brand] [b]
-        ///  WHERE [b].[id] = @id;.
+        ///  WHERE
+        ///  [b].[id] = @id
+        ///  AND [b].[company_id] = @companyid.
         /// </summary>
         internal static string GetBrandById {
             get {
@@ -97,11 +100,11 @@ namespace Ordbox.Services.Scripts {
         ///      ,[b].[total]
         ///      ,[b].[payment]
         ///      ,[b].[is_inactive] AS [IsInactive]
+        ///      ,[b].[company_id] AS [CompanyId]
         ///	  ,[bd].[id]
         ///      ,[bd].[budget_id] AS [BudgetId]
         ///      ,[bd].[product_id] AS [ProductId]
-        ///      ,[bd].[product_name] AS [ProductName]
-        ///      ,[bd].[produc [resto de la cadena truncado]&quot;;.
+        ///      ,[bd].[product_nam [resto de la cadena truncado]&quot;;.
         /// </summary>
         internal static string GetBudgetById {
             get {
@@ -112,8 +115,10 @@ namespace Ordbox.Services.Scripts {
         /// <summary>
         ///   Busca una cadena traducida similar a SELECT [c].[id]
         ///      ,[c].[description]
+        ///      ,[c].[company_id]
         ///  FROM [category] [c]
-        ///  WHERE [c].[id] = @id;.
+        ///  WHERE [c].[id] = @id
+        ///  AND [c].[company_id] = @companyid;.
         /// </summary>
         internal static string GetCategoryById {
             get {
@@ -161,7 +166,8 @@ namespace Ordbox.Services.Scripts {
         ///  INNER JOIN [product] P
         ///  ON P.brand_id = B.id
         ///  WHERE B.id = @brandid
-        ///  AND P.[is_deleted] = 0.
+        ///  AND P.[is_deleted] = 0
+        ///  AND B.[company_id] = @companyid.
         /// </summary>
         internal static string GetCountBrandById {
             get {
@@ -174,11 +180,54 @@ namespace Ordbox.Services.Scripts {
         ///  INNER JOIN [product] P
         ///  ON P.[category_id] = C.id
         ///  WHERE C.id = @categoryid
-        ///  AND P.[is_deleted] = 0.
+        ///  AND P.[is_deleted] = 0
+        ///  AND C.[company_id] = @companyid.
         /// </summary>
         internal static string GetCountCategoryById {
             get {
                 return ResourceManager.GetString("GetCountCategoryById", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a SELECT TOP(1)
+        ///	[e].[id]
+        ///    FROM entity e
+        ///    INNER JOIN customer c ON c.[id] = [e].[id]
+        ///    WHERE REPLACE([e].[cuit], &apos;-&apos;, &apos;&apos;) = @cuit
+        ///    AND c.[company_id] = @companyid;.
+        /// </summary>
+        internal static string GetCustomerByCUIT {
+            get {
+                return ResourceManager.GetString("GetCustomerByCUIT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a WITH EntityCustomer AS (
+        ///    SELECT 
+        ///        [e].[id],
+        ///        [e].[dni],
+        ///        [e].[cuit],
+        ///        REPLACE([e].[cuit], &apos;-&apos;, &apos;&apos;) AS CuitNormalized,
+        ///        [e].[name],
+        ///        [e].[address],
+        ///        [ee].[email]
+        ///    FROM entity e
+        ///    INNER JOIN customer c ON c.[id] = [e].[id]
+        ///    OUTER APPLY (
+        ///        SELECT TOP 1 email
+        ///        FROM email_entity ee
+        ///        WHERE ee.entity_id = c.id
+        ///        ORDER BY ee.id
+        ///    ) ee
+        ///    WHERE [e].[isInactive] = 0 AND [c].[company_id] = @companyid
+        ///)
+        ///SELECT  [resto de la cadena truncado]&quot;;.
+        /// </summary>
+        internal static string GetCustomersByCUIT {
+            get {
+                return ResourceManager.GetString("GetCustomersByCUIT", resourceCulture);
             }
         }
         
@@ -263,7 +312,7 @@ namespace Ordbox.Services.Scripts {
         /// <summary>
         ///   Busca una cadena traducida similar a  SELECT (1) FROM [product] P
         ///  
-        ///  WHERE P.id = @productid.
+        ///  WHERE P.id = @productid AND P.company_id = @companyid.
         /// </summary>
         internal static string GetProductById {
             get {
@@ -286,6 +335,7 @@ namespace Ordbox.Services.Scripts {
         ///ON [B].[id] = [p].[brand_id]
         ///
         ///WHERE [quantity] &gt; 0 AND [is_deleted] = 0
+        ///AND [company_id] = @companyid
         ///ORDER BY [p].[description].
         /// </summary>
         internal static string GetProductReport {
@@ -359,6 +409,20 @@ namespace Ordbox.Services.Scripts {
         internal static string GetUserAdminId {
             get {
                 return ResourceManager.GetString("GetUserAdminId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a UPDATE [credit_memo]
+        ///        SET [cae] = @CAE,
+        ///            [cae_expiration_date] = @caexpirationdate,
+        ///            [integration_success] = @integrationsuccess,
+        ///            [creditMemo_number] = @creditmemonumber
+        ///        WHERE Id = @id;.
+        /// </summary>
+        internal static string UpdateCreditNoteCAE {
+            get {
+                return ResourceManager.GetString("UpdateCreditNoteCAE", resourceCulture);
             }
         }
         
