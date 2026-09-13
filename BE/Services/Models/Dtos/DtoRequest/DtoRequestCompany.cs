@@ -20,6 +20,8 @@
 
         public required short CompanyPoint { get; set; }
 
+        public required short CompanyConcept { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public IEnumerable<long> UserIds { get; set; } = [];

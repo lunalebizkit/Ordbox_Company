@@ -32,19 +32,19 @@ namespace Ordbox.Services.Services
         {
             try
             {
-                var user = await _contextSql
+                var model = await _contextSql
                                     .Companies
                                     .AsNoTracking()
                                     .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted)
                                     .ConfigureAwait(false);
 
-                if (user == null)
+                if (model == null)
                 {
                     _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_S002_CLIENTID_INVALIDO));
                     return Error<DtoResponseCompany>(new OperationExceptions("001", "El Compañia no es valido"));
                 }
 
-                var result = _mapper.Map<DtoResponseCompany>(user);
+                var result = _mapper.Map<DtoResponseCompany>(model);
                 return new OperationResponse<DtoResponseCompany>(result);
             }
             catch (Exception ex)

@@ -47,7 +47,9 @@ namespace Ordbox.Services.ARCA
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
                 var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
-                string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, _configuration.GetSection("Pdf:Cuit").Value, "FEParamGetTiposDoc");
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+
+                string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, company.CompanyCuit, "FEParamGetTiposDoc");
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
                 httpContent.Headers.Clear();
                 httpContent.Headers.Add("Content-Type", "text/xml; charset=utf-8");
@@ -70,7 +72,8 @@ namespace Ordbox.Services.ARCA
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
                 var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
-                string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, _configuration.GetSection("Pdf:Cuit").Value, "FEParamGetTiposIva");
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+                string soapRequest = BuildGetTipoDocumentoRequestXml(auth.Token, auth.Sign, company.CompanyCuit, "FEParamGetTiposIva");
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
                 httpContent.Headers.Clear();
                 httpContent.Headers.Add("Content-Type", "text/xml; charset=utf-8");
@@ -103,7 +106,9 @@ namespace Ordbox.Services.ARCA
                 string wsaaUrl = _arcaConfig.URLCAEBase;
                 var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
 
-                var ultimoComprobante = await ConsultarUltimoComprobanteAsync(invoice.Type, auth.Token, auth.Sign, ct);
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+
+                var ultimoComprobante = await ConsultarUltimoComprobanteAsync(invoice.Type, auth.Token, auth.Sign, company, ct);
 
                 if (ultimoComprobante.CbteNro != null && ultimoComprobante.Errores.Any() == false)
                 {
@@ -121,7 +126,7 @@ namespace Ordbox.Services.ARCA
                     };
                 }
 
-                string soapRequest = BuildSoapRequest(invoice, auth.Token, auth.Sign);
+                string soapRequest = BuildSoapRequest(invoice, auth.Token, auth.Sign, company);
 
                 integrationLog.Request = soapRequest;
 
@@ -154,12 +159,12 @@ namespace Ordbox.Services.ARCA
             }
         }
 
-        public async Task<DtoResponseArcaUltimoComprobante> ConsultarUltimoComprobanteAsync(int docType, string token, string sign, CancellationToken ct = default)
+        public async Task<DtoResponseArcaUltimoComprobante> ConsultarUltimoComprobanteAsync(int docType, string token, string sign, Company company, CancellationToken ct = default)
         {
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                string soapRequest = BuildGetUltimoComprobanteRequestXml(token, sign, _configuration.GetSection("Pdf:Cuit").Value, "FECompUltimoAutorizado", docType);
+                string soapRequest = BuildGetUltimoComprobanteRequestXml(token, sign, company, docType);
                 _requestUltimoComprobante = soapRequest;
 
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
@@ -185,12 +190,12 @@ namespace Ordbox.Services.ARCA
             }
         }
         
-        public async Task<DtoResponseArcaUltimoComprobante> ConsultarPuntodeVentaAsync(string token, string sign, CancellationToken ct = default)
+        public async Task<DtoResponseArcaUltimoComprobante> ConsultarPuntodeVentaAsync(string token, string sign, Company company, CancellationToken ct = default)
         {
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                string soapRequest = BuildGetPuntoDeVentaRequestXml(token, sign, _configuration.GetSection("Pdf:Cuit").Value);
+                string soapRequest = BuildGetPuntoDeVentaRequestXml(token, sign, company.CompanyCuit.Replace("-", ""));
                 _requestUltimoComprobante = soapRequest;
 
                 var httpContent = new StringContent(soapRequest, Encoding.UTF8, "text/xml");
@@ -342,8 +347,8 @@ namespace Ordbox.Services.ARCA
             return new DtoResponseARCAInvoice
             {
                 InvoiceNumber = invoiceNumber,
-                Resultado = resultado,
-                Cae = cae,
+                Resultado = resultado ?? string.Empty,
+                Cae = cae ?? string.Empty,
                 FechaVencimientoCae = string.IsNullOrEmpty(fechaVto) ? null : DateTime.ParseExact(fechaVto, "yyyyMMdd", null),
                 Observaciones = observaciones,
                 Errores = errores
@@ -464,11 +469,11 @@ namespace Ordbox.Services.ARCA
 
         #region Create XML Requests, Firmar y Logueo
 
-        private string BuildSoapRequest(DtoRequestInvoice dto, string token, string sign)
+        private string BuildSoapRequest(DtoRequestInvoice dto, string token, string sign, Company company)
         {
             XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
             XNamespace ar = "http://ar.gov.afip.dif.FEV1/";
-            string cuitEmisor = _configuration.GetSection("Pdf:Cuit").Value;
+            string cuitEmisor = company.CompanyCuit.Replace("-", "");
 
             var doc = new XDocument(
                 new XElement(soapenv + "Envelope",
@@ -480,17 +485,17 @@ namespace Ordbox.Services.ARCA
                             new XElement(ar + "Auth",
                                 new XElement(ar + "Token", token),
                                 new XElement(ar + "Sign", sign),
-                                new XElement(ar + "Cuit", cuitEmisor.Replace("-", ""))
+                                new XElement(ar + "Cuit", cuitEmisor)
                             ),
                             new XElement(ar + "FeCAEReq",
                                 new XElement(ar + "FeCabReq",
                                     new XElement(ar + "CantReg", 1),
-                                    new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                                    new XElement(ar + "PtoVta", (int)company.CompanyPoint),
                                     new XElement(ar + "CbteTipo", MapDocumentType(dto.Type))
                                 ),
                                 new XElement(ar + "FeDetReq",
                                     new XElement(ar + "FECAEDetRequest",
-                                        new XElement(ar + "Concepto", (int)EConcepto.Productos),
+                                        new XElement(ar + "Concepto", (int)company.CompanyConcept),
                                         new XElement(ar + "DocTipo", MapPersonIdentificationType(dto.CustomerCuit)),
                                         new XElement(ar + "DocNro", dto.CustomerCuit),
                                         new XElement(ar + "CbteDesde", dto.InvoiceNumber),
@@ -542,7 +547,7 @@ namespace Ordbox.Services.ARCA
                             new XElement(ar + "Auth",
                                 new XElement(ar + "Token", token),
                                 new XElement(ar + "Sign", sign),
-                                new XElement(ar + "Cuit", 20328120543)
+                                new XElement(ar + "Cuit", cuit)
                             )
                         )
                     )
@@ -552,7 +557,7 @@ namespace Ordbox.Services.ARCA
             return doc.ToString(SaveOptions.DisableFormatting);
         }
 
-        private string BuildGetUltimoComprobanteRequestXml(string token, string sign, string cuit, string operation, int docType)
+        private string BuildGetUltimoComprobanteRequestXml(string token, string sign, Company company, int docType)
         {
             XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
             XNamespace ar = "http://ar.gov.afip.dif.FEV1/";
@@ -567,9 +572,9 @@ namespace Ordbox.Services.ARCA
                             new XElement(ar + "Auth",
                                 new XElement(ar + "Token", token),
                                 new XElement(ar + "Sign", sign),
-                                new XElement(ar + "Cuit", cuit.Replace("-", ""))
+                                new XElement(ar + "Cuit", company.CompanyCuit.Replace("-", ""))
                             ),
-                            new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                            new XElement(ar + "PtoVta", (int)company.CompanyPoint),
                             new XElement(ar + "CbteTipo", MapDocumentType(docType))
                         )
                     )
@@ -659,19 +664,24 @@ namespace Ordbox.Services.ARCA
             byte[] decryptedCert = EncryptDecryptWithSeed.AESDecrypt(encryptedCert, passByted);
             string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
 
-            var cert = new X509Certificate2(decryptedCert, decryptedPassword, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.EphemeralKeySet);
+            using (var cert = new X509Certificate2(decryptedCert, decryptedPassword, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.EphemeralKeySet))
+            {
+                using (var rsa = cert.GetRSAPrivateKey())
+                {
+                    if (rsa == null) throw new InvalidOperationException("El certificado no contiene clave privada RSA.");
+                }
 
-            if (!cert.HasPrivateKey) throw new InvalidOperationException("El certificado no contiene clave privada.");
-            if (DateTime.UtcNow < cert.NotBefore.ToUniversalTime() || DateTime.UtcNow > cert.NotAfter.ToUniversalTime())
-                throw new InvalidOperationException("El certificado está fuera de vigencia.");
+                if (DateTime.UtcNow < cert.NotBefore.ToUniversalTime() || DateTime.UtcNow > cert.NotAfter.ToUniversalTime())
+                    throw new InvalidOperationException("El certificado está fuera de vigencia.");
 
-            var contentBytes = Encoding.UTF8.GetBytes(xml);
-            var contentInfo = new ContentInfo(contentBytes);
-            var signedCms = new SignedCms(contentInfo, detached: false);
-            var signer = new CmsSigner(cert) { IncludeOption = X509IncludeOption.EndCertOnly };
-            signedCms.ComputeSignature(signer);
-            var encoded = signedCms.Encode();
-            return Convert.ToBase64String(encoded);
+                var contentBytes = Encoding.UTF8.GetBytes(xml);
+                var contentInfo = new ContentInfo(contentBytes);
+                var signedCms = new SignedCms(contentInfo, detached: false);
+                var signer = new CmsSigner(cert) { IncludeOption = X509IncludeOption.EndCertOnly };
+                signedCms.ComputeSignature(signer);
+                var encoded = signedCms.Encode();
+                return Convert.ToBase64String(encoded);
+            }
         }
 
         private static string BuildLoginCmsSoapEnvelope(string cmsBase64)
@@ -725,9 +735,7 @@ namespace Ordbox.Services.ARCA
             var doc = new XmlDocument();
             doc.LoadXml(xmlResponse);
 
-            // Nodos típicos: /loginTicketResponse/header/{uniqueId,generationTime,expirationTime} /loginTicketResponse/sign /loginTicketResponse/token
             var nsManager = new XmlNamespaceManager(doc.NameTable);
-            // si hay namespaces en la respuesta, agrégalos al nsManager antes de usar SelectSingleNode
 
             var uniqueIdNode = doc.SelectSingleNode("//uniqueId", nsManager);
             if (uniqueIdNode != null && long.TryParse(uniqueIdNode.InnerText, out var u)) dto.UniqueId = u;
