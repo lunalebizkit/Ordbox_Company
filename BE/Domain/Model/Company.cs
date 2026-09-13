@@ -24,10 +24,10 @@ namespace Ordbox.Domain.Model
         [Required]
         [Column("company_email")]
         public required string CompanyEmail { get; set; }
-        
+
         [Required]
         [Column("company_email_pass")]
-        public required string CompanyEmailPass { get; set; }
+        public required byte[] CompanyEmailPass { get; set; }
 
         [Column("company_description")]
         public string? CompanyDescription { get; set; }

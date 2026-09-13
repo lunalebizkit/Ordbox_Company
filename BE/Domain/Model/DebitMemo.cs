@@ -60,6 +60,18 @@ namespace Ordbox.Domain.Model
         [Column("type")]
         public int Type { get; set; }
 
+        [Column("cae")]
+        public string? CAE { get; set; }
+
+        [Column("cae_expiration_date")]
+        public DateTime? CAEExpirationDate { get; set; }
+
+        [Column("integration_success")]
+        public bool? IntegrationSuccess { get; set; }
+
+        [Column("version")]
+        public byte Version { get; set; }
+
         [Required]
         [Column("company_id")]
         public long CompanyId { get; set; }
