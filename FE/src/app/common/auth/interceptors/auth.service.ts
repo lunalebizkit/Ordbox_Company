@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { Observable, tap } from "rxjs";
 import { AuthUserModel } from "../models/auth-user.model";
 import { SecurityAuthService } from '../../../pages/auth/security-auth.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,8 @@ export class AuthService {
    */
   constructor(
     private service: SecurityAuthService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) { }
   
   public get tokenLS(): string {
@@ -45,6 +48,7 @@ export class AuthService {
     localStorage.removeItem('refreshtoken');
     localStorage.removeItem('auth-user');
     this.userSignal.set(null);
+    this.router.navigate(['/auth'], { relativeTo: this.route });
   }
 
   login(model: { userName: string; password: string }) {
