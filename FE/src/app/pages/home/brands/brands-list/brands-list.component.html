@@ -14,7 +14,7 @@
     <app-search-filter [title]="'Filtros'" [(model)]="queryParams.filter" (keydown.enter)="search()"
       [palceHolder]="'Ingrese marca'"></app-search-filter>
 
-    <div class="table">
+    <div>
       <nz-table class="tabla" [nzTotal]="totalItems()" [nzPageIndex]="1" [nzPageSize]="queryParams.pageSize" nzShowSizeChanger
         (nzQueryParams)="onQueryParamsChange($event)" [nzData]="brandList()" nzBordered="true" [nzLoading]="loading()"
         [nzSize]="'small'" nzShowPagination nzFrontPagination="false" nzTableLayout="fixed">

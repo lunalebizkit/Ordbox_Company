@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, LOCALE_ID, signal } from '@angular/core';
+import { Component, OnInit, Inject, LOCALE_ID, signal, ViewEncapsulation } from '@angular/core';
 import { InvoiceListModel } from '../model/invoice.model';
 import { formatCurrency, formatDate } from '@angular/common';
 import { FormBuilder, FormGroup } from '@angular/forms';

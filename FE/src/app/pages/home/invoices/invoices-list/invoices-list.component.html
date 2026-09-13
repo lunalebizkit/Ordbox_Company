@@ -16,8 +16,8 @@
     </nz-collapse>
 
     <!-- Tabla -->
-    <div class="table">
-      <nz-table class="tabla" [nzPageIndex]="1" [nzTotal]="totalItems()" (nzQueryParams)="onQueryParamsChange($event)"
+    <div class="tabla">
+      <nz-table [nzPageIndex]="1" [nzTotal]="totalItems()" (nzQueryParams)="onQueryParamsChange($event)"
         [nzPageSize]="queryParams.pageSize" nzShowSizeChanger [nzData]="invoicesList()" nzBordered="false"
         [nzSize]="'small'" [nzLoading]="loading()" [nzPaginationType]="'small'" nzFrontPagination="false">
         <thead>

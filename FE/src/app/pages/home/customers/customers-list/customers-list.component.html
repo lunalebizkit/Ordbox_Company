@@ -16,9 +16,9 @@
 
     <!-- Tabla -->
 
-    <div class="table">
+    <div class="tabla">
       <nz-table [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize" [nzPageIndex]="1" nzShowSizeChanger
-        class="tabla" nzShowPagination nzFrontPagination="false" (nzQueryParams)="onQueryParamsChange($event)"
+        nzShowPagination nzFrontPagination="false" (nzQueryParams)="onQueryParamsChange($event)"
         [nzData]="entityList()" [nzSize]="'small'" [nzLoading]="loading()" nzTableLayout="fixed">
         <thead>
           <tr>

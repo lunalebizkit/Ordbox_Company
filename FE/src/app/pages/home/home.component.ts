@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, signal, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterOutlet, RouterLinkWithHref, RouterModule } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { NzModalService, NzModalModule } from 'ng-zorro-antd/modal';
 import { AuthService } from '../../common/auth/interceptors/auth.service';
 import { NzPageHeaderModule } from 'ng-zorro-antd/page-header';
@@ -30,8 +30,6 @@ export class HomeComponent implements OnInit {
 
   constructor(
     public token: AuthService,
-    private router: Router,
-    private route: ActivatedRoute,
     private modalService: NzModalService,
     private fb: FormBuilder
   ) {
@@ -53,8 +51,7 @@ export class HomeComponent implements OnInit {
   }
 
   logOut() {
-    this.token.logout();
-    this.router.navigate(['/auth'], { relativeTo: this.route });
+    this.token.logout();    
   }
 
   createModal(): void {
