@@ -16,6 +16,7 @@ import { Permission } from "../../../../common/auth/models/permissions.enum";
 import { CompanyService } from "../companies.services";
 import { CompanyModel } from "../model/company.model";
 import { NzSwitchModule } from "ng-zorro-antd/switch";
+import { concepList } from "../../../../common/auth/models/invoice-versions.enum";
 @Component({
     selector: 'app-companies.edit',
     templateUrl: './companies-edit.component.html',
@@ -39,11 +40,8 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
      ** Determina si esta buscando el usuario
      */
     isLoading = signal<boolean>(false);
-
-    /*
-     ** id del usuario a editar, si es nuevo...
-     */
     id = signal<number>(0);
+    concepList = concepList;
 
     /*
      ** Determina si se estan cargando los roles
@@ -77,6 +75,7 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
             companyDescription: [{ value: '', disabled: true }, [Validators.required]],
             companyCuit: [{ value: '', disabled: true }, [Validators.required]],
             companyPoint: [{ value: '', disabled: true }, [Validators.required]],
+            companyConcept: [{ value: null, disabled: true }, [Validators.required]],
             companyEmailPass: [{ value: '', disabled: true },],
             checkpassword: [{ value: '', disabled: true },],
             companyEmail: [{ value: '', disabled: true }, [Validators.email]],
@@ -111,6 +110,7 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
                         this.form.controls['companyEmail'].setValue(r.companyEmail),
                         this.form.controls['companyEmailPass'].setValue(r.companyEmailPass),
                         this.form.controls['companyPoint'].setValue(r.companyPoint),
+                        this.form.controls['companyConcept'].setValue(r.companyConcept),
                         this.form.controls['isDeleted'].setValue(r.isDeleted),
                         this.isLoading.set(false);
                 },
@@ -134,7 +134,8 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
                 companyEmail: this.form.controls['companyEmail'].value,
                 companyDescription: this.form.controls['companyDescription'].value,
                 isDeleted: this.form.controls['isDeleted'].value,
-                companyPoint: this.form.controls['companyPoint'].value,                
+                companyPoint: this.form.controls['companyPoint'].value,
+                companyConcept: this.form.controls['companyConcept'].value         
             };
             this.isSaving.set(true);
             this.service.saveCompany(model)

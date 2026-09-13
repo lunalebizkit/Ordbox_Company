@@ -16,6 +16,7 @@ export interface CompanyModel {
   companyEmailPass: string,
   companyDescription: string,
   companyPoint: number,
+  companyConcept: number,
   isDeleted: boolean,
 }
 

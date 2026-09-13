@@ -31,10 +31,11 @@
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyDescription">Descripción</nz-form-label>
                             <nz-form-control>
-                                <input formControlName="companyDescription" nz-input id="companyDescription" maxlength="250" />
+                                <input formControlName="companyDescription" nz-input id="companyDescription"
+                                    maxlength="250" />
                             </nz-form-control>
                         </nz-form-item>
-                       
+
                         <!--Cuit-->
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyCuit">CUIT</nz-form-label>
@@ -42,7 +43,7 @@
                                 <input formControlName="companyCuit" nz-input id="companyCuit" maxlength="13" />
                             </nz-form-control>
                         </nz-form-item>
-                       
+
                         <!--Direccion-->
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyAddress">Dirección</nz-form-label>
@@ -50,7 +51,7 @@
                                 <input formControlName="companyAddress" nz-input id="companyAddress" maxlength="250" />
                             </nz-form-control>
                         </nz-form-item>
-                        
+
                         <!--Punto de venta-->
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyPoint">Punto de venta</nz-form-label>
@@ -63,7 +64,8 @@
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyEmail">Dirección de e-mail</nz-form-label>
                             <nz-form-control nzErrorTip="Ingrese una dirección de email válida">
-                                <input formControlName="companyEmail" nz-input id="companyEmail" type="email" maxlength="250" />
+                                <input formControlName="companyEmail" nz-input id="companyEmail" type="email"
+                                    maxlength="250" />
                             </nz-form-control>
                         </nz-form-item>
 
@@ -72,8 +74,8 @@
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzFor="companyEmailPass" nzRequired>Contraseña</nz-form-label>
                             <nz-form-control>
-                                <input nz-input type="password" id="companyEmailPass" formControlName="companyEmailPass" maxlength="250"
-                                    (ngModelChange)="updateConfirmValidator()" />
+                                <input nz-input type="password" id="companyEmailPass" formControlName="companyEmailPass"
+                                    maxlength="250" (ngModelChange)="updateConfirmValidator()" />
                             </nz-form-control>
                         </nz-form-item>
                         }
@@ -83,8 +85,8 @@
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzFor="checkpassword" nzRequired>Confirmar Contraseña</nz-form-label>
                             <nz-form-control [nzErrorTip]="errorTpl">
-                                <input nz-input type="companyEmailPass" formControlName="checkpassword" id="checkpassword"
-                                    maxlength="250" (ngModelChange)="updateConfirmValidator()" />
+                                <input nz-input type="companyEmailPass" formControlName="checkpassword"
+                                    id="checkpassword" maxlength="250" (ngModelChange)="updateConfirmValidator()" />
                                 <ng-template #errorTpl let-control>
                                     <ng-container>
                                         Las contraseñas ingresadas no coinciden
@@ -107,16 +109,14 @@
                         }
 
                         <!--Rol-->
-                        <!-- <nz-form-item [style.width.%]="75">
-                            <nz-form-label nzRequired nzFor="roleId">Rol</nz-form-label>
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyConcept">Concepto</nz-form-label>
                             <nz-form-control>
-                         
-                                    <nz-select  formControlName="roleId" [nzId]="'roleId'"
-                            (ngModelChange)="rolSelectedChange($event)" [nzOptions]="permissionRol()">
-                            </nz-select>                      
-        
+                                <nz-select formControlName="companyConcept" [nzId]="'companyConcept'"
+                                    [nzOptions]="concepList()">
+                                </nz-select>
                             </nz-form-control>
-                        </nz-form-item> -->
+                        </nz-form-item>
 
                         <div nzSpan="18" style="width: 240px">
                             <nz-form-item>
@@ -128,7 +128,7 @@
                         </div>
                     </form>
                     @if (isEditMode() && id()) {
-                        <button nz-button nzType="primary" (click)="addCertificate()">Agregar certificado</button>
+                    <button nz-button nzType="primary" (click)="addCertificate()">Agregar certificado</button>
                     }
 
                 </nz-col>
