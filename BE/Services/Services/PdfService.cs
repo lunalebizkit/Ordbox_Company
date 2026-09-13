@@ -1,19 +1,14 @@
 ﻿
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Ordbox.Domain.Enum;
-using Ordbox.Domain.Model;
 using Ordbox.SDK.Error;
-using Ordbox.Services.ARCA.Enum;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using System.Globalization;
-using System.IO;
-using System.Text;
 using Document = iTextSharp.text.Document;
 using Font = iTextSharp.text.Font;
 using Paragraph = iTextSharp.text.Paragraph;
@@ -41,7 +36,7 @@ namespace Ordbox.Services.Services
             _logger = logger;
         }
 
-        public Task<OperationResponse<byte[]>> PrintInvoiceARCA(DtoRequestInvoice invoice)
+        public Task<OperationResponse<byte[]>> PrintInvoiceARCA(DtoRequestCabeceraPrintPDF invoice, DtoResponseCompany company)
         {
             using (var stream = new MemoryStream())
             using (Document document = new Document(PageSize.A4, 5f, 5f, 15f, 80f))
@@ -49,18 +44,18 @@ namespace Ordbox.Services.Services
                 try
                 {
                     PdfWriter writer = PdfWriter.GetInstance(document, stream);
-                    writer.PageEvent = new FooterWithCAEEvent(invoice, _configuration.GetSection("Pdf:Cuit").Value.ToString());
+                    writer.PageEvent = new FooterWithCAEEvent(invoice, company.CompanyCuit, company.CompanyPoint);
 
                     document.Open();
 
-                    document.Add(this.CabeceraArca(invoice));
+                    document.Add(this.CabeceraArca(invoice, company));
 
                     int itemsPerPage = 25;
                     int itemCount = 0;
 
                     PdfPTable table = CrearTablaDetalle();
 
-                    foreach (var item in invoice.InvoiceDetails)
+                    foreach (var item in invoice.Details)
                     {
                         AgregarFilaDetalle(table, item);
 
@@ -96,7 +91,7 @@ namespace Ordbox.Services.Services
             }
         }
 
-        public async Task<OperationResponse<byte[]>> Imprimir(Paragraph paragraph, DtoRequestInvoice invoice = null)
+        public async Task<OperationResponse<byte[]>> Imprimir(Paragraph paragraph, bool showFooter = false)
         {
             using (MemoryStream stream = new MemoryStream())
             {
@@ -114,10 +109,11 @@ namespace Ordbox.Services.Services
                 {
                     PdfWriter writer = PdfWriter.GetInstance(document, stream);
 
-                    if (invoice != null && !string.IsNullOrEmpty(invoice.CAE))
+                    if (showFooter)
                     {
-                        writer.PageEvent = new FooterWithCAEEvent(invoice, _configuration.GetSection("Pdf:Cuit").Value.ToString());
+                        writer.PageEvent = new FooterDocumentEvent("RETIRO DE MERCADERIA EN CONDICIONES, UNA VEZ FIRMADO ESTE REMITO NO TIENE DERECHO A RECLAMO NI DEVOLUCIÓN.");
                     }
+
                     document.Open();
                     document.Add(paragraph);
                     document.Close();
@@ -1412,7 +1408,7 @@ namespace Ordbox.Services.Services
             return paragraph;
         }
 
-        public Paragraph CabeceraArca(DtoRequestInvoice invoice)
+        public Paragraph CabeceraArca(DtoRequestCabeceraPrintPDF invoice, DtoResponseCompany company)
         {
             BaseColor black = BaseColor.Black;
             Font fontTitle = FontFactory.GetFont(FontFactory.HELVETICA, 12, Font.BOLD, black);
@@ -1420,13 +1416,13 @@ namespace Ordbox.Services.Services
             Font fontTextBold = FontFactory.GetFont(FontFactory.HELVETICA, 8, Font.BOLD, black);
             Paragraph paragraph = new Paragraph();
 
-            string titulo = _configuration.GetSection("Pdf:Name").Value;
-            string dni = _configuration.GetSection("Pdf:Cuit").Value;
-            string direccion = _configuration.GetSection("Pdf:Direccion").Value;
-            string nombre_apellido = _configuration.GetSection("Pdf:Nombre").Value;
-            string email = _configuration.GetSection("Pdf:Email").Value;
+            string titulo = company.CompanyName;
+            string dni = company.CompanyCuit;
+            string direccion = company.CompanyAddress;
+            string nombre_apellido = company.CompanyOwnerName;
+            string email = company.CompanyEmail;
 
-            string imagePath = Path.Combine(_Env.ContentRootPath, "Assets", "dantesLogo1.png");
+            string imagePath = Path.Combine(_Env.WebRootPath, "Assets", "dantesLogo1.png");
 
             #region PRIMERA-CABECERA-LOGO
 
@@ -1490,7 +1486,7 @@ namespace Ordbox.Services.Services
             phraseDrh.Add(new Chunk(CustomizationConstant.PuntoDeVenta.ToString().PadLeft(3, '0'), fontText));
             phraseDrh.Add(Chunk.Newline);
             phraseDrh.Add(new Chunk("Comp. N°: ", fontTextBold));
-            phraseDrh.Add(new Chunk(invoice.InvoiceNumber.ToString(), fontText));
+            phraseDrh.Add(new Chunk(invoice.Number.ToString(), fontText));
             phraseDrh.Add(Chunk.Newline);
             phraseDrh.Add(new Chunk("Fecha de Emisión: ", fontTextBold));
             phraseDrh.Add(new Chunk(invoice.DateTime.ToString("dd/MM/yyyy"), fontText));
@@ -1527,11 +1523,11 @@ namespace Ordbox.Services.Services
             Phrase textoIzquierda = new()
             {
                 new Chunk("Cliente: ", fontTextBold),
-                new Chunk(invoice.CustomerName.ToUpper().Trim(), fontText),
+                new Chunk(invoice.Nombre.ToUpper().Trim(), fontText),
                 Chunk.Newline,
                 Chunk.Newline,
                 new Chunk("Dirección: ", fontTextBold),
-                new Chunk(invoice.CustomerAddress, fontText),
+                new Chunk(invoice.Direccion, fontText),
                 Chunk.Newline,
             };
 
@@ -1620,7 +1616,7 @@ namespace Ordbox.Services.Services
             return table;
         }
 
-        private void AgregarFilaDetalle(PdfPTable table, DtoResponseInvoiceDetail item)
+        private void AgregarFilaDetalle(PdfPTable table, DtoRequestDetallePrintPDF item)
         {
             var textFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
 
@@ -1631,7 +1627,7 @@ namespace Ordbox.Services.Services
             table.AddCell(new PdfPCell(new Phrase((item.Price * item.Quantity).ToString("F2"), textFont)) { HorizontalAlignment = Element.ALIGN_RIGHT, Border = PdfPCell.NO_BORDER });
         }
 
-        private PdfPTable CrearTablaTotales(DtoRequestInvoice invoice)
+        private PdfPTable CrearTablaTotales(DtoRequestCabeceraPrintPDF invoice)
         {
             Font fontTextBoldIvas = FontFactory.GetFont(FontFactory.HELVETICA, 9, Font.BOLD, BaseColor.Black);
             #region Total con IVA

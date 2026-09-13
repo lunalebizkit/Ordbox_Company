@@ -67,5 +67,19 @@ namespace Ordbox.Api.Controllers.Entity
             RequestedBy requestedBy = User.GetRequestedBy();
             return Return(await _service.DeleteEntity(id, requestedBy).ConfigureAwait(false));
         }
+
+        /// <summary>
+        /// Return customer´s list searched by CUIT 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("getcustomersbycuit")]
+        [AllowAccess(Permission = new EPermission[] { EPermission.ViewEntity })]
+        public async Task<IActionResult> GetCustomersByCuit([FromQuery] string cuit)
+        {
+            RequestedBy requestedBy = User.GetRequestedBy();
+            return Return(await _service.GetCustomersByCuit(cuit, requestedBy).ConfigureAwait(false));
+        }
     }
 }

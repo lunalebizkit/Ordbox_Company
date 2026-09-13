@@ -16,12 +16,18 @@ namespace Ordbox.Api.Controllers.Invoice
     {
         private readonly InvoiceService _service;
         private readonly CompanyService _companyService;
+
+        private readonly PdfService _pdfService;
+
+        private readonly EmailService _emailService;
         private readonly IArcaIntegracion _arcaIntegracionService;
 
-        public InvoiceController(InvoiceService service, CompanyService companyService, IArcaIntegracion arcaIntegracionService)
+        public InvoiceController(InvoiceService service, CompanyService companyService, PdfService pdfService, EmailService emailService, IArcaIntegracion arcaIntegracionService)
         {
             _service = service;
             _companyService = companyService;
+            _pdfService = pdfService;
+            _emailService = emailService;
             _arcaIntegracionService = arcaIntegracionService;
         }
 
@@ -212,7 +218,15 @@ namespace Ordbox.Api.Controllers.Invoice
 
                 if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
                 {
-                  return Return(await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false));
+                    var result = await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false);
+
+                    if (result.Success && !string.IsNullOrEmpty(invoice.Data.CustomerEmail))
+                    {
+                        var document = await _service.GetDocumentById(invoiceId);
+                        var company = await _companyService.GetById(requestedBy.CompanyId);
+                        var content = await _pdfService.PrintInvoiceARCA(document.Data, company.Data);
+                        return Return(await _emailService.SendEmailInvoice(invoice.Data.CustomerEmail, content.Data, company.Data));
+                    }
                 }
             }
             return BadRequest("No se encontro número de factura");
