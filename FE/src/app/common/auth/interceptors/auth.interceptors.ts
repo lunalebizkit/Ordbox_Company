@@ -51,7 +51,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           catchError(refreshError => {
 
             notification.error(
-              `No se puedo reconectar`, 'Inicie sesión nuevamente',
+              `No se pudo reconectar`, 'Inicie sesión nuevamente',
               { nzPlacement: 'bottomRight' }
             );
             authService.logout();

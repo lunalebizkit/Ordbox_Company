@@ -113,6 +113,6 @@ export class CustomersListComponent extends BaseComponent implements OnInit {
   }
 
   onDoubleClicked(id: number) {
-    this.router.navigate([`/home/invoices/edit/${id}`]);
+    this.router.navigate([`/home/customers/edit/${id}`]);
   }
 }

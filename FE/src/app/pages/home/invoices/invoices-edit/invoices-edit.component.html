@@ -337,7 +337,7 @@
     </nz-table>
   </nz-content>
 </nz-collapse>
-@if(version() == invoiceVersion.Arca) {
+@if(version() == invoiceVersion.Arca && invoiceLog().length > 0) {
 <nz-collapse>
   <nz-collapse-panel nzHeader="Log ARCA" [nzActive]="false" [nzShowArrow]="true">
     <nz-content>
