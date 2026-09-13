@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
@@ -7,6 +6,7 @@ using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Services;
 
 namespace Ordbox.Api.Controllers.CreditMemoController
@@ -15,12 +15,14 @@ namespace Ordbox.Api.Controllers.CreditMemoController
     {
         private readonly CreditMemoService _service;
         private readonly IArcaIntegracion _arcaIntegracionService;
-        private readonly IConfiguration _settingConfiguration;
-        public CreditMemoController(CreditMemoService service, IArcaIntegracion arcaIntegracionService, IConfiguration configuration)
+
+        private readonly CompanyService _companyService;
+
+        public CreditMemoController(CreditMemoService service, CompanyService companyService, IArcaIntegracion arcaIntegracionService)
         {
             _service = service;
             _arcaIntegracionService = arcaIntegracionService;
-            _settingConfiguration = configuration;
+            _companyService = companyService;
         }
         /// <summary>
         /// Devuelve una NC buscando en la BASE DE DATOS por ID.
@@ -57,7 +59,21 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         public async Task<IActionResult> Post([FromBody] DtoRequestCreditMemo model)
         {
             RequestedBy requestedBy = User.GetRequestedBy();
-            return Return(await _service.NewMemo(model, requestedBy).ConfigureAwait(false));
+            var result = await _service.NewMemo(model, requestedBy).ConfigureAwait(false);
+
+            if (result.Success && result.Data != null)
+            {
+                try
+                {
+                    await GetCAEInvoiceAsync(result.Data.Id, requestedBy);
+                }
+                catch (Exception)
+                {
+                    return Return(result);
+                }
+            }
+
+            return Return(result);
         }
         /// <summary>
         /// Edita una NC ya creada y la guarda modificada en la BASE DE DATOS.
@@ -87,28 +103,24 @@ namespace Ordbox.Api.Controllers.CreditMemoController
         }
         #region PRIVATE
 
-        private async Task<IActionResult> GetCAEInvoiceAsync(long id, DateTime? dateTime = null, string? observacion = null)
+        private async Task<IActionResult> GetCAEInvoiceAsync(long id, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
         {
-            if (!bool.Parse(_settingConfiguration.GetSection("ArcaStatus:Status").Value))
-            {
-                return BadRequest("La impresora esta activada, desactive para realizar el llamado a ARCA");
-            }
-            RequestedBy requestedBy = User.GetRequestedBy(); //ojo acaaa
-
             var data = await _service.GetById(id, requestedBy).ConfigureAwait(false);
 
-            if (data.Success && data.Data != null)
+            DtoResponseCompanyCertificate? certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
+
+            if (data.Success && data.Data != null && certificate != null && certificate.IsActive)
             {
                 data.Data.DateTime = dateTime == null ? data.Data.DateTime : DateTime.Now;
 
                 if (!string.IsNullOrEmpty(observacion)) { data.Data.Observation = observacion; }
 
-                //var responseCAE = await _arcaIntegracionService.CreateCreditNoteAsync(data.Data).ConfigureAwait(false);
+                var responseCAE = await _arcaIntegracionService.CreateCreditNoteAsync(data.Data, certificate).ConfigureAwait(false);
 
-                //if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
-                //{
-                //    return Return(await _service.Update(data.Data, responseCAE).ConfigureAwait(false));
-                //}
+                if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
+                {
+                    return Return(await _service.Update(data.Data, responseCAE).ConfigureAwait(false));
+                }
             }
             return BadRequest("No se encontro número de factura");
         }

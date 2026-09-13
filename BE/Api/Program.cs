@@ -96,6 +96,7 @@ builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<ReceiptMapperProfile>();
     cfg.AddProfile<RolMapperProfile>();
     cfg.AddProfile<CompanyMapperProfile>();
+    cfg.AddProfile<PDFMapperProfile>();
 });
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RolService>();
