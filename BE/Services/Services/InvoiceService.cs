@@ -23,10 +23,11 @@ namespace Ordbox.Services.Services
 {
     public class InvoiceService : BaseService
     {
-
-        public InvoiceService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration) :
+        private readonly EntityService _entityService;
+        public InvoiceService(ErrorManager logger, DBContext context, IMapper maper, IConfiguration configuration, EntityService entityService) :
             base(logger, context, maper, configuration)
         {
+            _entityService = entityService;
         }
         public async Task<OperationResponse<DtoRequestInvoice>> GetById(long id, RequestedBy requestedBy)
         {
@@ -35,6 +36,7 @@ namespace Ordbox.Services.Services
                 var factura = await _contextSql
                                    .Invoices
                                    .Include(x => x.InvoiceDetails)
+                                   .Include(y => y.Customer).ThenInclude(y => y.EmailEntities)
                                    .AsNoTracking()
                                    .FirstOrDefaultAsync(p => p.Id == id && p.CompanyId == requestedBy.CompanyId)
                                    .ConfigureAwait(false);
@@ -163,7 +165,21 @@ namespace Ordbox.Services.Services
 
                     if (invoiceModel.CustomerId == 0)
                     {
-                        invoiceModel.CustomerId = GetUserAdminId();
+                        DtoEntity newCustomer = new DtoEntity()
+                        {
+                            Id = 0,
+                            Dni = null,
+                            Cuit = invoiceModel.CustomerCuit,
+                            Address = invoiceModel.CustomerAddress,
+                            Name = invoiceModel.CustomerName,
+                            CompanyId = requestedBy.CompanyId,
+                            PhoneEntity = new List<string>(),
+                            EmailEntity = new List<string>() { model.CustomerEmail?.Trim() },
+                        };
+
+                        var customerid = await _entityService.SaveCustomerFromInvoice(newCustomer).ConfigureAwait(false);
+
+                        invoiceModel.CustomerId = customerid.Data.Id;
                     }
 
                     foreach (var detail in invoiceModel.InvoiceDetails)
@@ -328,6 +344,44 @@ namespace Ordbox.Services.Services
             catch (Exception ex)
             {
                 _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+                throw;
+            }
+        }
+
+        public async Task<OperationResponse<DtoRequestCabeceraPrintPDF>> GetDocumentById(long id)
+        {
+            try
+            {
+                var factura = await _contextSql
+                                   .Invoices
+                                   .Include(x => x.InvoiceDetails)
+                                   .AsNoTracking()
+                                   .FirstOrDefaultAsync(p => p.Id == id)
+                                   .ConfigureAwait(false);
+                if (factura == null)
+                {
+                    _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
+                    return Error<DtoRequestCabeceraPrintPDF>(new OperationExceptions("000", $"Factura no encontrada {id}"));
+                }
+
+                var result = _mapper.Map<DtoRequestCabeceraPrintPDF>(factura);
+
+                result.Iva10 = 0;
+                result.Iva21 = 0;
+                result.Iva27 = 0;
+                foreach (var item in result.Details)
+                {
+                    result.Iva10 += ((decimal)item.Iva == (decimal)10.5) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.105m : 0;
+                    result.Iva21 += ((decimal)item.Iva == (decimal)21) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.21m : 0;
+                    result.Iva27 += ((decimal)item.Iva == (decimal)27) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.27m : 0;
+                }
+
+
+                return new OperationResponse<DtoRequestCabeceraPrintPDF>(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
                 throw;
             }
         }

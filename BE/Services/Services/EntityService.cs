@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
@@ -7,6 +9,7 @@ using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoResponse;
+using Ordbox.Services.Scripts;
 
 namespace Ordbox.Services.Services
 {
@@ -580,6 +583,101 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Retorna Listado de Cuits para busqueda predictiva en New-Invoice
+        /// </summary>
+        /// <param name="Cuit"></param>
+        /// <param name="requestedBy"></param>
+        /// <returns></returns>
+        public async Task<OperationResponse<List<DtoEntity>>> GetCustomersByCuit(string Cuit, RequestedBy requestedBy)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    var customers = await connection.QueryAsync<DtoEntity>(SqlScripts.GetCustomersByCUIT, new { @cuit = Cuit, @companyid = requestedBy.CompanyId });
+
+                    return new OperationResponse<List<DtoEntity>>(customers.ToList());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+
+        public async Task<OperationResponse<IdResponse<long>>> SaveCustomerFromInvoice(DtoEntity model, CancellationToken ct = default)
+        {
+            try
+            {
+                var entityModel = _mapper.Map<Customer>(model);
+
+                var email = new EmailEntity();
+                var phones = new PhoneEntity();
+
+                var customer = GetCustomerByCUIT(model.Cuit, model.CompanyId.Value);
+
+                if (customer != null)
+                {
+                    return Ok(new IdResponse<long>(customer.Value));
+                }
+
+                if (model.EmailEntity != null)
+                {
+                    foreach (var newEmail in model.EmailEntity)
+                    {
+                        if (!string.IsNullOrEmpty(newEmail))
+                        {
+                            var emails = new EmailEntity()
+                            {
+                                Email = newEmail,
+                                Entity = entityModel
+                            };
+                            entityModel.EmailEntities.Add(emails);
+                        }
+                    }
+
+                }
+
+                await _contextSql.Customers.AddAsync(entityModel, ct).ConfigureAwait(false);
+                await _contextSql.SaveChangesAsync(ct).ConfigureAwait(false);
+
+                return Ok(new IdResponse<long>(entityModel.Id));
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+
+        #region Private Methods
+        
+        /// <summary>
+        /// GetCustomerByCUIT: Retorna el Id del cliente si existe, sino retorna null
+        /// </summary>
+        /// <param name="Cuit"></param>
+        /// <returns></returns>
+        private long? GetCustomerByCUIT(string Cuit, long CompanyId)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    return connection.Query<long?>(SqlScripts.GetCustomerByCUIT, new { @cuit = Cuit, @companyid = CompanyId }).FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+
+        #endregion
 
     }
 }

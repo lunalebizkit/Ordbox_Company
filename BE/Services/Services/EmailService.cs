@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
-using Ordbox.Domain;
-using Ordbox.SDK.Error;
-using Ordbox.Services.Common;
-using Ordbox.Services.Models.Dtos.DtoResponse;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using MimeKit.Text;
+using Ordbox.Domain;
+using Ordbox.SDK.Error;
+using Ordbox.SDK.Security;
+using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoResponse;
 using System.Text;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
@@ -108,24 +109,33 @@ namespace Ordbox.Services.Services
 
         }
 
-        public async Task<OperationResponse<string>> SendEmailInvoice(string emailTo, byte[] attachment)
+        public async Task<OperationResponse<string>> SendEmailInvoice(string emailTo, byte[] attachment, DtoResponseCompany company)
         {
             using var smtp = new SmtpClient();
+
+            byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
+            byte[]? pfxPassword = EncryptDecryptWithSeed.AESDecrypt(company.CompanyEmailPass, passByted);
+            string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
+
+            if (string.IsNullOrEmpty(company.CompanyEmail) || string.IsNullOrEmpty(decryptedPassword))
+            {
+                return new OperationResponse<string>(""); ;
+            }
 
             try
             {
                 var email = new MimeMessage();
                 string host = _config.GetSection("EmailHost").Value;
-                string emailFrom = _config.GetSection("EmailUsername").Value;
-                string pass = _config.GetSection("EmailPassword").Value;
+                string emailFrom = company.CompanyEmail;
+                string pass = decryptedPassword;
 
-                email.From.Add(new MailboxAddress("REFRIGERACION DANTE", emailFrom));
-                string templateEail = Path.Combine(_Env.ContentRootPath, "Assets", "body.cshtml");
+                email.From.Add(new MailboxAddress(company.CompanyName, emailFrom));
+                string templateEail = Path.Combine(_Env.WebRootPath, "Assets", "body.cshtml");
                 string template = File.ReadAllText(templateEail);
                 string remplazar = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 
                 email.To.Add(MailboxAddress.Parse(emailTo));
-                email.Subject = "Refrigeración Dante";
+                email.Subject = company.CompanyName;
                 var body = new TextPart(TextFormat.Html) { Text = remplazar };
 
                 var attachmentPart = new MimePart("application", "pdf")

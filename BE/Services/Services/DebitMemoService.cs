@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
+using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain;
 using Ordbox.Domain.Model;
 using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
+using Ordbox.Services.ARCA.Dto.Response;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
+using Ordbox.Services.Scripts;
 using System.Text.RegularExpressions;
 
 namespace Ordbox.Services.Services
@@ -180,6 +184,99 @@ namespace Ordbox.Services.Services
                 throw;
             }
         }
+
+        public async Task<OperationResponse<DtoRequestCabeceraPrintPDF>> GetDocumentById(long id)
+        {
+            try
+            {
+                var factura = await _contextSql
+                                    .DebitMemos
+                                    .Include(x => x.DebitMemoDetails)
+                                    .AsNoTracking()
+                                    .FirstOrDefaultAsync(c => c.Id == id)
+                                    .ConfigureAwait(false);
+                if (factura == null)
+                {
+                    _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
+                    return Error<DtoRequestCabeceraPrintPDF>(new OperationExceptions("000", $"Factura no encontrada {id}"));
+                }
+
+                var result = _mapper.Map<DtoRequestCabeceraPrintPDF>(factura);
+
+                result.Iva10 = 0;
+                result.Iva21 = 0;
+                result.Iva27 = 0;
+                foreach (var item in result.Details)
+                {
+                    result.Iva10 += ((decimal)item.Iva == (decimal)10.5) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.105m : 0;
+                    result.Iva21 += ((decimal)item.Iva == (decimal)21) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.21m : 0;
+                    result.Iva27 += ((decimal)item.Iva == (decimal)27) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.27m : 0;
+                }
+
+
+                return new OperationResponse<DtoRequestCabeceraPrintPDF>(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestDebitMemo model, DtoResponseARCAInvoice responseARCAInvoice, CancellationToken ct = default)
+        {
+            var transaction = _contextSql.Database.BeginTransaction();
+            var debitModel = _mapper.Map<DebitMemo>(model);
+            var newProduct = new Product();
+            try
+            {
+                if (debitModel.Id != 0)
+                {
+                    if (debitModel.CustomerId == 0)
+                    {
+                        debitModel.CustomerId = GetUserAdminId();
+                    }
+
+                    DebitMemo debitMemo = await _contextSql.DebitMemos.FirstAsync(p => p.Id == debitModel.Id).ConfigureAwait(false);
+
+                    debitModel.CAE = string.IsNullOrEmpty(responseARCAInvoice.Cae) ? null : responseARCAInvoice.Cae;
+                    debitModel.CAEExpirationDate = responseARCAInvoice.FechaVencimientoCae.HasValue ? responseARCAInvoice.FechaVencimientoCae.Value : null;
+                    debitModel.IntegrationSuccess = !string.IsNullOrEmpty(responseARCAInvoice.Cae);
+                    debitModel.DebitMemoNumber = responseARCAInvoice.InvoiceNumber;
+
+                    _contextSql.Entry(debitMemo).State = EntityState.Detached;
+                    _contextSql.DebitMemos.Update(debitModel);
+                }
+
+                await _contextSql.SaveChangesAsync(ct).ConfigureAwait(false);
+                transaction.Commit();
+                return Ok(new IdResponse<long>(debitModel.Id));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                return Error<IdResponse<long>>(new OperationExceptions(ErrorsCodes.C_999_ERROR_GENERICO, ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO)));
+            }
+        }
+
+        #region Private Methods
+        private byte GetUserAdminId()
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    return connection.Query<byte>(SqlScripts.GetUserAdminId).First();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+        #endregion
 
     }
 }

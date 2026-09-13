@@ -92,10 +92,11 @@ namespace Ordbox.Services.Services
             try
             {
                 var newModel = _mapper.Map<Company>(model);
+                byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
 
                 if (newModel.Id == 0)
                 {
-                    newModel.CompanyEmailPass = SecurePasswordHasher.Hash(newModel.CompanyEmailPass, 100);
+                    newModel.CompanyEmailPass = EncryptDecryptWithSeed.AESEncrypt(System.Text.Encoding.UTF8.GetBytes(model.CompanyEmailPass), passByted);
                     await _contextSql.Companies.AddAsync(newModel, ct).ConfigureAwait(false);
 
                 }
@@ -106,9 +107,9 @@ namespace Ordbox.Services.Services
                                 .FirstAsync(p => p.Id == newModel.Id, ct)
                                 .ConfigureAwait(false);
 
-                    if (!String.IsNullOrEmpty(newModel.CompanyEmailPass))
+                    if (!string.IsNullOrEmpty(model.CompanyEmailPass))
                     {
-                        newModel.CompanyEmailPass = SecurePasswordHasher.Hash(newModel.CompanyEmailPass, 100);
+                        newModel.CompanyEmailPass = EncryptDecryptWithSeed.AESEncrypt(System.Text.Encoding.UTF8.GetBytes(model.CompanyEmailPass), passByted);
                     }
 
                     else

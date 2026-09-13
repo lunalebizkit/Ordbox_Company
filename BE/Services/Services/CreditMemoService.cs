@@ -7,6 +7,7 @@ using Ordbox.Domain;
 using Ordbox.Domain.Model;
 using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
+using Ordbox.Services.ARCA.Dto.Response;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
@@ -196,7 +197,26 @@ namespace Ordbox.Services.Services
                 _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
                 throw;
             }
-        }        
+        }
+
+        public async Task<OperationResponse<IdResponse<long>>> Update(DtoRequestCreditMemo model, DtoResponseARCAInvoice responseARCAInvoice, CancellationToken ct = default)
+        {
+            var creditMemo = _mapper.Map<CreditMemo>(model);
+            try
+            {
+                if (creditMemo.Id != 0)
+                {
+                    await UpdateCreditMemoAsync(creditMemo, responseARCAInvoice).ConfigureAwait(false);
+                }
+
+                return Ok(new IdResponse<long>(creditMemo.Id));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                return Error<IdResponse<long>>(new OperationExceptions(ErrorsCodes.C_999_ERROR_GENERICO, ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO)));
+            }
+        }
 
         public async Task<OperationResponse<IEnumerable<DtoResponseIntegrationLogCredit>>> GetIntegrationLogById(long Id, CancellationToken ct = default)
         {
@@ -216,6 +236,68 @@ namespace Ordbox.Services.Services
                 _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
                 throw;
             }
+        }
+
+        public async Task<OperationResponse<DtoRequestCabeceraPrintPDF>> GetDocumentById(long id)
+        {
+            try
+            {
+                var factura = await _contextSql
+                                    .CreditMemo
+                                    .Include(x => x.CreditMemoDetail)
+                                    .AsNoTracking()
+                                    .FirstOrDefaultAsync(c => c.Id == id)
+                                    .ConfigureAwait(false);
+                if (factura == null)
+                {
+                    _logger.LogWarning(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO));
+                    return Error<DtoRequestCabeceraPrintPDF>(new OperationExceptions("000", $"Factura no encontrada {id}"));
+                }
+
+                var result = _mapper.Map<DtoRequestCabeceraPrintPDF>(factura);
+
+                result.Iva10 = 0;
+                result.Iva21 = 0;
+                result.Iva27 = 0;
+                foreach (var item in result.Details)
+                {
+                    result.Iva10 += ((decimal)item.Iva == (decimal)10.5) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.105m : 0;
+                    result.Iva21 += ((decimal)item.Iva == (decimal)21) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.21m : 0;
+                    result.Iva27 += ((decimal)item.Iva == (decimal)27) ? (item.Quantity * item.Price) - (item.Quantity * item.Price) / 1.27m : 0;
+                }
+
+
+                return new OperationResponse<DtoRequestCabeceraPrintPDF>(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+                throw;
+            }
+        }
+
+        private async Task UpdateCreditMemoAsync(CreditMemo creditMemo, DtoResponseARCAInvoice responseARCAInvoice)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    connection.Execute(SqlScripts.UpdateCreditNoteCAE, new
+                    {
+                        id = creditMemo.Id,
+                        cae = string.IsNullOrEmpty(responseARCAInvoice.Cae) ? null : responseARCAInvoice.Cae,
+                        caexpirationdate = responseARCAInvoice.FechaVencimientoCae.HasValue ? responseARCAInvoice.FechaVencimientoCae.Value : (DateTime?)null,
+                        integrationsuccess = !string.IsNullOrEmpty(responseARCAInvoice.Cae),
+                        creditmemonumber = responseARCAInvoice.InvoiceNumber
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_000_MENSAJE_INVALIDO), ex: ex);
+            }
+
         }
     }
 }

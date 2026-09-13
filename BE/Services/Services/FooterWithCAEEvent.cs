@@ -11,14 +11,14 @@ namespace Ordbox.Services.Services
 {
     public class FooterWithCAEEvent : PdfPageEventHelper
     {
-        private readonly DtoRequestInvoice _invoice;
-        private readonly float _marginFromBottom;
+        private readonly DtoRequestCabeceraPrintPDF _document;
         private readonly string _cuit;
-        public FooterWithCAEEvent(DtoRequestInvoice invoice, string cuit, float marginFromBottom = 80f)
+        private readonly short _companyPoint;
+        public FooterWithCAEEvent(DtoRequestCabeceraPrintPDF document, string cuit, short companyPoint)
         {
-            _invoice = invoice;
-            _marginFromBottom = marginFromBottom;
+            _document = document;
             _cuit = cuit;
+            _companyPoint = companyPoint;
         }
 
         public override void OnEndPage(PdfWriter writer, Document document)
@@ -35,16 +35,16 @@ namespace Ordbox.Services.Services
             float[] columnWidthsTransparenciaFiscal = { 6f, 4f };
             transparenciafiscalTable.SetWidths(columnWidthsTransparenciaFiscal);
             transparenciafiscalTable.AddCell(GenerateTFcell());
-            transparenciafiscalTable.AddCell(GenerateTFIvaCell(_invoice));
+            transparenciafiscalTable.AddCell(GenerateTFIvaCell(_document));
             paragraph.Add(transparenciafiscalTable);
             #endregion
 
             #region QR Code
             var table = new PdfPTable(3) { TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin };
             table.SetWidths(new float[] { 1f, 3f, 3f });
-            table.AddCell(GenerateQRCell(_invoice, _cuit));
+            table.AddCell(GenerateQRCell(_document));
             table.AddCell(GenerateARCALeyend());
-            table.AddCell(GenerateCAECell(_invoice));
+            table.AddCell(GenerateCAECell(_document));
             #endregion
 
             float x = document.LeftMargin;
@@ -54,7 +54,7 @@ namespace Ordbox.Services.Services
             table.WriteSelectedRows(0, -1, x, y + 10f, cb);
         }
 
-        private static PdfPCell GenerateTFIvaCell(DtoRequestInvoice invoice)
+        private static PdfPCell GenerateTFIvaCell(DtoRequestCabeceraPrintPDF invoice)
         {
             Font fontTextBoldIvas = FontFactory.GetFont(FontFactory.HELVETICA, 9, Font.BOLD, BaseColor.Black);
 
@@ -126,9 +126,9 @@ namespace Ordbox.Services.Services
             return textCellARC;
         }
 
-        private PdfPCell GenerateQRCell(DtoRequestInvoice invoice, string cuit)
+        private PdfPCell GenerateQRCell(DtoRequestCabeceraPrintPDF invoice)
         {
-            string qrCode = GenerateQRCode(invoice, cuit);
+            string qrCode = GenerateQRCode(invoice);
             byte[] qrCodeImage = GenerateImageQR(qrCode);
             iTextSharp.text.Image qrImage = iTextSharp.text.Image.GetInstance(qrCodeImage);
             qrImage.ScaleAbsolute(80f, 80f);
@@ -145,7 +145,7 @@ namespace Ordbox.Services.Services
             return qrCell;
         }
 
-        private static PdfPCell GenerateCAECell(DtoRequestInvoice invoice)
+        private static PdfPCell GenerateCAECell(DtoRequestCabeceraPrintPDF invoice)
         {
             var fontBold = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10);
             var font = FontFactory.GetFont(FontFactory.HELVETICA, 10);
@@ -154,7 +154,7 @@ namespace Ordbox.Services.Services
             phrase.Add(new Chunk("CAE: ", fontBold));
             phrase.Add(new Chunk(invoice.CAE ?? string.Empty, font));
             phrase.Add(new Chunk("  |  Fecha Vto: ", fontBold));
-            phrase.Add(new Chunk(invoice.CAEExpirationDate?.ToString("dd/MM/yyyy") ?? string.Empty, font));
+            phrase.Add(new Chunk(invoice.CAEExpirationDate.ToString("dd/MM/yyyy") ?? string.Empty, font));
 
             var textCell = new PdfPCell(phrase)
             {
@@ -167,16 +167,16 @@ namespace Ordbox.Services.Services
             return textCell;
         }
 
-        private string GenerateQRCode(DtoRequestInvoice invoice, string cuit)
+        private string GenerateQRCode(DtoRequestCabeceraPrintPDF invoice)
         {
             var json = new
             {
                 ver = 1,
                 fecha = invoice.DateTime.ToString("yyyy-MM-dd"),
                 cuit = long.Parse(_cuit.Replace("-", "")),
-                ptoVta = CustomizationConstant.PuntoDeVenta,
-                tipoCmp = MapDocumentType(invoice.Type),
-                nroCmp = invoice.InvoiceNumber,
+                ptoVta = _companyPoint,
+                tipoCmp = invoice.ArcaType,
+                nroCmp = invoice.Number,
                 importe = invoice.Total,
                 moneda = CustomizationConstant.TipoMoneda,
                 ctz = CustomizationConstant.MonCotiz,
@@ -201,16 +201,6 @@ namespace Ordbox.Services.Services
 
             var qrCode = new BitmapByteQRCode(qrCodeData);
             return qrCode.GetGraphic(20);            
-        }
-
-        private static int MapDocumentType(int invoiceType)
-        {
-            return (ETypeReceipt)invoiceType switch
-            {
-                ETypeReceipt.A or ETypeReceipt.ResponsableMonotrinuto => (int)EInvoiceType.FacturaA,
-                ETypeReceipt.EXENTO or ETypeReceipt.B => (int)EInvoiceType.FacturaB,
-                _ => invoiceType,
-            };
         }
 
         private static int MapPersonIdentificationType(string customerCuit)
