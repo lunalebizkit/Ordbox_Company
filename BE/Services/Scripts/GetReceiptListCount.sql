@@ -3,8 +3,7 @@
         r.Id
     FROM [receipt] [r]
     INNER JOIN [user] u ON [r].[user_id] = u.Id
-    INNER JOIN [company] c ON u.[company_id] = c.Id
-    WHERE c.Id = @companyid
+    WHERE r.[company_id] = @companyid
       AND r.is_inactive = 0
       AND (@cuit IS NULL OR r.[supplier_cuit] LIKE '%' + @cuit + '%')
       AND (@number IS NULL OR r.[receipt_number] = @number)

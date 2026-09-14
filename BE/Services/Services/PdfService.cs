@@ -1418,7 +1418,7 @@ namespace Ordbox.Services.Services
 
             string titulo = company.CompanyName;
             string dni = company.CompanyCuit;
-            string direccion = company.CompanyAddress;
+            string direccion = company.CompanyAddress ?? string.Empty;
             string nombre_apellido = company.CompanyOwnerName;
             string email = company.CompanyEmail;
 
@@ -1483,7 +1483,7 @@ namespace Ordbox.Services.Services
             Phrase phraseDrh = new(5f);
 
             phraseDrh.Add(new Chunk("Punto de Venta: ", fontTextBold));
-            phraseDrh.Add(new Chunk(CustomizationConstant.PuntoDeVenta.ToString().PadLeft(3, '0'), fontText));
+            phraseDrh.Add(new Chunk(company.CompanyPoint.ToString().PadLeft(3, '0'), fontText));
             phraseDrh.Add(Chunk.Newline);
             phraseDrh.Add(new Chunk("Comp. N°: ", fontTextBold));
             phraseDrh.Add(new Chunk(invoice.Number.ToString(), fontText));

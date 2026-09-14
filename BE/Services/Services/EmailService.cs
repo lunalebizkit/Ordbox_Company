@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using MimeKit;
 using MimeKit.Text;
 using Ordbox.Domain;
+using Ordbox.Domain.Enum;
 using Ordbox.SDK.Error;
 using Ordbox.SDK.Security;
 using Ordbox.Services.Common;
@@ -37,7 +38,7 @@ namespace Ordbox.Services.Services
             email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
             using var smtp = new SmtpClient();
-            smtp.Connect(_config.GetSection("EmailHost").Value, 587, SecureSocketOptions.StartTls);
+            smtp.Connect(CustomizationConstant.EmailHost, 587, SecureSocketOptions.StartTls);
             smtp.Authenticate(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
             var response = smtp.Send(email);
             smtp.Disconnect(true);
@@ -125,7 +126,7 @@ namespace Ordbox.Services.Services
             try
             {
                 var email = new MimeMessage();
-                string host = _config.GetSection("EmailHost").Value;
+                string host = CustomizationConstant.EmailHost;
                 string emailFrom = company.CompanyEmail;
                 string pass = decryptedPassword;
 

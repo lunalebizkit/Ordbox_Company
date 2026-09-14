@@ -109,37 +109,44 @@ namespace Ordbox.Services.Services
         {
             try
             {
-                var query = _contextSql
-                                    .Products
-                                    .AsNoTracking()
-                                      .Include(p => p.Category)
-                                    .Include(p => p.Brand)
-                                    .Include(p => p.Supplier)
-                                    .Where(p => !p.IsDeleted && p.Id > 0)
-                                    .Where(p => p.CompanyId == requestedBy.CompanyId &&
-                                     (string.IsNullOrEmpty(request.Filter.Product) || p.Description.ToLower().Contains(request.Filter.Product.ToLower())) &&
-                                    (!request.Filter.Brand.HasValue || request.Filter.Brand == 0 || p.BrandId == request.Filter.Brand) &&
-                                    (!request.Filter.Category.HasValue || request.Filter.Category == 0 || p.CategoryId == request.Filter.Category) &&
-                                    (string.IsNullOrEmpty(request.Filter.Code) || p.Code.ToLower().Contains(request.Filter.Code.ToLower())) &&
-                                    (string.IsNullOrEmpty(request.Filter.BarCode) || p.BarCode.ToLower().Contains(request.Filter.BarCode.ToLower())) &&
-                                    (request.Filter.Supplier.Count == 0 || request.Filter.Supplier.Contains(p.SupplierId))
-                                    );
+                List<DtoResponseProduct> dtoRequests = new List<DtoResponseProduct>();
+                int count = 0;
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    dtoRequests = connection.Query<DtoResponseProduct>(SqlScripts.GetProductsList, new
+                    {
+                        companyid = requestedBy.CompanyId,
+                        product = string.IsNullOrWhiteSpace(request.Filter.Product) ? null : request.Filter.Product,
+                        brand = request.Filter.Brand == 0 ? null : request.Filter.Brand,
+                        category = request.Filter.Category == 0 ? null : request.Filter.Category,
+                        code = string.IsNullOrEmpty(request.Filter.Code) ? null : request.Filter.Code,
+                        barcode = string.IsNullOrEmpty(request.Filter.BarCode) ? null : request.Filter.BarCode,
+                        supplierids = string.Join(",", request.Filter.Supplier),
+                        suppliercount = request.Filter.Supplier.Count,
+                        page = request.Page,
+                        pagesize = request.PageSize
+                    }).ToList();
 
-                var count = await query.CountAsync().ConfigureAwait(false);
+                    count = connection.QuerySingle<int>(SqlScripts.GetProductsListCount, new
+                    {
+                        companyid = requestedBy.CompanyId,
+                        product = string.IsNullOrWhiteSpace(request.Filter.Product) ? null : request.Filter.Product,
+                        brand = request.Filter.Brand == 0 ? null : request.Filter.Brand,
+                        category = request.Filter.Category == 0 ? null : request.Filter.Category,
+                        code = string.IsNullOrEmpty(request.Filter.Code) ? null : request.Filter.Code,
+                        barcode = string.IsNullOrEmpty(request.Filter.BarCode) ? null : request.Filter.BarCode,
+                        supplierids = string.Join(",", request.Filter.Supplier),
+                        suppliercount = request.Filter.Supplier.Count,
+                        page = request.Page,
+                        pagesize = request.PageSize
+                    });
 
-                var list = await query.OrderBy(p => p.Id)
-                                      .Skip(request.Page * request.PageSize)
-                                      .Take(request.PageSize)
-                                      .ToListAsync()
-                                      .ConfigureAwait(false);
-
-
-                var dto = _mapper.Map<List<DtoResponseProduct>>(list);
+                }
 
 
                 return new OperationResponse<DtoPagination<DtoResponseProduct>>(new DtoPagination<DtoResponseProduct>
                 {
-                    Data = dto,
+                    Data = dtoRequests,
                     PageSize = request.PageSize,
                     TotalCount = count
                 });

@@ -170,7 +170,7 @@ namespace Ordbox.Api.Controllers.PDF
             paragraph.Add(Cabecera);
             paragraph.Add(Detalle);
             paragraph.Add(Observacion);
-            var contenido = await _service.Imprimir(paragraph);
+            var contenido = await _service.Imprimir(paragraph, true);
             return File(contenido.Data, "application/pdf", $"Remito_{DateTime.Now:dd-MM-yyyy}.pdf");
         }
 

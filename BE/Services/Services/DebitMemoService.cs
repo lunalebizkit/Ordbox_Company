@@ -150,30 +150,35 @@ namespace Ordbox.Services.Services
         {
             try
             {
-                var query = _contextSql
-                                    .DebitMemos
-                                    .AsNoTracking()
-                                    .Where(p => p.CompanyId == requestedBy.CompanyId && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.CustomerCuit.ToLower().Contains(request.Filter.Cuit) : true)
-                                     && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.Id == request.Filter.Number : true) &&
-                                     ((!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
-                                        &&
-                                     (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.CustomerName.ToLower().Contains(request.Filter.CustomerName) : true)
-                                     );
+                List<DtoRequestDebitMemo> dtoRequests = new List<DtoRequestDebitMemo>();
+                int count = 0;
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    dtoRequests = connection.Query<DtoRequestDebitMemo>(SqlScripts.GetDebitMemoList, new
+                    {
+                        companyid = requestedBy.CompanyId,
+                        cuit = string.IsNullOrEmpty(request.Filter.Cuit) ? null : request.Filter.Cuit,
+                        number = request.Filter.Number == 0 ? null : request.Filter.Number,
+                        date = string.IsNullOrEmpty(request.Filter.Date) ? null : request.Filter.Date,
+                        customername = string.IsNullOrEmpty(request.Filter.CustomerName) ? null : request.Filter.CustomerName,
+                        page = request.Page,
+                        pagesize = request.PageSize
+                    }).ToList();
 
-                var count = await query.CountAsync().ConfigureAwait(false);
+                    count = connection.QuerySingle<int>(SqlScripts.GetDebitMemoListCount, new
+                    {
+                        companyid = requestedBy.CompanyId,
+                        cuit = string.IsNullOrEmpty(request.Filter.Cuit) ? null : request.Filter.Cuit,
+                        number = request.Filter.Number == 0 ? null : request.Filter.Number,
+                        date = string.IsNullOrEmpty(request.Filter.Date) ? null : request.Filter.Date,
+                        customername = string.IsNullOrEmpty(request.Filter.CustomerName) ? null : request.Filter.CustomerName
+                    });
 
-                var list = await query.OrderByDescending(p => p.DateTime)
-                                      .Skip(request.Page * request.PageSize)
-                                      .Take(request.PageSize)
-                                      .ToListAsync()
-                                      .ConfigureAwait(false);
-
-                var result = _mapper.Map<List<DtoRequestDebitMemo>>(list);
-
+                }
 
                 return new OperationResponse<DtoPagination<DtoRequestDebitMemo>>(new DtoPagination<DtoRequestDebitMemo>
                 {
-                    Data = result,
+                    Data = dtoRequests,
                     PageSize = request.PageSize,
                     TotalCount = count
                 });
@@ -243,6 +248,7 @@ namespace Ordbox.Services.Services
                     debitModel.CAEExpirationDate = responseARCAInvoice.FechaVencimientoCae.HasValue ? responseARCAInvoice.FechaVencimientoCae.Value : null;
                     debitModel.IntegrationSuccess = !string.IsNullOrEmpty(responseARCAInvoice.Cae);
                     debitModel.DebitMemoNumber = responseARCAInvoice.InvoiceNumber;
+                    debitModel.CompanyId = debitMemo.CompanyId;
 
                     _contextSql.Entry(debitMemo).State = EntityState.Detached;
                     _contextSql.DebitMemos.Update(debitModel);

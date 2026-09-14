@@ -89,10 +89,10 @@ namespace Ordbox.Services.Services
                     dtoRequests = connection.Query<DtoRequestListReceipt>(SqlScripts.GetReceiptList, new
                     {
                         companyid = requestedBy.CompanyId,
-                        cuit = request.Filter.Cuit,
-                        number = request.Filter.Number,
+                        cuit = string.IsNullOrWhiteSpace(request.Filter.Cuit) ? null : request.Filter.Cuit,
+                        number = request.Filter.Number == 0 ? null : request.Filter.Number,
                         date = request.Filter.Date,
-                        customername = request.Filter.CustomerName,
+                        customername = string.IsNullOrWhiteSpace(request.Filter.CustomerName) ? null : request.Filter.CustomerName,
                         Page = request.Page,
                         PageSize = request.PageSize
                     }).ToList();
@@ -100,35 +100,13 @@ namespace Ordbox.Services.Services
                     count = connection.QuerySingle<int>(SqlScripts.GetReceiptListCount, new
                     {
                         companyid = requestedBy.CompanyId,
-                        cuit = request.Filter.Cuit,
-                        number = request.Filter.Number,
+                        cuit = string.IsNullOrWhiteSpace(request.Filter.Cuit) ? null : request.Filter.Cuit,
+                        number = request.Filter.Number == 0 ? null : request.Filter.Number,
                         date = request.Filter.Date,
-                        customername = request.Filter.CustomerName
+                        customername = string.IsNullOrWhiteSpace(request.Filter.CustomerName) ? null : request.Filter.CustomerName
                     });
 
                 }
-
-                //    var query = _contextSql
-                //                    .Receipts
-                //                    .AsNoTracking()
-                //                    .Include(x => x.User).ThenInclude(x => x.Company)
-                //                     .Where(p => p.User.CompanyId == companyId && (!p.IsInactive) && (!string.IsNullOrEmpty(request.Filter.Cuit) ? p.SupplierCuit.ToLower().Contains(request.Filter.Cuit) : true)
-                //                     && ((request.Filter.Number.HasValue && request.Filter.Number != 0) ? p.ReceiptNumber == request.Filter.Number : true)
-                //                      &&
-                //                     ((!request.Filter.Date.Contains("") || request.Filter.Date != null) ? p.DateTime.Date.ToString().Contains(request.Filter.Date) : true)
-                //                      &&
-                //                     (!string.IsNullOrEmpty(request.Filter.CustomerName) ? p.SupplierName.ToLower().Contains(request.Filter.CustomerName) : true)
-                //                     );
-
-                //var count = await query.CountAsync().ConfigureAwait(false);
-
-                //var list = await query.OrderByDescending(p => p.DateTime)
-                //                      .Skip(request.Page * request.PageSize)
-                //                      .Take(request.PageSize)
-                //                      .ToListAsync()
-                //                      .ConfigureAwait(false);
-
-                //var dto = _mapper.Map<List<DtoRequestListReceipt>>(list);
 
                 return new OperationResponse<DtoPagination<DtoRequestListReceipt>>(new DtoPagination<DtoRequestListReceipt>
                 {

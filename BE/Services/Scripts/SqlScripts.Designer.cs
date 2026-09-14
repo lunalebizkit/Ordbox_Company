@@ -232,6 +232,50 @@ namespace Ordbox.Services.Scripts {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a WITH FilteredData AS (
+        ///    SELECT 
+        ///        r.Id,
+        ///        r.[debitMemo_number] AS DebitMemoNumber,
+        ///        r.[dateTime],
+        ///        r.[customer_cuit] AS CustomerCuit,
+        ///        r.[customer_name] AS CustomerName,
+        ///		u.[first_name] AS CreatedBy,
+        ///		r.[total],
+        ///		r.[type]
+        ///    FROM [debit_memo] [r]
+        ///    INNER JOIN [user] u ON [r].[user_id] = u.Id
+        ///    WHERE r.[company_id] = @companyid
+        ///      AND (@cuit IS NULL OR r.[customer_cuit] LIKE &apos;%&apos; + @cuit + &apos;%&apos;)
+        ///      AND (@number IS NULL OR r.[debitMemo_number] = @n [resto de la cadena truncado]&quot;;.
+        /// </summary>
+        internal static string GetDebitMemoList {
+            get {
+                return ResourceManager.GetString("GetDebitMemoList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a WITH FilteredData AS (
+        ///    SELECT 
+        ///        r.Id
+        ///    FROM [debit_memo] [r]
+        ///    INNER JOIN [user] u ON [r].[user_id] = u.Id
+        ///    WHERE r.[company_id] = @companyid
+        ///      AND (@cuit IS NULL OR r.[customer_cuit] LIKE &apos;%&apos; + @cuit + &apos;%&apos;)
+        ///      AND (@number IS NULL OR r.[debitMemo_number] = @number)
+        ///      AND (@date IS NULL OR CONVERT(VARCHAR(10), r.DateTime, 120) LIKE &apos;%&apos; + @date + &apos;%&apos;)
+        ///      AND (@customername IS NULL OR LOWER(r.[customer_name]) LIKE &apos;%&apos; + LOWER(@customername) + &apos;%&apos;)
+        ///)
+        ///
+        ///SELECT COUNT(*) [resto de la cadena truncado]&quot;;.
+        /// </summary>
+        internal static string GetDebitMemoListCount {
+            get {
+                return ResourceManager.GetString("GetDebitMemoListCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a SELECT [id]
         ///      ,[credit_id] AS [CreditId]
         ///      ,[request]
@@ -345,6 +389,51 @@ namespace Ordbox.Services.Scripts {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a WITH FilteredData AS (
+        ///    SELECT 
+        ///        p.[id],
+        ///        p.[description],
+        ///        p.[code],
+        ///        p.[company_id],
+        ///        p.[is_deleted] AS IsDeleted,
+        ///        c.[description] AS CategoryName,
+        ///        b.[description] AS BrandName,
+        ///        e.[name] AS SupplierName
+        ///    FROM [product] p
+        ///    INNER JOIN [brand] b ON p.[brand_id] = b.[id]
+        ///    INNER JOIN [supplier] s ON p.[supplier_id] = s.[id]
+        ///	INNER JOIN [entity] e ON s.[id] = e.[id]
+        ///	INNER JOIN	[category] c ON p.[category_id] = c.[id]
+        ///    WHER [resto de la cadena truncado]&quot;;.
+        /// </summary>
+        internal static string GetProductsList {
+            get {
+                return ResourceManager.GetString("GetProductsList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a WITH FilteredData AS (
+        ///    SELECT 
+        ///        p.[id]
+        ///    FROM [product] p
+        ///    INNER JOIN [brand] b ON p.[brand_id] = b.[id]
+        ///    INNER JOIN [supplier] s ON p.[supplier_id] = s.[id]
+        ///	INNER JOIN [entity] e ON s.[id] = e.[id]
+        ///	INNER JOIN	[category] c ON p.[category_id] = c.[id]
+        ///    WHERE p.[is_deleted] = 0
+        ///      AND p.[id] &gt; 0
+        ///      AND p.[company_id] = @companyid
+        ///      AND (@product IS NULL OR LOWER(p.[description]) LIKE &apos;%&apos; + LOWER(@product) + &apos;%&apos;)
+        ///      AND (@brand IS NULL OR @brand = 0 OR p.[brand_ [resto de la cadena truncado]&quot;;.
+        /// </summary>
+        internal static string GetProductsListCount {
+            get {
+                return ResourceManager.GetString("GetProductsListCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a WITH FilteredReceipts AS (
         ///    SELECT 
         ///        r.Id,
@@ -357,10 +446,10 @@ namespace Ordbox.Services.Scripts {
         ///		r.[type]
         ///    FROM [receipt] [r]
         ///    INNER JOIN [user] u ON [r].[user_id] = u.Id
-        ///    INNER JOIN [company] c ON u.[company_id] = c.Id
-        ///    WHERE c.Id = @companyid
+        ///    WHERE r.[company_id] = @companyid
         ///      AND r.is_inactive = 0
-        ///      AND (@cuit IS NULL OR r.[supplier_cuit] LIKE &apos;%&apos; +  [resto de la cadena truncado]&quot;;.
+        ///      AND (@cuit IS NULL OR r.[supplier_cuit] LIKE &apos;%&apos; + @cuit + &apos;%&apos;)
+        ///      AND (@number IS NULL OR [resto de la cadena truncado]&quot;;.
         /// </summary>
         internal static string GetReceiptList {
             get {
@@ -374,13 +463,12 @@ namespace Ordbox.Services.Scripts {
         ///        r.Id
         ///    FROM [receipt] [r]
         ///    INNER JOIN [user] u ON [r].[user_id] = u.Id
-        ///    INNER JOIN [company] c ON u.[company_id] = c.Id
-        ///    WHERE c.Id = @companyid
+        ///    WHERE r.[company_id] = @companyid
         ///      AND r.is_inactive = 0
         ///      AND (@cuit IS NULL OR r.[supplier_cuit] LIKE &apos;%&apos; + @cuit + &apos;%&apos;)
         ///      AND (@number IS NULL OR r.[receipt_number] = @number)
         ///      AND (@date IS NULL OR CONVERT(VARCHAR(10), r.DateTime, 120) LIKE &apos;%&apos; + @date + &apos;%&apos;)
-        ///      AND (@customername IS NULL OR LOWER(r.[suppl [resto de la cadena truncado]&quot;;.
+        ///      AND (@customername IS NULL OR LOWER(r.[supplier_name]) LIKE &apos;%&apos; + LOWER(@customername)  [resto de la cadena truncado]&quot;;.
         /// </summary>
         internal static string GetReceiptListCount {
             get {

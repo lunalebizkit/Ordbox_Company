@@ -148,6 +148,12 @@
   <data name="GetCustomersByCUIT" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>GetCustomersByCUIT.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="GetDebitMemoList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>GetDebitMemoList.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="GetDebitMemoListCount" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>GetDebitMemoListCount.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="GetIntegrationLogCreditById" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>GetIntegrationLogCreditById.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
@@ -165,6 +171,12 @@
   </data>
   <data name="GetProductReport" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>GetProductReport.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="GetProductsList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>GetProductsList.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="GetProductsListCount" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>GetProductsListCount.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="GetReceiptList" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>GetReceiptList.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>

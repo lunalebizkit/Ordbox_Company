@@ -718,7 +718,7 @@ namespace Ordbox.Services.ARCA
                                         new XElement(ar + "CbtesAsoc",
                                                 new XElement(ar + "CbteAsoc",
                                                     new XElement(ar + "Tipo", MapDocumentType(dto.Type)),
-                                                    new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                                                    new XElement(ar + "PtoVta", company.CompanyPoint),
                                                     new XElement(ar + "Nro", dto.InvoiceNumber)
                                                 )
                                             )
@@ -787,7 +787,7 @@ namespace Ordbox.Services.ARCA
                                         new XElement(ar + "CbtesAsoc",
                                                 new XElement(ar + "CbteAsoc",
                                                     new XElement(ar + "Tipo", MapDocumentType(dto.Type)),
-                                                    new XElement(ar + "PtoVta", CustomizationConstant.PuntoDeVenta),
+                                                    new XElement(ar + "PtoVta", company.CompanyPoint),
                                                     new XElement(ar + "Nro", dto.InvoiceNumber)
                                                 )
                                             )
