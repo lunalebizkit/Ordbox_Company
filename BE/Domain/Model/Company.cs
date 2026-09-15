@@ -41,6 +41,10 @@ namespace Ordbox.Domain.Model
         public required short CompanyConcept { get; set; }
 
         [Required]
+        [Column("company_condition_iva")]
+        public required short CompanyConditionIva { get; set; }
+
+        [Required]
         [Column("is_deleted")]
         public bool IsDeleted { get; set; }
 

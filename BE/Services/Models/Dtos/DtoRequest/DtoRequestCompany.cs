@@ -22,6 +22,8 @@
 
         public required short CompanyConcept { get; set; }
 
+        public required short CompanyConditionIva { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public IEnumerable<long> UserIds { get; set; } = [];
