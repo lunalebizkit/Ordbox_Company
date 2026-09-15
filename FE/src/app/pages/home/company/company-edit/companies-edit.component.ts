@@ -14,7 +14,7 @@ import { NzInputModule } from "ng-zorro-antd/input";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Permission } from "../../../../common/auth/models/permissions.enum";
 import { CompanyService } from "../companies.services";
-import { CompanyModel } from "../model/company.model";
+import { CompanyModel, condicionIvaList } from "../model/company.model";
 import { NzSwitchModule } from "ng-zorro-antd/switch";
 import { concepList } from "../../../../common/auth/models/invoice-versions.enum";
 @Component({
@@ -42,6 +42,7 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
     isLoading = signal<boolean>(false);
     id = signal<number>(0);
     concepList = concepList;
+    condicionIva = condicionIvaList;
 
     /*
      ** Determina si se estan cargando los roles
@@ -80,7 +81,7 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
             checkpassword: [{ value: '', disabled: true },],
             companyEmail: [{ value: '', disabled: true }, [Validators.email]],
             isDeleted: [{ value: false, disabled: true }, [Validators.required]],
-
+            companyConditionIva: [{ value: null, disabled: true }, [Validators.required]],
         })
     }
 
@@ -112,6 +113,7 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
                         this.form.controls['companyPoint'].setValue(r.companyPoint),
                         this.form.controls['companyConcept'].setValue(r.companyConcept),
                         this.form.controls['isDeleted'].setValue(r.isDeleted),
+                        this.form.controls['companyConditionIva'].setValue(r.companyConditionIva),
                         this.isLoading.set(false);
                 },
                 error: () => {
@@ -135,7 +137,8 @@ export class CompaniesEditComponent extends BaseComponent implements OnInit {
                 companyDescription: this.form.controls['companyDescription'].value,
                 isDeleted: this.form.controls['isDeleted'].value,
                 companyPoint: this.form.controls['companyPoint'].value,
-                companyConcept: this.form.controls['companyConcept'].value         
+                companyConcept: this.form.controls['companyConcept'].value,      
+                companyConditionIva: this.form.controls['companyConditionIva'].value,      
             };
             this.isSaving.set(true);
             this.service.saveCompany(model)

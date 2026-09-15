@@ -108,12 +108,22 @@
                         </nz-form-item>
                         }
 
-                        <!--Rol-->
+                        <!--Concepto-->
                         <nz-form-item [style.width.%]="75">
                             <nz-form-label nzRequired nzFor="companyConcept">Concepto</nz-form-label>
                             <nz-form-control>
                                 <nz-select formControlName="companyConcept" [nzId]="'companyConcept'"
                                     [nzOptions]="concepList()">
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                        
+                        <!--Condicion Iva-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="companyConditionIva">Concepto</nz-form-label>
+                            <nz-form-control>
+                                <nz-select formControlName="companyConditionIva" [nzId]="'companyConditionIva'"
+                                    [nzOptions]="condicionIva()">
                                 </nz-select>
                             </nz-form-control>
                         </nz-form-item>
