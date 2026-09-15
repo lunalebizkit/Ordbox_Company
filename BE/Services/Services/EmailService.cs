@@ -29,7 +29,7 @@ namespace Ordbox.Services.Services
         }
         ///Email General
 
-        public async Task<OperationResponse<string>> SendEmail(string emailTo, string subject, string htmlBody, string plainBody = "")
+        public async Task<OperationResponse<string>> SendEmail(string emailTo, string subject, string htmlBody)
         {
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
@@ -99,15 +99,17 @@ namespace Ordbox.Services.Services
             return new OperationResponse<string>("Ok");
 
         }
+
         public async Task<OperationResponse<string>> SendUser(string email, string userName, string password)
         {
-            var emailBody = $"<html> <head><div  style=\"font-size:30px\"> Refrigeraciones Dante <img  style=\"heigth:50px;width:50px;margin-left:100px\" src = https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWa5Ib3MGd8kiDLloC7s3FaDQfJfRw1oaqOJwBj261Nz0uOOZf1jJ3VZRePSC3IR6KtMw&usqp=CAU></div></head>  <body  style=\"padding:25px\" ><h3> <strong> <h2>Hola,{userName}!</h2></br> Queríamos darte la bienvenida a nuestro sistema acercandote la información necesaria para que puedas acceder.</br> <p style=\"padding-left:25px\" ><strong><img style=\"heigth:20px;width:20px\" src=https://cdn-icons-png.flaticon.com/512/149/149071.png>  Usuario:</strong> {userName} </p> <p style=\"padding-left:25px\" ><strong><img style=\"heigth:20px;width:20px\" src=https://w7.pngwing.com/pngs/138/590/png-transparent-computer-icons-password-icon-svg-security-password-icon.png>  Contraseña:</strong> {password} </p></br><p> Saludos! </p></h3><h4>PD:Ante cualquier duda comunicarse con el administrador</h4></strong> </body>";
+            string templateEail = Path.Combine(AppContext.BaseDirectory, "Assets", "userpass.cshtml");
+            string template = File.ReadAllText(templateEail);
+            template = template.Replace("@Model.User", userName);
+            template = template.Replace("@Model.Pass", password);
+            template = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 
-
-            await SendEmail(email, "Envio de Datos Usuario", emailBody);
-
+            await SendEmail(email, "Envio de Datos Usuario", template);
             return new OperationResponse<string>("Ok");
-
         }
 
         public async Task<OperationResponse<string>> SendEmailInvoice(string emailTo, byte[] attachment, DtoResponseCompany company)
@@ -131,7 +133,7 @@ namespace Ordbox.Services.Services
                 string pass = decryptedPassword;
 
                 email.From.Add(new MailboxAddress(company.CompanyName, emailFrom));
-                string templateEail = Path.Combine(_Env.WebRootPath, "Assets", "body.cshtml");
+                string templateEail = Path.Combine(AppContext.BaseDirectory, "Assets", "body.cshtml");
                 string template = File.ReadAllText(templateEail);
                 string remplazar = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 

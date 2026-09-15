@@ -13,6 +13,12 @@
     <Content Include="appsettings.Production.json" />
     <Content Include="appsettings.Staging.json" />
     <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Remove="Assets\userpass.cshtml" />
+    <Content Include="Assets\dantesLogo1.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\body.cshtml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\userpass.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Ordbox.Domain.Enum;
 using Ordbox.SDK.Error;
+using Ordbox.Services.ARCA.Enum;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
@@ -150,7 +151,7 @@ namespace Ordbox.Services.Services
             string nombre_apellido = _configuration.GetSection("Pdf:Nombre").Value;
             string email = _configuration.GetSection("Pdf:Email").Value;
 
-            string imagePath = Path.Combine(_Env.WebRootPath, "Assets", "dantesLogo1.png");
+            string imagePath = Path.Combine(AppContext.BaseDirectory, "Assets", "dantesLogo1.png");
             // Crear el objeto de imagen
             iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(imagePath);
 
@@ -1422,7 +1423,7 @@ namespace Ordbox.Services.Services
             string nombre_apellido = company.CompanyOwnerName;
             string email = company.CompanyEmail;
 
-            string imagePath = Path.Combine(_Env.WebRootPath, "Assets", "dantesLogo1.png");
+            string imagePath = Path.Combine(AppContext.BaseDirectory, "Assets", "dantesLogo1.png");
 
             #region PRIMERA-CABECERA-LOGO
 
@@ -1464,7 +1465,7 @@ namespace Ordbox.Services.Services
             phraseIzq.Add(new Chunk(direccion, fontText));
             phraseIzq.Add(Chunk.Newline);
             phraseIzq.Add(new Chunk("Condición frente al IVA: ", fontTextBold));
-            phraseIzq.Add(new Chunk("IVA Responsable Inscripto", fontText));
+            phraseIzq.Add(new Chunk(MapCondicionIva(company.CompanyConditionIva), fontText));
             phraseIzq.Add(Chunk.Newline);
 
             PdfPCell celdaIzquierda = new PdfPCell(phraseIzq)
@@ -1597,6 +1598,24 @@ namespace Ordbox.Services.Services
                 ETypeReceipt.B => "Consumidor final",
                 ETypeReceipt.EXENTO => "Excento",
                 _ => ""
+            };
+        }
+
+        private static string MapCondicionIva(short conditioIva)
+        {
+            return (ECondFrenteIvaReceptor)conditioIva switch
+            {
+                ECondFrenteIvaReceptor.ResponsableInscripto => "Responsable Inscripto",
+                ECondFrenteIvaReceptor.IvaSujetoExento => "Iva Sujeto Exento",
+                ECondFrenteIvaReceptor.ConsumidorFinal => "Consumidor Final",
+                ECondFrenteIvaReceptor.ResponsableMonotributo => "Responsable Monotributo",
+                ECondFrenteIvaReceptor.SujetoNoCategorizado => "Sujeto No Categorizado",
+                ECondFrenteIvaReceptor.ProveedorDelExterior => "Proveedor del Exterior",
+                ECondFrenteIvaReceptor.ClienteDelExterior => "Cliente del Exterior",
+                ECondFrenteIvaReceptor.IVALiberado => "IVA Liberado",
+                ECondFrenteIvaReceptor.MonotributistaSocial => "Monotributista Social",
+                ECondFrenteIvaReceptor.IVANoAlcanzado => "IVA No Alcanzado",
+                _ => string.Empty
             };
         }
 

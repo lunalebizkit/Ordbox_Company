@@ -126,6 +126,9 @@ namespace Ordbox.Services.Services
         {
             try
             {
+                bool sendEmail = false;
+                var unHashPassword =model.Password ?? string.Empty;
+
                 var countEmails = await _contextSql
                                     .Users
                                     .AsNoTracking()
@@ -138,13 +141,12 @@ namespace Ordbox.Services.Services
 
                 var usermodel = _mapper.Map<User>(model);
 
-                var email = await _emailService.SendUser(model.Email, model.UserName, model.Password);
-
                 if (usermodel.Id == 0)
                 {
+                    unHashPassword = usermodel.Password;
                     usermodel.Password = SecurePasswordHasher.Hash(usermodel.Password, 100);
                     await _contextSql.Users.AddAsync(usermodel, ct).ConfigureAwait(false);
-
+                    sendEmail = true;
                 }
                 else
                 {
@@ -155,7 +157,9 @@ namespace Ordbox.Services.Services
 
                     if (!String.IsNullOrEmpty(usermodel.Password))
                     {
+                        unHashPassword = usermodel.Password;
                         usermodel.Password = SecurePasswordHasher.Hash(usermodel.Password, 100);
+                        sendEmail = true;
                     }
 
                     else
@@ -168,7 +172,20 @@ namespace Ordbox.Services.Services
                      _contextSql.Entry(oldUser).CurrentValues.SetValues(usermodel);
 
                 }
+
                 await _contextSql.SaveChangesAsync(ct).ConfigureAwait(false);
+
+                if (sendEmail)
+                {
+                    try
+                    {
+                        var email = await _emailService.SendUser(model.Email, model.UserName, unHashPassword);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ErrorsMessages.GetMessage(ErrorsCodes.C_010_ERROR_EXCEPTION), ex: ex);
+                    }
+                }
 
                 return Ok(new IdResponse<long>(usermodel.Id));
 

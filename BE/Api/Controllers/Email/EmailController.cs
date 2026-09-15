@@ -18,12 +18,11 @@ namespace Ordbox.Api.Controllers.Email
         /// <param name="emailTo"></param>
         /// <param name="subject"></param>
         /// <param name="htmlBody"></param>
-        /// <param name="plainBody"></param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult SendEmail(string emailTo, string subject, string htmlBody, string plainBody = "")
+        public IActionResult SendEmail(string emailTo, string subject, string htmlBody)
         {
-             _service.SendEmail(emailTo, subject, htmlBody, plainBody);
+             _service.SendEmail(emailTo, subject, htmlBody);
             return Ok();
         }
     }
