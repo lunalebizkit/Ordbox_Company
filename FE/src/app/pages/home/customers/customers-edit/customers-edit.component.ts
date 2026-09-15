@@ -74,7 +74,7 @@ export class CustomersEditComponent extends BaseComponent implements OnInit {
     ) {
         super(notificacionService, el, message);
         this.form = this.fb.group({
-            dni: [{ value: '',disabled: true}, [Validators.required, Validators.pattern, Validators.maxLength]],
+            dni: [{ value: '',disabled: true}, [Validators.pattern, Validators.maxLength]],
             cuit: [{ value: '',disabled: true}, [Validators.maxLength, Validators.pattern]],
             name: [{ value: '',disabled: true},[Validators.required]],
             address: [{ value: '',disabled: true}, [Validators.required]],
@@ -125,7 +125,7 @@ export class CustomersEditComponent extends BaseComponent implements OnInit {
     save(): void {
         if (!this.isValidForm(this.form)) return;
         const model = this.form.getRawValue();
-        model.id = this.id;
+        model.id = this.id();
         this.isSaving.set(true);
         this.service.saveCustomer(model).subscribe({
             next: (r) => {
