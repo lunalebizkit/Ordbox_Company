@@ -396,15 +396,15 @@ namespace Ordbox.Services.Scripts {
         ///        p.[code],
         ///        p.[company_id],
         ///        p.[is_deleted] AS IsDeleted,
-        ///        c.[description] AS CategoryName,
-        ///        b.[description] AS BrandName,
-        ///        e.[name] AS SupplierName
-        ///    FROM [product] p
-        ///    INNER JOIN [brand] b ON p.[brand_id] = b.[id]
-        ///    INNER JOIN [supplier] s ON p.[supplier_id] = s.[id]
-        ///	INNER JOIN [entity] e ON s.[id] = e.[id]
-        ///	INNER JOIN	[category] c ON p.[category_id] = c.[id]
-        ///    WHER [resto de la cadena truncado]&quot;;.
+        ///		p.[quantity],
+        ///		p.[purchase_price] AS PurchasePrice,
+        ///		p.[sale_percentage] AS SalePercentage,
+        ///		p.[sale_price] AS SalePrice,
+        ///		p.[card_sale_percentage] AS CardSalePercentage,
+        ///		p.[card_sale_price] AS CardSalePrice,
+        ///		p.[cash_sale_percentage] AS CashSalePercentage,
+        ///		p.[cash_sale_price] AS CashSalePrice,
+        ///        c.[description] AS Category [resto de la cadena truncado]&quot;;.
         /// </summary>
         internal static string GetProductsList {
             get {

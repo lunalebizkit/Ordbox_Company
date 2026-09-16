@@ -27,7 +27,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { ButtonOperationFooter } from '../../../../common/components/footers/button.operation.footer.component';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { PermissionDirective } from '../../../../common/directives/permission.directive';
-import { ActivatedRoute, Route } from '@angular/router';
+import { ActivatedRoute, Route, Router } from '@angular/router';
 
 @Component({
   selector: 'app-products-edit',
@@ -111,7 +111,8 @@ export class ProductsEditComponent extends BaseComponent implements OnInit {
     private route: ActivatedRoute,
     @Inject(LOCALE_ID) public locale: string,
     private modalService: NzModalService,
-    private permissionService: AuthService
+    private permissionService: AuthService,
+    private router: Router,
   ) {
     super(notificacionService, el, message);
     this.form = this.fb.group({
@@ -267,6 +268,7 @@ export class ProductsEditComponent extends BaseComponent implements OnInit {
             `Se guardo correctamente el Producto ${model.description}`
           );
           this.isSaving.set(false);
+          this.router.navigate(['/home/products']);
         },
         error: () => {
           this.isSaving.set(false);

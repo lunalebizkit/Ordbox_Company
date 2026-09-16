@@ -1,4 +1,3 @@
-import { formatDate } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -8,7 +7,7 @@ import {
   signal,
 
 } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { CategoriesService } from '../../categories/category.services';
@@ -61,7 +60,7 @@ export class OrdersListComponent extends BaseComponent implements OnInit {
   /*
    ** Parametros de busqueda Filtrada
    */
-  queryParams: ProductFilter = resetProductFilter;
+  queryParams = resetProductFilter();
   /*
    ** Parametros de busqueda
    */

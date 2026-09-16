@@ -206,6 +206,7 @@ namespace Ordbox.Services.Services
                                     .Include(p => p.Supplier)
                                     .Include(p => p.SupplierOrderDetail)
                                     .ThenInclude(p => p.Product)
+                                    .Include(y => y.Company)
                                     .AsNoTracking()
                                     .FirstOrDefaultAsync(p => p.Id == model.Id && p.CompanyId == requestedBy.CompanyId)
                                     .ConfigureAwait(false);
@@ -219,7 +220,7 @@ namespace Ordbox.Services.Services
                     var result = _mapper.Map<DtoResponseSupplierOrderById>(order);
                     List<DtoResponseOrderByIdDetail> orderDetail = new List<DtoResponseOrderByIdDetail>(result.OrderDetail);
                    
-                    var email = await _emailService.SendOrder(model.Emails, order.Supplier.Name, order.Id.ToString(), order.DateTime.ToString("dd/MM/yyyy"), order.IsPaid, orderDetail);
+                    var email = await _emailService.SendOrder(model.Emails, order.Supplier.Name, order.Id.ToString(), order.DateTime.ToString("dd/MM/yyyy"), order.IsPaid, orderDetail, order.Company.CompanyName);
 
                     if (email.Success)
                     {

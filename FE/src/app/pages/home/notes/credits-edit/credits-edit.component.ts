@@ -219,19 +219,10 @@ export class CreditsEditComponent extends BaseComponent implements OnInit {
             this.dataGrid.set(r.invoiceDetails.map((modelDetail: InvoiceDetails, index: number) => {
               return creditMemoGridFromInvoiceParser(modelDetail, index)
             }));
-            /**parse a Grilla */
-            // r.invoiceDetails.forEach(modelDetail => {
-          //   const model = creditMemoGridFromInvoiceParser(modelDetail)
-          //   this.creditMemoListTest.push(model)
-          // })
           /**Parseo al back */
           this.dataDetails.set(r.invoiceDetails.map((modelDetail: InvoiceDetails, index: number) => {
             return creditMemoDetailFromInvoiceParser(modelDetail, index)
           }));
-          // r.invoiceDetails.forEach(model => {
-            //   const modelDetail = creditMemoDetailFromInvoiceParser(model);
-            //   this.creditMemoDetails.push(modelDetail);
-            // })
             this.isLoading.set(false);
         },
 

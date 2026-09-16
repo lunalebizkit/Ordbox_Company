@@ -1,4 +1,4 @@
-import { ElementRef, Input, OnInit, ViewChild, Component, signal } from "@angular/core";
+import { ElementRef, OnInit, ViewChild, Component, signal } from "@angular/core";
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { NzMessageService } from "ng-zorro-antd/message";
 import { NzNotificationService } from "ng-zorro-antd/notification";
@@ -11,7 +11,7 @@ import { EntityService } from "../../customers/customer.service";
 import { NzCollapseModule } from "ng-zorro-antd/collapse";
 import { NzLayoutModule } from "ng-zorro-antd/layout";
 import { NzInputModule } from "ng-zorro-antd/input";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { NzButtonModule } from "ng-zorro-antd/button";
 import { NzIconModule } from "ng-zorro-antd/icon";
 import { Permission } from "../../../../common/auth/models/permissions.enum";
@@ -73,6 +73,7 @@ export class SuppliersEditComponent extends BaseComponent implements OnInit {
         message: NzMessageService,
         private fb: FormBuilder,
         private route: ActivatedRoute,
+    private router: Router,
     ) {
         super(notificacionService, el, message);
         this.form = this.fb.group({
@@ -138,6 +139,7 @@ export class SuppliersEditComponent extends BaseComponent implements OnInit {
                     `Se guardo correctamente el Proveedor ${model.name}`
                 );
                 this.isSaving.set(false);
+                this.router.navigate(['/home/suppliers']);
             },
             error: () => {
                 this.isSaving.set(false);

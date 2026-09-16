@@ -53,7 +53,7 @@ import { NzSpaceModule } from 'ng-zorro-antd/space';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { Permission } from '../../../../common/auth/models/permissions.enum';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProductFilter, resetProductFilter } from '../../../../common/components/model/product.filter.model';
 import { InvoiceProductSearchComponent } from '../../invoices/invoice-product-search/invoice-product-search.component';
 import { NzDrawerModule, NzDrawerService } from 'ng-zorro-antd/drawer';
@@ -98,7 +98,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
    ** Variables globales
    */
   id = signal<number>(0);
-  product= signal<string>('');
+  product = signal<string>('');
   today = new Date();
   newOrder = signal<boolean>(true);
   paymentSelected: any;
@@ -164,7 +164,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     pageSize: 20,
   };
 
-  queryData: ProductFilter = resetProductFilter;
+  queryData = resetProductFilter();
 
   constructor(
     notificacionService: NzNotificationService,
@@ -177,21 +177,22 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     private route: ActivatedRoute,
     @Inject(LOCALE_ID) public locale: string,
     private drawerService: NzDrawerService,
+    private router: Router,
   ) {
     super(notificacionService, el, message);
     this.form = this.fb.group({
-      statusId: [1, [Validators.required]],
-      isPaid: [false],
-      datetime: [new Date(), [Validators.required]],
+      statusId: [{ value: 1, disabled: true }, [Validators.required]],
+      isPaid: [{ value: false, disabled: true }],
+      datetime: [{ value: new Date(), disabled: true }, [Validators.required]],
       supplierEmail: new FormArray([]),
       emailEntity: new FormArray([]),
-      observation: [{ value: '', disabled: false }]
+      observation: [{ value: '', disabled: true }]
     });
     this.formProductSearch = this.fb.group({
-      productSearchFilter: ['', [Validators.required]],
+      productSearchFilter: [{ value: '', disabled: true }, [Validators.required]],
     });
     this.formSupplierSearch = this.fb.group({
-      supplierId: ['', [Validators.required]],
+      supplierId: [{ value: '', disabled: true }, [Validators.required]],
     });
   }
 
@@ -201,11 +202,10 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
         if (p['id']) {
           this.isLoading.set(true);
           this.getOrder(p['id']);
-          this.id.set(p['id']);
         }
       },
       error: () => { }
-    });
+    });    
   }
 
   /*
@@ -254,6 +254,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
 
   getOrder(id: number): void {
     if (id != 0) {
+      this.id.set(id);
       this.ordersService.getById(id).subscribe({
         next: (r) => {
           this.newOrder.set(false);
@@ -270,15 +271,9 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
               new FormControl({ value: `${e}`, disabled: true }, [Validators.required])
             );
           });
-          // /*Bindeo detalles*/
-          // r.orderDetail.forEach((orderDetail: OrderDetailGrid) => {
-          //   /**Parseo viejo Producto a Grid */
-          //   this.orderListGridTest.push(orderGridParser(orderDetail));
           this.orderDetailGrid.set(r.orderDetail.map((item: OrderDetailGrid) => orderGridParser(item)));
           this.orderDetail.set(r.orderDetail.map((item: OrderDetailGrid) => orderOldProductParser(item)));
-          //   /* Parseo viejo Producto a Detalle*/
-          //   this.orderDetail.push(orderOldProductParser(orderDetail));
-          // });
+
           if (r.statusId == 1) {
             this.editOrder.set(true);
             this.disabled.set(false);
@@ -309,7 +304,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
       this.isValidForm(this.form) &&
       this.isValidForm(this.formSupplierSearch)
     ) {
-      if (this.orderDetail.length === 0) {
+      if (this.orderDetail().length === 0) {
         this.showMessageError('No hay Productos Seleccionados');
       } else {
         const model: NewOrder = {
@@ -334,6 +329,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
               `Se guardo correctamente el pedido`
             );
             this.isSaving.set(false);
+            this.router.navigate(['/home/orders']);
 
           },
           error: () => {
@@ -454,12 +450,6 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
 
   msjConfirmOk() {
     try {
-
-      const idToDelete = this.popupComponent.elementSelected();
-
-      const updatedList = this.orderDetail().filter(el => el.productId !== idToDelete);
-      this.orderDetail.set(updatedList);
-
       this.popupComponent.isConfirmationvisible.set(false);
       if (
         this.isValidForm(this.form) && this.isValidForm(this.formSupplierSearch) &&
@@ -617,34 +607,38 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     this.isEditMode.set(!this.isEditMode());
     if (this.isEditMode()) {
       this.form.enable();
+      this.formSupplierSearch.enable();
+      this.formProductSearch.enable();
     } else {
       this.form.disable();
+      this.formProductSearch.disable();
+      this.formSupplierSearch.disable();
     }
   }
 
   addOrUpdateProduct(product: ProductsModel): void {
     const exists = this.orderDetail().some(item => item.productId === product.id);
 
-  if (exists) {
-    this.orderDetail.update(list =>
-      list.map(item =>
-        item.productId === product.id
-          ? { ...item, orderedQuantity: item.orderedQuantity + 1 }
-          : item
-      )
-    );
+    if (exists) {
+      this.orderDetail.update(list =>
+        list.map(item =>
+          item.productId === product.id
+            ? { ...item, orderedQuantity: item.orderedQuantity + 1 }
+            : item
+        )
+      );
 
-    this.orderDetailGrid.update(list =>
-      list.map(item =>
-        item.id === product.id
-          ? {
+      this.orderDetailGrid.update(list =>
+        list.map(item =>
+          item.id === product.id
+            ? {
               ...item,
               orderedQuantity: item.orderedQuantity + 1,
               subTotal: product.purchasePrice * (item.orderedQuantity + 1),
             }
-          : item
-      )
-    );
+            : item
+        )
+      );
     } else {
       // agregar nuevo producto
       const gridDetail: OrderDetailGrid = orderGridProductParser(product);
@@ -674,11 +668,11 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
       });
 
       drawerRefProduct.afterClose.subscribe({
-        next: (data: [ProductsModel]| undefined) => {
+        next: (data: [ProductsModel] | undefined) => {
           if (data != undefined) {
 
             data.forEach((productItem) => {
-              this.addOrUpdateProduct(productItem);              
+              this.addOrUpdateProduct(productItem);
             })
 
           }

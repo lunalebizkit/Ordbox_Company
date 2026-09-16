@@ -9,6 +9,7 @@ using Ordbox.Domain.Enum;
 using Ordbox.SDK.Error;
 using Ordbox.SDK.Security;
 using Ordbox.Services.Common;
+using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using System.Text;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
@@ -47,53 +48,51 @@ namespace Ordbox.Services.Services
 
         ///Email de orden
 
-        public async Task<OperationResponse<string>> SendOrder(List<string> emails, string supplierName, string orderNumber, string date, bool paid, List<DtoResponseOrderByIdDetail> details)
+        public async Task<OperationResponse<string>> SendOrder(List<string> emails, string supplierName, string orderNumber, string date, bool paid, List<DtoResponseOrderByIdDetail> details, string companyName)
         {
+            string templateEmail = Path.Combine(AppContext.BaseDirectory, "Assets", "order.cshtml");
 
-            StringBuilder detallesCollection = new(2000);
+            string template = await File.ReadAllTextAsync(templateEmail);
+
+            StringBuilder detailsCollection = new();
+
             foreach (var detail in details)
             {
-                detallesCollection.Append($"<tr><td>{detail.ProductName}</td><td style =\"text-align:center\">{detail.ProductCode}</td><td style =\"text-align:center\">{detail.OrderedQuantity}</td><td>${detail.ProductPrice}</td></tr>");
+                detailsCollection.Append($@"
+            <tr>
+                <td style=""text-align:left; padding:8px; border:1px solid #dddddd;"">
+                    {detail.ProductName}
+                </td>
+
+                <td style=""text-align:center; padding:8px; border:1px solid #dddddd;"">
+                    {detail.ProductCode}
+                </td>
+
+                <td style=""text-align:center; padding:8px; border:1px solid #dddddd;"">
+                    {detail.OrderedQuantity}
+                </td>
+
+                <td style=""text-align:right; padding:8px; border:1px solid #dddddd;"">
+                    ${detail.ProductPrice}
+                </td>
+            </tr>");
             }
 
-            var emailBody = "<html> " +
-                            "<head> " +
-                            "<style>" +
-                            ".table, th, td {width: 30%; align-items:center; border: 1px solid black;}" +
-                            "</style> " +
-                           "<div style =\"font-size:37px\"> REFRIGERACIONES DANTE<img style=\"heigth:50px;width:50px;margin-left:100px\" src= https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWa5Ib3MGd8kiDLloC7s3FaDQfJfRw1oaqOJwBj261Nz0uOOZf1jJ3VZRePSC3IR6KtMw&usqp=CAU></div>" +
-                            "</head>" +
-                             "<body>" +
-                            "<h1>Orden de Pedido</h1>" +
-                            "<h3> Hola, " +
-                           $"{supplierName}" +
-                            "!</br> " +
-                            "</h3>" +
-                            "<p>" +
-                            "Enviamos a continuación el detalle del pedido" +
-                            "</p>" +
-                            "<p><strong>N° de Pedido</strong>: " +
-                           $"{orderNumber}" +
-                            "</p>" +
-                            "<p><strong>Pedido</strong>: @@paid@@ " +
-                            "</p>" +
-                            "<p><strong>Fecha del pedido:</strong> " +
-                           $"{date}" +
-                            "</p>" +
-                            "<table>" +
-                            "<tr><th> Producto </th><th> Código </th><th> Cantidad </th><th> Precio </th></tr>" +
-                           $"{detallesCollection}" +
-                            "</table>" +
-                            "<p> Esperamos su respuesta.</p>" +
-                            "<p> Saludos cordiales! </p>" +
-                            "</body>";
+            template = template.Replace("@Model.CompanyName", string.IsNullOrEmpty(companyName) ? string.Empty : companyName);
 
+            template = template.Replace("@Model.Date", date ?? string.Empty);
 
-            emailBody = emailBody.Replace("@@paid@@", paid ? "Pago" : "No pago");
+            template = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 
+            template = template.Replace("@Model.Supplier", supplierName ?? string.Empty);
+
+            template = template.Replace("@Model.OrderNumber", orderNumber ?? string.Empty);
+
+            template = template.Replace("@Model.Details", detailsCollection.ToString());
+            
             foreach (var item in emails)
             {
-                await SendEmail(item, "Envio de Pedido", emailBody);
+                await SendEmail(item, "Envio de Pedido", template);
             }
 
             return new OperationResponse<string>("Ok");
@@ -135,6 +134,7 @@ namespace Ordbox.Services.Services
                 email.From.Add(new MailboxAddress(company.CompanyName, emailFrom));
                 string templateEail = Path.Combine(AppContext.BaseDirectory, "Assets", "body.cshtml");
                 string template = File.ReadAllText(templateEail);
+                template = template.Replace("@Model.CompanyName", string.IsNullOrEmpty(company.CompanyName) ? string.Empty : company.CompanyName);
                 string remplazar = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 
                 email.To.Add(MailboxAddress.Parse(emailTo));

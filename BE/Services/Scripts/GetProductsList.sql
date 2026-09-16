@@ -5,6 +5,14 @@
         p.[code],
         p.[company_id],
         p.[is_deleted] AS IsDeleted,
+		p.[quantity],
+		p.[purchase_price] AS PurchasePrice,
+		p.[sale_percentage] AS SalePercentage,
+		p.[sale_price] AS SalePrice,
+		p.[card_sale_percentage] AS CardSalePercentage,
+		p.[card_sale_price] AS CardSalePrice,
+		p.[cash_sale_percentage] AS CashSalePercentage,
+		p.[cash_sale_price] AS CashSalePrice,
         c.[description] AS CategoryName,
         b.[description] AS BrandName,
         e.[name] AS SupplierName
@@ -29,6 +37,6 @@
 
 SELECT *
 FROM FilteredData
-ORDER BY [id] DESC
+ORDER BY [id] ASC
 OFFSET @page * @pagesize ROWS
 FETCH NEXT @pagesize ROWS ONLY;
