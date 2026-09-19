@@ -10,12 +10,13 @@ import { NzImageModule } from 'ng-zorro-antd/experimental/image';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { Permission } from '../../common/auth/models/permissions.enum';
+import { PermissionDirective } from '../../common/directives/permission.directive';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  imports: [NzPageHeaderModule, NzIconModule, ReactiveFormsModule, NzAvatarModule, NzModalModule, RouterOutlet, NzImageModule, NzLayoutModule, NzMenuModule, RouterModule]
+  imports: [NzPageHeaderModule, NzIconModule, ReactiveFormsModule, NzAvatarModule, NzModalModule, RouterOutlet, NzImageModule, NzLayoutModule, NzMenuModule, RouterModule, PermissionDirective]
 })
 export class HomeComponent implements OnInit {
   @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
@@ -24,6 +25,7 @@ export class HomeComponent implements OnInit {
   permiso= signal<Permission [] | undefined>(undefined);
   color!: string;
   formModal!: FormGroup;
+  permissions = Permission;
   
   colorList: string[] = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#1112EC', '#11EC17',
 '#E9EC11', '#ECA911', '#C811EC'];

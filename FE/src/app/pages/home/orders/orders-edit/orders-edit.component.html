@@ -1,8 +1,11 @@
-<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [btnSendText]="'Guardar y Enviar'"
-  [showBack]="true" [btnSendEmail]="'Enviar'" [showEmail]="id() < 0" [title]="'Pedidos'" [iconBack]="'rollback'"
-  [iconSave]="'save'" [iconTitle]="'shopping-cart'" [iconSend]="'mail'" (onSaveClick)="msjConfirmOk()"
-  (onSendClick)="email.showConfirmation()" (onSendEmailClick)="onlyEmail.showConfirmation()"
-  [showSave]="isEditMode()" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'"
+<app-header-op-buttons #header [title]="'Pedidos'" [iconTitle]="'shopping-cart'"
+  [btnCancelText]="'Volver'" [showBack]="true" [iconBack]="'rollback'"
+  [btnSaveText]="'Guardar'" [showSave]="isEditMode()" (onSaveClick)="msjConfirmOk()" [iconSave]="'save'"
+  [btnSendText]="'Guardar y Enviar'" [showSend]="isEditMode()" (onSendClick)="msjConfirmOkEmail()" [showSpinner]="isSaving()"
+  [btnSendEmail]="'Enviar'" [showEmail]="disableMail()" [iconSend]="'mail'"
+   
+   (onSendEmailClick)="onlyEmail.showConfirmation()"
+   (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'"
   [disabledEdit]="id() > 0" [editPermission]="permissions.EditOrderSupplier">
 </app-header-op-buttons>
 
@@ -149,7 +152,7 @@
           </div>
         </form>
         <div nz-col style="margin: 3px">
-          <button style="margin-bottom: 25px" nz-button nzSize="small" nzType="primary" [disabled]="disabled()" (click)="openComponentProduct()">
+          <button style="margin-bottom: 25px" nz-button nzSize="small" nzType="primary" [disabled]="!isEditMode()" (click)="openComponentProduct()">
             <i nz-icon nzType="search" nzTheme="outline"></i> Buscar
           </button>
         </div>
@@ -247,7 +250,7 @@
 </app-popup-confirmation>
 <app-popup-confirmation #email [title]="'Confirmar Pedido y enviar mail'"
   [header]="'¿Está seguro que desea guardar pedido?'" [message]="'Esta acción no se puede revertir'"
-  (handleOk)="msjConfirmOkEmail()" [disabled]="isSaving()">
+  (handleOk)="saveAndSend()" [disabled]="isSaving()">
 </app-popup-confirmation>
 <app-popup-confirmation #onlyEmail [title]="'Enviar mail'" [header]="'¿Está seguro que desea enviar el mail?'"
   [message]="'Esta acción no se puede revertir'" (handleOk)="msjConfirmOkEmailOnly()" [disabled]="isSaving()">

@@ -295,10 +295,7 @@ export class InvoicesEditComponent extends BaseComponent implements OnInit {
   }
 
   msjConfirmOk() {
-    try {
-      this.invoiceDetailsList.set(this.invoiceDetailsList().
-        filter(element => element.ownCode != this.popupComponent.elementSelected()));
-
+    try {      
       this.popupComponent.isConfirmationvisible.set(false);
 
       if (this.invoiceDetailsList().length == 0) {

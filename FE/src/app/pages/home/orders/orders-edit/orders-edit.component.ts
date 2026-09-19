@@ -54,7 +54,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { Permission } from '../../../../common/auth/models/permissions.enum';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ProductFilter, resetProductFilter } from '../../../../common/components/model/product.filter.model';
+import { resetProductFilter } from '../../../../common/components/model/product.filter.model';
 import { InvoiceProductSearchComponent } from '../../invoices/invoice-product-search/invoice-product-search.component';
 import { NzDrawerModule, NzDrawerService } from 'ng-zorro-antd/drawer';
 
@@ -69,6 +69,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
   @ViewChild('header') headerComponent!: HeaderOperationsButtonsComponent;
   @ViewChild('popup') popupComponent!: PopupConfirmationComponent;
   @ViewChild('pop') popComponent!: PopupConfirmationComponent;
+  @ViewChild('email') emailPopUpComponent!: PopupConfirmationComponent;
 
   /*
    ** Formularios
@@ -108,7 +109,6 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
   allStatus: { value: number; label: string }[] = Object.entries(eStatus)
     .filter(([key, value]) => typeof value === 'number')
     .map(([key, value]) => ({ value: value as number, label: key }));
-  status: number = 0;
   email!: string;
 
   /*
@@ -205,7 +205,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
         }
       },
       error: () => { }
-    });    
+    });
   }
 
   /*
@@ -238,6 +238,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     if (id != 0 && id != null)
       this.entityService.getSupplierById(id).subscribe({
         next: (r) => {
+          this.emailsEntityArray.clear();
           r.emailEntity.forEach((e: any) => {
             this.emailsEntityArray.push(
               new FormControl({ value: `${e}`, disabled: true }, [Validators.required])
@@ -276,14 +277,14 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
 
           if (r.statusId == 1) {
             this.editOrder.set(true);
-            this.disabled.set(false);
             this.disableMail.set(true);
+            this.disabled.set(false);
             this.viewOrder.set(false);
           } else {
-            this.viewOrder.set(true);
             this.editOrder.set(false);
-            this.disabled.set(true);
             this.disableMail.set(false);
+            this.viewOrder.set(true);
+            this.disabled.set(true);
           }
 
           this.isLoading.set(false);
@@ -300,45 +301,39 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
    */
 
   save(): void {
-    if (
-      this.isValidForm(this.form) &&
-      this.isValidForm(this.formSupplierSearch)
-    ) {
-      if (this.orderDetail().length === 0) {
-        this.showMessageError('No hay Productos Seleccionados');
-      } else {
-        const model: NewOrder = {
-          id: this.id() !== undefined ? this.id() : 0,
-          supplierId: this.formSupplierSearch.controls['supplierId'].value,
-          isPaid: this.form.controls['isPaid'].value,
-          statusId:
-            this.id() != undefined && this.id() == 0
-              ? 1
-              : this.form.controls['statusId'].value,
-          orderDetail: this.orderDetail(),
-          dateTime: this.form.controls['datetime'].value,
-          supplierName: null,
-          supplierEmail: this.form.controls['emailEntity'].value,
-          observation: this.form.controls['observation'].value
-        };
-        this.isSaving.set(true);
-        this.ordersService.saveOrder(model).subscribe({
-          next: (r) => {
-            this.showNotificationSuccess(
-              'Guardado correcto',
-              `Se guardo correctamente el pedido`
-            );
-            this.isSaving.set(false);
-            this.router.navigate(['/home/orders']);
 
-          },
-          error: () => {
-            this.isSaving.set(false);
-            this.showMessageError('No se pudo Guardar el pedido');
-          },
-        });
-      }
-    }
+    const model: NewOrder = {
+      id: this.id() !== undefined ? this.id() : 0,
+      supplierId: this.formSupplierSearch.controls['supplierId'].value,
+      isPaid: this.form.controls['isPaid'].value,
+      statusId:
+        this.id() != undefined && this.id() == 0
+          ? 1
+          : this.form.controls['statusId'].value,
+      orderDetail: this.orderDetail(),
+      dateTime: this.form.controls['datetime'].value,
+      supplierName: null,
+      supplierEmail: this.form.controls['emailEntity'].value,
+      observation: this.form.controls['observation'].value
+    };
+    this.isSaving.set(true);
+    this.ordersService.saveOrder(model).subscribe({
+      next: (r) => {
+        this.showNotificationSuccess(
+          'Guardado correcto',
+          `Se guardo correctamente el pedido`
+        );
+        this.isSaving.set(false);
+        this.router.navigate(['/home/orders']);
+
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.showMessageError('No se pudo Guardar el pedido');
+      },
+    });
+
+
   }
 
   /*
@@ -450,33 +445,31 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
 
   msjConfirmOk() {
     try {
-      this.popupComponent.isConfirmationvisible.set(false);
-      if (
-        this.isValidForm(this.form) && this.isValidForm(this.formSupplierSearch) &&
-        this.orderDetail().length != 0) {
-        this.popComponent.showConfirmation()
-      } else {
+      if (this.orderDetail().length == 0) {
         this.showMessageError('No ha seleccionado producto');
+        return;
       }
-    } catch (error) {
-      console.log(error);
 
-    }
+      this.popComponent.isConfirmationvisible.set(false);
+
+      if (this.isValidForm(this.form) && this.isValidForm(this.formSupplierSearch)) {
+        this.popComponent.showConfirmation()
+      }
+    } catch (error) { console.log(error); }
   }
 
   msjConfirmOkEmail() {
     try {
-      const idToDelete = this.popupComponent.elementSelected();
-      const updatedList = this.orderDetail().filter(el => el.productId !== idToDelete);
-      this.orderDetail.set(updatedList);
 
-      this.popupComponent.isConfirmationvisible.set(false);
-      if (
-        this.isValidForm(this.form)
-        || (this.orderDetailGrid().length === 0)) {
-        this.saveAndSend();
-      } else {
-        this.showMessageError('No ha seleccionado producto');
+      if (this.orderDetail().length === 0) {
+        this.showMessageError('No hay Productos Seleccionados');
+        return;
+      }
+
+      this.emailPopUpComponent.isConfirmationvisible.set(false);
+
+      if (this.isValidForm(this.form) && this.isValidForm(this.formSupplierSearch)) {
+        this.emailPopUpComponent.showConfirmation();
       }
     } catch (error) {
       console.log(error);
@@ -486,22 +479,17 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
 
   msjConfirmOkEmailOnly() {
     try {
-      const idToDelete = this.popupComponent.elementSelected();
-      const updatedList = this.orderDetail().filter(el => el.productId !== idToDelete);
-      this.orderDetail.set(updatedList);
+      if (this.orderDetail().length === 0) {
+        this.showMessageError('No hay Productos Seleccionados');
+        return;
+      }
 
       this.popupComponent.isConfirmationvisible.set(false);
-      if (
-        this.isValidForm(this.form)
-        || (this.orderDetailGrid().length === 0)) {
-        this.sendEmail();
-      } else {
-        this.showMessageError('No ha seleccionado producto')
-      }
-    } catch (error) {
-      console.log(error);
 
-    }
+      if (this.isValidForm(this.form)) {
+        this.sendEmail();
+      }
+    } catch (error) { console.log(error); }
   }
 
   getStatusName(id: number) {
@@ -530,6 +518,7 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
             `Se realizo correctamente el envio del email`
           );
           this.isSaving.set(false);
+          this.router.navigate(['/home/orders']);
         },
         error: () => {
           this.isSaving.set(false);
@@ -545,45 +534,39 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
    */
   saveAndSend(): void {
     if (this.emailList().length > 0) {
-      if (
-        this.isValidForm(this.form) &&
-        this.isValidForm(this.formSupplierSearch)
-      ) {
-        if (this.orderDetail.length === 0) {
-          this.showMessageError('No hay Productos Seleccionados');
-        } else {
-          this.isSaving.set(true);
+      this.isSaving.set(true);
 
-          const model: NewOrder = {
-            id: this.id() !== undefined ? this.id() : 0,
-            supplierId: this.formSupplierSearch.controls['supplierId'].value,
-            isPaid: this.form.controls['isPaid'].value,
-            statusId:
-              this.id() != undefined && this.id() == 0
-                ? 1
-                : this.form.controls['statusId'].value,
-            orderDetail: this.orderDetail(),
-            dateTime: this.form.controls['datetime'].value,
-            supplierName: null,
-            supplierEmail: this.emailList(),
-            observation: this.form.controls['observation'].value
-          };
-          this.ordersService.saveOrderAndSendEmail(model).subscribe({
-            next: (r) => {
-              this.showNotificationSuccess(
-                'Guardado y enviado correcto',
-                `Se guardo correctamente el pedido y se envio el email`
-              );
-              this.isSaving.set(false);
-            },
-            error: () => {
-              this.isSaving.set(false);
-              this.showMessageError('No se pudo Guardar el pedido');
-            },
-          });
-        }
-      }
-    } else {
+      const model: NewOrder = {
+        id: this.id() !== undefined ? this.id() : 0,
+        supplierId: this.formSupplierSearch.controls['supplierId'].value,
+        isPaid: this.form.controls['isPaid'].value,
+        statusId:
+          this.id() != undefined && this.id() == 0
+            ? 1
+            : this.form.controls['statusId'].value,
+        orderDetail: this.orderDetail(),
+        dateTime: this.form.controls['datetime'].value,
+        supplierName: null,
+        supplierEmail: this.emailList(),
+        observation: this.form.controls['observation'].value
+      };
+      this.ordersService.saveOrderAndSendEmail(model).subscribe({
+        next: (r) => {
+          this.showNotificationSuccess(
+            'Guardado y enviado correcto',
+            `Se guardo correctamente el pedido y se envio el email`
+          );
+          this.isSaving.set(false);
+          this.router.navigate(['/home/orders']);
+        },
+        error: () => {
+          this.isSaving.set(false);
+          this.showMessageError('No se pudo Guardar el pedido');
+        },
+      });
+    }
+
+    else {
       this.showMessageError('No hay emails seleccionados');
     }
   }

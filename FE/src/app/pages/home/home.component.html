@@ -1,9 +1,5 @@
 <nz-page-header>
   <nz-page-header-extra style=" margin-top: 1rem;">
-    <!-- <img class="img" style=" margin-right:5px;" nz-image width="60px" nzSrc="../../../assets/img/dantesLogo1.png" alt="ordbox" 
-    />
-    <img class="img1" nz-image width="65px" style=" margin-right:5px; margin-top: 10px;" nzSrc="../../../assets/img/ordbox.png" alt="logoDantes" 
-    /> -->
    
   </nz-page-header-extra>
 
@@ -11,7 +7,7 @@
     <ul nz-menu nzMode="horizontal">
       <li nz-submenu nzPlacement="bottomLeft" nzTitle="Persona" nzIcon="user">
         <ul>
-          <li nz-menu-item nzMatchRouter style="padding-left: 5%;">
+          <li nz-menu-item nzMatchRouter style="padding-left: 5%;" *authPermission="[permissions.ViewCompany, permissions.CreateCompany]">
             <span nz-icon nzType="idcard" nzTheme="twotone" [nzTwotoneColor]="'#66B9D9'"></span>
             <a [routerLink]="['/home/companies']" style="padding-left: 5%;">Compañias</a>
           </li>
