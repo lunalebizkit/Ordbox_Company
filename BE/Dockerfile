@@ -20,5 +20,9 @@ RUN dotnet publish "Ordbox.Api.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl
+COPY openssl.cnf /etc/ssl/openssl.cnf
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Ordbox.Api.dll"]
