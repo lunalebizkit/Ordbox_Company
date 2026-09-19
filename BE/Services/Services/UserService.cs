@@ -179,7 +179,7 @@ namespace Ordbox.Services.Services
                 {
                     try
                     {
-                        var email = await _emailService.SendUser(model.Email, model.UserName, unHashPassword);
+                        var email = await _emailService.SendUser(model.Email, model.UserName, unHashPassword, requestedBy);
                     }
                     catch (Exception ex)
                     {

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Bibliography;
 using MailKit.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -6,10 +7,11 @@ using MimeKit;
 using MimeKit.Text;
 using Ordbox.Domain;
 using Ordbox.Domain.Enum;
+using Ordbox.Domain.Model;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.SDK.Error;
 using Ordbox.SDK.Security;
 using Ordbox.Services.Common;
-using Ordbox.Services.Models.Dtos.DtoRequest;
 using Ordbox.Services.Models.Dtos.DtoResponse;
 using System.Text;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
@@ -30,17 +32,22 @@ namespace Ordbox.Services.Services
         }
         ///Email General
 
-        public async Task<OperationResponse<string>> SendEmail(string emailTo, string subject, string htmlBody)
-        {
+        public async Task<OperationResponse<string>> SendEmail(string emailTo, string subject, string htmlBody, string companyEmail, string decryptedPassword)
+        {       
+            if (string.IsNullOrEmpty(companyEmail) || string.IsNullOrEmpty(decryptedPassword))
+            {
+                return new OperationResponse<string>("Company not found");
+            }
+
             var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_config.GetSection("EmailUsername").Value));
+            email.From.Add(MailboxAddress.Parse(companyEmail));
             email.To.Add(MailboxAddress.Parse(emailTo));
             email.Subject = subject;
             email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
             using var smtp = new SmtpClient();
             smtp.Connect(CustomizationConstant.EmailHost, 587, SecureSocketOptions.StartTls);
-            smtp.Authenticate(_config.GetSection("EmailUsername").Value, _config.GetSection("EmailPassword").Value);
+            smtp.Authenticate(companyEmail, decryptedPassword);
             var response = smtp.Send(email);
             smtp.Disconnect(true);
             return new OperationResponse<string>(response.ToString());
@@ -48,8 +55,10 @@ namespace Ordbox.Services.Services
 
         ///Email de orden
 
-        public async Task<OperationResponse<string>> SendOrder(List<string> emails, string supplierName, string orderNumber, string date, bool paid, List<DtoResponseOrderByIdDetail> details, string companyName)
+        public async Task<OperationResponse<string>> SendOrder(List<string> emails, string supplierName, string orderNumber, string date, bool paid, List<DtoResponseOrderByIdDetail> details, RequestedBy  requestedBy)
         {
+            var credentials = await GetEmailCredentials(requestedBy);
+
             string templateEmail = Path.Combine(AppContext.BaseDirectory, "Assets", "order.cshtml");
 
             string template = await File.ReadAllTextAsync(templateEmail);
@@ -78,7 +87,7 @@ namespace Ordbox.Services.Services
             </tr>");
             }
 
-            template = template.Replace("@Model.CompanyName", string.IsNullOrEmpty(companyName) ? string.Empty : companyName);
+            template = template.Replace("@Model.CompanyName", string.IsNullOrEmpty(credentials.Item1) ? string.Empty : credentials.Item1);
 
             template = template.Replace("@Model.Date", date ?? string.Empty);
 
@@ -89,17 +98,18 @@ namespace Ordbox.Services.Services
             template = template.Replace("@Model.OrderNumber", orderNumber ?? string.Empty);
 
             template = template.Replace("@Model.Details", detailsCollection.ToString());
-            
+
+
             foreach (var item in emails)
             {
-                await SendEmail(item, "Envio de Pedido", template);
+                await SendEmail(item, "Envio de Pedido", template, credentials.Item1, credentials.Item2);
             }
 
             return new OperationResponse<string>("Ok");
 
         }
 
-        public async Task<OperationResponse<string>> SendUser(string email, string userName, string password)
+        public async Task<OperationResponse<string>> SendUser(string email, string userName, string password, RequestedBy requestedBy)
         {
             string templateEail = Path.Combine(AppContext.BaseDirectory, "Assets", "userpass.cshtml");
             string template = File.ReadAllText(templateEail);
@@ -107,7 +117,9 @@ namespace Ordbox.Services.Services
             template = template.Replace("@Model.Pass", password);
             template = template.Replace("@Model.Year", DateTimeOffset.Now.Year.ToString());
 
-            await SendEmail(email, "Envio de Datos Usuario", template);
+            var credentials = await GetEmailCredentials(requestedBy);
+
+            await SendEmail(email, "Envio de Datos Usuario", template, credentials.Item1, credentials.Item2);
             return new OperationResponse<string>("Ok");
         }
 
@@ -119,7 +131,7 @@ namespace Ordbox.Services.Services
             byte[]? pfxPassword = EncryptDecryptWithSeed.AESDecrypt(company.CompanyEmailPass, passByted);
             string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
 
-            if (string.IsNullOrEmpty(company.CompanyEmail) || string.IsNullOrEmpty(decryptedPassword))
+            if (string.IsNullOrEmpty(company?.CompanyEmail) || string.IsNullOrEmpty(decryptedPassword))
             {
                 return new OperationResponse<string>(""); ;
             }
@@ -172,7 +184,20 @@ namespace Ordbox.Services.Services
                 smtp.Disconnect(true);
             }
         }
+        
+        private async Task<(string, string)> GetEmailCredentials(RequestedBy requestedBy)
+        {
+            Company? company = await _contextSql.Companies.FindAsync(requestedBy.CompanyId)
+                ?? throw new Exception("Company not found");
+
+            byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
+            byte[]? pfxPassword = EncryptDecryptWithSeed.AESDecrypt(company.CompanyEmailPass, passByted);
+            string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
+
+            return (company.CompanyEmail, decryptedPassword);
+        }
     }
+
 
 }
 

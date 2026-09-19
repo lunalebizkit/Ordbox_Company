@@ -1,6 +1,7 @@
-﻿using Ordbox.Services.Models.Dtos.DtoRequest;
+﻿using Microsoft.AspNetCore.Mvc;
+using Ordbox.Api.Extension;
+using Ordbox.Domain.Model.Extensions;
 using Ordbox.Services.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Ordbox.Api.Controllers.Email
 {
@@ -22,7 +23,8 @@ namespace Ordbox.Api.Controllers.Email
         [HttpPost]
         public IActionResult SendEmail(string emailTo, string subject, string htmlBody)
         {
-             _service.SendEmail(emailTo, subject, htmlBody);
+            RequestedBy requestedBy = User.GetRequestedBy();
+            _service.SendEmail(emailTo, subject, htmlBody, string.Empty, string.Empty);
             return Ok();
         }
     }

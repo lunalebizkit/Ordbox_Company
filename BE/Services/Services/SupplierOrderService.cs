@@ -220,7 +220,7 @@ namespace Ordbox.Services.Services
                     var result = _mapper.Map<DtoResponseSupplierOrderById>(order);
                     List<DtoResponseOrderByIdDetail> orderDetail = new List<DtoResponseOrderByIdDetail>(result.OrderDetail);
                    
-                    var email = await _emailService.SendOrder(model.Emails, order.Supplier.Name, order.Id.ToString(), order.DateTime.ToString("dd/MM/yyyy"), order.IsPaid, orderDetail, order.Company.CompanyName);
+                    var email = await _emailService.SendOrder(model.Emails, order.Supplier.Name, order.Id.ToString(), order.DateTime.ToString("dd/MM/yyyy"), order.IsPaid, orderDetail, requestedBy);
 
                     if (email.Success)
                     {
