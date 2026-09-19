@@ -1,15 +1,15 @@
- REM .\publish.bat $(git rev-parse HEAD)
+ .\publish.bat $(git rev-parse HEAD)
  cd BE
  
- IF NOT "%2" == "front" (
- docker build --no-cache -f Dockerfile --tag lunale/ordbox:api-%1 --tag lunale/ordbox:api-latest .
- docker push lunale/ordbox:api-%1
- docker push lunale/ordbox:api-latest
+ IF NOT "%2" == "FE" (
+ docker build --no-cache -f Dockerfile --tag lunale/ordboxcompany:api-%1 --tag lunale/ordboxcompany:api-latest .
+ docker push lunale/ordboxcompany:api-%1
+ docker push lunale/ordboxcompany:api-latest
  )
 
-@REM  cd ..\Front
-@REM  IF NOT "%2" == "api" (
-@REM  docker build -f Dockerfile --tag lunale/ordbox:front-%1 --tag lunale/ordbox:front-latest .
-@REM  docker push lunale/ordbox:front-%1
-@REM  docker push lunale/ordbox:front-latest
-@REM  )
+  cd ..\front
+ if not "%2" == "BE" (
+  docker build -f dockerfile --tag lunale/ordboxcompany:front-%1 --tag lunale/ordboxcompany:front-latest .
+ docker push lunale/ordboxcompany:front-%1
+ docker push lunale/ordboxcompany:front-latest
+  )
