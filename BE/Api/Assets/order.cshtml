@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
+	<title>ORDBOX</title>
+	<style>
+        .footer-ic a {
+            color: #007DC3;
+            text-decoration: none;
+        }
+
+            .footer-ic a:hover {
+                text-decoration: underline;
+            }
+    </style>
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="text-align:center; background-color: #ffffff;background: none !important;">
+	<!-- Header logo -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="width: 100%!important; clear: both; max-width: 600px; background: linear-gradient(90deg, #c3d9e1, #01809dd0); color:#121212;">
+        <tr>
+            <td style="text-align:center; padding: 5px;">                
+                <img src="https://raw.githubusercontent.com/lunalebizkit/Ordbox_Company/main/ordbox.png" style="width: 100px; vertical-align: middle; margin-right: 10px;" />
+                <a href="" style="font-family: sans-serif; font-weight: bold; font-variant-caps: petite-caps; font-size: xx-large; color: white; vertical-align: middle; text-shadow: 3px 3px black; text-decoration:none">@Model.CompanyName</a>
+            </td>
+        </tr>
+    </table>
+	<!-- Main Content White -->
+	<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="width: 100%!important; clear: both; max-width:600px; padding-left: 30px; padding-right: 30px;">
+        <tr>
+            <td width="100%" valign="top">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" align="left" style="width: 100%!important; text-align: center!important; clear: both;border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+                    <tr>
+                        <td width="100%" height="25"></td>
+                    </tr>
+                    <!-- Title -->
+					<tr style="padding-top: 40px;">
+                        <td height="auto" valign="bottom" width="100%" style="line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 18px"">
+                            Hola @Model.Supplier
+                        </td>
+                    </tr>
+                    <!-- Greeting -->
+                    <tr>
+                        <td width="100%" height="22"></td>
+                    </tr>
+                    <tr>
+                        <td height="auto" valign="bottom" width="100%" style="color: #6E6E6E; line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 18px">
+							N° de pedido @Model.OrderNumber
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="100%" height="22"></td>
+                    </tr>
+                    <tr>
+                        <td height="auto" valign="bottom" width="100%" style="color: #6E6E6E; line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 18px">
+							Fecha del pedido @Model.Date
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="100%" height="32"></td>
+                    </tr>
+                    <tr>
+                        <td height="auto" valign="bottom" width="100%" style="color: #6E6E6E; line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 18px">
+							Enviamos a continuación el detalle del pedido.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="100%" height="42"></td>
+                    </tr>
+                   
+<!-- Detalle del pedido -->
+                    <tr>
+                        <!-- Tabla de detalle -->
+                    <table width="100%"
+                        border="0"
+                        cellpadding="8"
+                        cellspacing="0"
+                        style="width:100%; border-collapse:collapse; font-family:'Poppins', sans-serif;">
+
+                        <thead>
+                            <tr style="background-color:#01809d; color:white;">
+                                <th style="text-align:left; padding:8px;">Producto</th>
+                                <th style="text-align:center; padding:8px;">Código</th>
+                                <th style="text-align:center; padding:8px;">Cantidad</th>
+                                <th style="text-align:right; padding:8px;">Precio</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @Model.Details
+                        </tbody>
+
+                    </table>
+                    </tr>
+                    <tr>
+                        <td width="100%" height="42"></td>
+                    </tr>
+                    <tr>
+                        <td height="auto" valign="bottom" width="100%" style="color: #6E6E6E; line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 400; font-size: 18px">
+						    Si tenés alguna consulta o necesitas asistencia adicional, no dudes en contactarnos. Estamos a tu disposición para ayudarte.
+                        </td>
+                    </tr>
+                    
+                     <tr>
+                        <td width="100%" height="15"></td>
+                    </tr>
+                    <tr>
+                        <td height="auto" valign="bottom" width="100%" style="line-height: 25px; width: 100% !important; clear: both; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 18px">
+							Muchas Gracias.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="100%" height="42"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    <!-- Footer -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" style="width: 100%!important; clear: both; max-width:600px; background:linear-gradient(90deg, #c3d9e1, #01809dd0)">
+        <tr>
+            <td width="100%" height="7"></td>
+        </tr>
+        <tr>
+            <td height="auto" align="center" valign="bottom">
+                <a href="" style="text-decoration: none; color: #ffffff; font-family: 'Trebuchet MS'; font-size: 12px;"><b>@Model.CompanyName</b></a>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%" height="7"></td>
+        </tr>
+        <tr>
+            <td height="auto" align="center" valign="bottom">
+                <a href="" style="text-decoration: none; color: #ffffff; font-family: 'Trebuchet MS'; font-size: 12px;">Ordbox Copyright © @Model.Year</a>
+            </td>
+        </tr>
+        <tr>
+            <td width="100%" height="7"></td>
+        </tr>
+    </table>
+</body>

@@ -1,0 +1,1 @@
+﻿UPDATE [product] SET quantity = quantity + @recievedquantity WHERE Id = @productid

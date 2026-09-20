@@ -1,0 +1,169 @@
+<nz-layout>
+  <div class="sticky">
+    <nz-page-header class="list-header">
+      <nz-page-header-title>Listado de Pedidos</nz-page-header-title>
+      <nz-page-header-extra>
+        <button *authPermission="[
+            permissions.CreateOrderSupplier,
+            permissions.EditOrderSupplier
+          ]" nz-tooltip nzTooltipTitle="Nuevo Pedido" nz-button nzType="primary" nzShape="circle"
+          [routerLink]="['/home/orders/new']">
+          <i nz-icon nzType="plus" nzTheme="outline"></i>
+        </button>
+      </nz-page-header-extra>
+    </nz-page-header>
+  </div>
+
+  <nz-content>
+    <nz-collapse>
+      <nz-collapse-panel nzSize="small" nzHeader="Filtros" [nzActive]="false">
+        <form nz-form [formGroup]="formSearch" style="margin-left: 30px;">
+          <div nz-row>
+            <div nz-col nzSpan="10" class="mb-2">
+              <nz-form-item>
+                <nz-form-label nzFor="supplier">Proveedor</nz-form-label>
+                <nz-form-control [nzSm]="24">
+                  <nz-select nzPlaceHolder="Ingrese un proveedor" nzAllowClear nzShowSearch nzServerSearch
+                    (nzOnSearch)="onSearch($event)" formControlName="supplier" [nzId]="'supplier'"
+                    (ngModelChange)="supplierSelectedChange($event)">
+                    @for (o of entityList(); track $index) {
+                    <ng-container>
+                      @if (!loading()) {
+                      <nz-option [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+                      } @else{
+                      <nz-option nzDisabled nzCustomContent>
+                        <span nz-icon nzType="loading" class="loading-icon"></span>
+                        Cargando ...
+                      </nz-option>}
+                    </ng-container>}
+                    <ng-template #clearQuery>
+                      @if (formSearch.get('supplier')?.value) {
+                      <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                        (click)="formSearch.get('supplier')?.setValue([])"></i>}
+                    </ng-template>
+                  </nz-select>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+
+            <div nz-col nzSpan="8" class="mb-2">
+              <nz-form-item style="margin-left: 15px;">
+                <nz-form-label nzFor="date">Fecha</nz-form-label>
+                <nz-form-control>
+                  <nz-date-picker formControlName="date" nzFormat="dd/MM/yyyy" [nzPlaceHolder]="'Fecha'"
+                    (ngModelChange)='dateSelectedChange($event)'></nz-date-picker>
+                  <ng-template #clearQuery>
+                    @if (formSearch.get('date')?.value) {
+                    <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                      (click)="formSearch.get('date')?.setValue('')"></i>}
+                  </ng-template>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </div>
+          
+          <div nz-row>
+            <div nz-col nzSpan="10">
+              <nz-form-item>
+                <nz-form-label nzFor="category">Categoría </nz-form-label>
+                <nz-form-control [nzSm]="24">
+                  <nz-select nzPlaceHolder="Ingrese una categoria" nzAllowClear nzShowSearch nzServerSearch
+                    (nzOnSearch)="onSearchCategory($event)" formControlName="category" [nzId]="'category'"
+                    (ngModelChange)="categorySelectedChange($event)">
+                    @for (o of allCategories(); track $index) {
+                    <ng-container>
+                      @if (!isLoading()) {
+                      <nz-option [nzValue]="o.value" [nzLabel]="o.label"></nz-option>}
+                      @else {
+                      <nz-option nzDisabled nzCustomContent>
+                        <span nz-icon nzType="loading" class="loading-icon"></span>
+                        Cargando ...
+                      </nz-option>}
+                    </ng-container>}
+                  </nz-select>
+
+                  <ng-template #clearQuery>
+                    @if (formSearch.get('category')?.value) {
+                    <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                      (click)="formSearch.get('category')?.setValue(0)"></i>}
+                  </ng-template>
+
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+            <div nz-col nzSpan="6">
+              <nz-form-item style="margin-left: 15px;">
+                <nz-form-label nzFor="status">Estado</nz-form-label>
+                <nz-form-control>
+                  <nz-select nzShowSearch nzAllowClear nzPlaceHolder="Seleccione un estado" id="status"
+                    formControlName="status" (ngModelChange)="statusSelectedChange($event)" [nzOptions]="allStatus">
+                  </nz-select>
+
+                  <ng-template #clearQuery>
+                    <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                      *ngIf="formSearch.get('product')?.value" (click)="formSearch.get('product')?.setValue('')"></i>
+                  </ng-template>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+            <div style="margin-left: 20px;">
+              <button nz-button nzType="primary" (click)="search()">
+                <i nz-icon nzType="search"></i>
+                Buscar
+              </button>
+            </div>
+          </div>
+        </form>
+      </nz-collapse-panel>
+    </nz-collapse>
+  </nz-content>
+</nz-layout>
+<br />
+
+<div class="row">
+  <div class="table">
+    <nz-table [nzPageIndex]="1" class="tabla" [nzBordered]="true" [nzData]="allOrders()" nzFrontPagination="false"
+      [nzTotal]="totalItems()" (nzQueryParams)="onQueryParamsChange($event)" [nzPageSize]="queryParams.pageSize"
+      nzShowSizeChanger [nzSize]="'small'" [nzLoading]="isLoading()" [nzPaginationType]="'small'">
+      <thead>
+        <tr>
+          <th>N° Pedido</th>
+          <th>Fecha</th>
+          <th>Proveedor</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (data of allOrders(); track $index) {
+        <tr class="small-text" (dblclick)="onDoubleClicked(data.id)" (click)="onClick(data.id)"
+          [style.background-color]="data === selectedOrders ? 'lightblue' : ''">
+          <td>{{ data.id }}</td>
+          <td>{{ data.dateTime | datePipe }}</td>
+          <td>{{ data.supplierName }}</td>
+          <td>{{ this.getStatusName(data.statusId) }}</td>
+        </tr>}
+      </tbody>
+    </nz-table>
+  </div>
+
+  <div>
+    <nz-table class="tabla" [nzBordered]="true" [nzData]="orderDetailList()" nzShowPagination="false"
+      [nzSize]="'small'">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (data of orderDetailList(); track $index) {
+        <tr class="small-text">
+          <td>{{ data.productId }}</td>
+          <td style="text-align: center; font-weight: bold">
+            {{ data.orderedQuantity }}
+          </td>
+        </tr>}
+      </tbody>
+    </nz-table>
+  </div>
+</div>

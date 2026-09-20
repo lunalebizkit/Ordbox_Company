@@ -1,0 +1,74 @@
+<nz-collapse>
+  <nz-collapse-panel nzSize="small" nzHeader="Filtros" style="font-weight: bold">
+    <form [formGroup]="customSearchForm" style="margin-left: 13px" (ngSubmit)="onSearchCustomClick.emit($event)">
+      <div nz-row>
+        <div nz-col nzFlex="2" style="margin: 10px;">
+          <nz-form-item>
+            <nz-form-label nzFor="customerName">Nombre</nz-form-label>
+            <nz-form-control>
+              <nz-input-wrapper>
+                <input name="customerName" type="text" placeholder="Ingrese nombre" nz-input
+                  (keydown.enter)="onSearchCustomClick.emit($event)" formControlName="customerName" id="customerName"
+                  autocomplete="off" />
+              </nz-input-wrapper>
+              @if (customSearchForm.get('customerName')?.value) {
+              <ng-template #clearQueryName>
+                <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                  (click)="clearFormValue('customerName')"></i>
+              </ng-template>}
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzFlex="2" style="margin: 10px;">
+          <nz-form-item>
+            <nz-form-label nzFor="cuit">CUIT</nz-form-label>
+            <nz-form-control>
+              <nz-input-wrapper>
+                <input id="cuit" name="cuit" type="text" placeholder="Ingrese CUIT/CUIL o DNI" nz-input
+                  (keydown.enter)="onSearchCustomClick.emit($event)" formControlName="cuit" maxlength="14" />
+              </nz-input-wrapper>
+              <ng-template #clearQueryCuit>
+                <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle" *ngIf="customSearchForm.get('cuit')?.value" (click)="clearFormValue('cuit')"></i>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div nz-row>
+        <div nz-col nzFlex="2" style="margin: 10px;">
+          <nz-form-item>
+            <nz-form-label nzFor="invoicenumber">Nro de comprobante</nz-form-label>
+            <nz-form-control>
+              <nz-input-wrapper>
+                <input id="invoicenumber" name="invoicenumber" type="number" placeholder="Ingrese numero de factura" nz-input
+                  (keydown.enter)="onSearchCustomClick.emit($event)" formControlName="invoicenumber" />
+              </nz-input-wrapper>
+              @if (customSearchForm.get('invoicenumber')?.value) {
+              <ng-template>
+                <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                  (click)="clearFormValue('invoicenumber')"></i>
+              </ng-template>}
+
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col nzFlex="2" style="margin: 10px;">
+          <nz-form-item>
+            <nz-form-label nzFor="date">Fecha</nz-form-label>
+            <nz-form-control>
+              <nz-date-picker id="date" nzFormat="dd/MM/yyyy" formControlName="date" [nzPlaceHolder]="'Fecha'"
+              ></nz-date-picker>                
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div nz-col style="margin: 10px;">
+          <button nz-button nzType="primary">
+            <i nz-icon nzType="search"></i>
+            Buscar
+          </button>
+        </div>
+      </div>
+    </form>
+  </nz-collapse-panel>
+</nz-collapse>

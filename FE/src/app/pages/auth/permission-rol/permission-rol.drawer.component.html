@@ -1,0 +1,32 @@
+<app-header-op-buttons #header [btnSaveText]="'Guardar'" [title]="'Permisos'" [showSpinner]="isSaving"
+    [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'tags'" (onCloseClick)="close()" [showClose]="true"
+    [showBack]="true" (onSaveClick)="pop.showConfirmation()">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading" style="margin-top: 20px;">
+    <div class="containFrom">
+        <form class="form" nz-form [formGroup]="form">
+            <nz-form-item>
+                <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="roleId">Rol</nz-form-label>
+                <nz-form-control [nzSm]="14" [nzXs]="24">
+                    <nz-select formControlName="roleId" [nzId]="'roleId'"
+                    (ngModelChange)="rolSelectedChange($event)" [nzOptions]="permissionRol">
+                    </nz-select>
+
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-control [nzSm]="24" [nzXs]="24" style="margin-left: 50px;">
+            <nz-transfer class="transfer" [nzTitles]="['Permisos', 'Permisos Asignados']" [nzDataSource]="listComplete" [nzDisabled]="disabled"
+                nzShowSearch (nzChange)="change($event)">
+            </nz-transfer>
+            </nz-form-control>
+
+
+
+
+        </form>
+    </div>
+</nz-spin>
+<app-popup-confirmation #pop [title]="'Confirmar Permisos'" [header]="'¿Está seguro que desea guardar los cambios?'"
+    [message]="'Esta acción no se puede revertir'" (handleOk)="msjConfirmOk()">
+</app-popup-confirmation>

@@ -1,0 +1,20 @@
+<nz-collapse>
+    <nz-collapse-panel nzSize="small" nzHeader={{title}}>
+        <form nz-form>
+            <div nz-row>
+                <div nz-col nzSpan="24">
+                    <nz-form-item>
+                        <nz-form-label nzFor="busqueda">Búsqueda</nz-form-label>
+                        <nz-form-control>                           
+                            <nz-input-wrapper nzSearch nzSize="large" nzAllowClear>
+                                <input [ngModelOptions]="{ standalone: true }" type="text"
+                                placeholder={{palceHolder}} nz-input (keydown.enter)="onSearchClick.emit($event)"
+                                [(ngModel)]="model" (ngModelChange)="onModelChange($event)" id="busqueda" autocomplete="off" />
+                            </nz-input-wrapper>                            
+                        </nz-form-control>
+                        </nz-form-item>
+                </div>
+            </div>
+        </form>
+    </nz-collapse-panel>
+</nz-collapse>

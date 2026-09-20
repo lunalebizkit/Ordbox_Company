@@ -1,0 +1,48 @@
+<nz-modal
+[(nzVisible)]="isDeleteConfirmationVisible"
+[nzTitle]="title"
+(nzOnCancel)="handleCancel()"
+(nzOnOk)="handleOk.emit($event)"
+[nzOkLoading]="okLoading">
+  <ng-container *nzModalContent>
+    <h3>{{header}}</h3>
+    <p>{{message}}</p>
+  </ng-container>
+</nz-modal>
+
+<nz-modal
+[(nzVisible)]="isConfirmationvisible"
+[nzTitle]="title"
+(nzOnCancel)="handleCance()"
+(nzOnOk)="handleOk.emit($event)"
+[nzOkDisabled]="disabled"
+[nzOkLoading]="okLoading">
+  <ng-container *nzModalContent>
+    <h3>{{header}}</h3>
+    <p>{{message}}</p>
+  </ng-container>
+</nz-modal>
+
+<!-- Enviar Correo -->
+<nz-modal
+[(nzVisible)]="isEmailConfirmationvisible"
+[nzTitle]="emailtitle"
+(nzOnCancel)="handleEmailCancel()"
+(nzOnOk)="handleSendOk()"
+[nzOkDisabled]="emailDisabled || !isValidEmail(emailToSend)"
+[nzOkLoading]="okLoading">
+  <ng-container *nzModalContent>
+    <h3>{{header}}</h3>
+    <p>{{message}}</p>
+    <label for="email">Correo electrónico:</label>
+    <input
+      nz-input
+      id="email"
+      type="email"
+      [(ngModel)]="emailToSend"
+      placeholder="ejemplo@dominio.com"
+      required
+    />
+  </ng-container>
+</nz-modal>
+

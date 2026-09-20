@@ -1,0 +1,35 @@
+<app-header-op-buttons #header [btnSaveText]="'Guardar'" [title]="'Permisos'" [showSpinner]="isSaving()"
+    [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'tags'" [showBack]="true" (onSaveClick)=" msjConfirmOk()" [showSave]="isEditMode()" (onEditClick)="toggleEdit()" [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.RolControl">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" style="margin-top: 20px;">
+    <nz-collapse>
+        <nz-collapse-panel nzHeader="Permisos" [nzActive]="true">
+            <nz-row [nzJustify]="'center'">
+                <nz-col nzSpan="12">
+                    <form class="form" nz-form [formGroup]="form">
+                        <nz-form-item [style.width.%]="75" style="margin-left: 30px;">
+                            <nz-form-label nzRequired nzFor="roleId">Rol</nz-form-label>
+                            <nz-form-control>
+                                <nz-select formControlName="roleId" [nzId]="'roleId'"
+                                    (ngModelChange)="rolSelectedChange($event)" [nzOptions]="permissionRol()">
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-control [style.width.%]="50">
+                            <nz-transfer class="transfer" [nzTitles]="['Permisos', 'Permisos Asignados']"
+                                [nzDataSource]="listComplete()" [nzDisabled]="disabled()" nzShowSearch
+                                (nzChange)="change($event)">
+                            </nz-transfer>
+                        </nz-form-control>
+
+                    </form>
+                </nz-col>
+            </nz-row>
+        </nz-collapse-panel>
+    </nz-collapse>
+</nz-spin>
+<app-popup-confirmation #popup [title]="'Confirmar Permisos'" [header]="'¿Está seguro que desea guardar los cambios?'"
+    [message]="'Esta acción no se puede revertir'" (handleOk)="save()">
+</app-popup-confirmation>

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Api/">
+    <Project Path="Ordbox.Api.csproj" />
+  </Folder>
+  <Folder Name="/Domain/">
+    <Project Path="../Domain/Ordbox.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Sdk/">
+    <Project Path="../Sdk/Ordbox.SDK.csproj" />
+  </Folder>
+  <Folder Name="/Services/">
+    <Project Path="../Services/Ordbox.Services.csproj" />
+  </Folder>
+</Solution>

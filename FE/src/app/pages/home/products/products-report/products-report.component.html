@@ -1,0 +1,76 @@
+<nz-layout>
+    <nz-page-header class="list-header">
+        <nz-page-header-title>Reporte de mercadería</nz-page-header-title>
+        <nz-page-header-extra>
+          <button
+            nz-tooltip
+            nzTooltipTitle="Generar Reporte de Stock"
+            nz-button
+            nzType="primary"
+            [nzLoading]="loading"
+            (click)="productsReport()"
+          >Generar Reporte de Stock
+          </button>
+        </nz-page-header-extra>
+      </nz-page-header> 
+      <nz-spin [nzSpinning]="loading" >
+        @if (productsReportList) {
+      <nz-content>
+          <nz-collapse>
+            <nz-collapse-panel nzHeader="Mercadería" [nzActive]="true" [nzShowArrow]="true" style="background-color: var(--blue-light);">
+              <div >
+                @if(productsReportList) {
+                <tr>
+                  <th style="background-color: white "></th>
+                  <th style="background-color: white  "></th>
+                  <th style="background-color: white  "></th>
+                  @if(productsReportList) {
+                    <th style="background-color: var(--blue-light); font-size:small; padding: 15px; margin-left: 1px;">
+                      <strong>Fecha :</strong> {{ productsReportList.date != undefined ? this.formaterDate(productsReportList.date) : null }}<br>
+                      <strong>Total :</strong> <span style="color: var(--blue);font-weight: bold;">{{productsReportList.total != undefined ? this.currencyFormat(productsReportList.total) : null}} </span></th>
+                  }
+                  <th style="background-color: white "></th>
+                </tr>}
+               </div> 
+              <div class="table" infiniteScroll> 
+              <nz-table  
+              nzShowPagination="false"
+              class="tabla"
+              [nzData]="productsReportList.products"
+              nzBordered="false"
+              nzTableLayout="fixed"
+              [nzSize]="'small'"
+              #tablaReport>
+                <thead>  
+                  <tr>
+                    <th nzEllipsis nzWidth="260px">Producto</th>
+                    <th nzEllipsis nzWidth="70px">Marca</th>
+                    <th nzEllipsis nzWidth="90px" style="text-align: right">Código</th>
+                    <th nzEllipsis nzWidth="50px" style="text-align: center">Cantidad</th>
+                    <th nzEllipsis nzWidth="50px" style="text-align: right;">Precio</th>
+                    <th nzEllipsis nzWidth="70px"  style="text-align: right">SubTotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (info of productsReportList.products; track $index) {
+                  <tr 
+                  tabindex="-1"
+                  (keydown)="myNavegation($event)"
+                  [style.background-color]="
+                  info === selectedProduct ? 'lightblue' : ''
+                ">
+                    <td>{{info.description}}</td>
+                    <td>{{info.brandName}}</td>
+                    <td nzEllipsis style="text-align: right">{{info.code}}</td>
+                    <td style="font-weight: bold; text-align: center" >{{info.quantity}}</td>
+                    <td nzEllipsis style="font-weight: bold; color: blue;text-align: right">{{this.currencyFormat(info.purchase_Price)}}</td>
+                    <td nzEllipsis style="font-weight: bold; text-align: right">{{this.currencyFormat(info.subTotal)}}</td>
+                  </tr>}
+               </tbody>
+              </nz-table>  
+              </div>      
+            </nz-collapse-panel>
+          </nz-collapse>
+      </nz-content>}
+    </nz-spin>
+</nz-layout>

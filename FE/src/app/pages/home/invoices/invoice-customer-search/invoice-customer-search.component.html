@@ -1,0 +1,49 @@
+
+    <form nz-form [formGroup]="formSearch">
+        <nz-collapse class="list-header">
+            <form nz-form (ngSubmit)="onSearch()"> 
+            <div nz-col nzSpan="24" style="margin-bottom: -20px;">
+                <div nz-col nzSpan="24" style="margin-bottom: -20px;">
+                    <nz-form-item>
+                      <nz-form-label nzFor="busqueda">Búsqueda</nz-form-label>
+                      <nz-form-control>                  
+                        <nz-input-wrapper>
+                          <input [ngModelOptions]="{standalone: true}" type="text" placeholder="Ingrese Cliente" nz-input
+                          (keydown.enter)="onSearch()"  [(ngModel)]="queryParams.filter" />
+                        </nz-input-wrapper>
+                        @if (queryParams.filter) {
+                        <ng-template #clearQuery>
+                          <i nz-icon class="ant-input-clear-icon" nzTheme="fill" nzType="close-circle"
+                            (click)="queryParams.filter = ''; getAllCustomer()"></i>
+                        </ng-template>}
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div> 
+          
+            </div>
+            </form>
+        </nz-collapse>
+
+        <div>
+            <nz-table class="tablaCustomer" nzShowSizeChanger [nzData]="allCustomer()" nzBordered=true [nzSize]="'small'"
+                [nzLoading]="loading()" [nzTotal]="totalItems()" [nzPageSize]="queryParams.pageSize" [nzPageIndex]="1"
+                [nzFrontPagination]="false" [nzPaginationType]="'small'" (nzQueryParams)="onQueryParamsChange($event)" >
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cuit</th>
+                        <th>Dirección</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (data of allCustomer(); track $index) {
+                    <tr class="small-text" (click)="selecccion($event)"
+                        id="{{data.id}}">
+                        <td>{{data.name}}</td>
+                        <td>{{data.cuit}}</td>
+                        <td>{{data.address}}</td>
+                    </tr>}
+                </tbody>
+            </nz-table>
+        </div>
+    </form>

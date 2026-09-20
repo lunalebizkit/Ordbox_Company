@@ -1,0 +1,41 @@
+<app-header-op-buttons #header [btnCancelText]="'Volver'" [btnSaveText]="'Guardar'" [title]="'Certificado'"
+    [showSpinner]="isSaving()" [iconBack]="'rollback'" [iconSave]="'save'" [iconTitle]="'user'"
+    (onSaveClick)="msjConfirmOk()" [showBack]="true" [showSave]="isEditMode()" (onEditClick)="toggleEdit()"
+    [btnEditText]="isEditMode() ? 'Cancelar' : 'Editar'" [editPermission]="permissions.EditUser">
+</app-header-op-buttons>
+
+<nz-spin [nzSpinning]="isLoading()" class="margin-top">
+    <nz-collapse>
+        <nz-collapse-panel nzHeader="Certificado" [nzActive]="true">
+            <nz-row [nzJustify]="'center'">
+                <nz-col nzSpan="12">
+                    <form nz-form [formGroup]="form" style="margin-top: 16px;">
+                        <!--Nombre-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="password">Contraseña</nz-form-label>
+                            <nz-form-control>
+                                <input formControlName="password" nz-input id="password" maxlength="250" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!--Description-->
+                        <nz-form-item [style.width.%]="75">
+                            <nz-form-label nzRequired nzFor="certificate">Certificado</nz-form-label>
+                            <nz-form-control>
+                                <input type="file" (change)="onFileSelected($event)" id="certificate" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                    </form>
+
+                </nz-col>
+            </nz-row>
+        </nz-collapse-panel>
+
+    </nz-collapse>
+
+</nz-spin>
+
+<app-popup-confirmation #pop [title]="'Confirmar'" [header]="'¿Está seguro que desea guardar Certificado?'"
+    [message]="'Esta acción no se puede revertir'" (handleOk)="save()" [disabled]="isSaving()">
+</app-popup-confirmation>

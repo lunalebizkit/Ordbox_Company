@@ -1,0 +1,15 @@
+<form nz-form [formGroup]="form" style="margin-top: 16px">
+<div >
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="barCode">Código de barra 
+      </nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+          <input formControlName="barCode" nz-input id="barCode" maxlength="250" (keydown.enter)="(setCodeBar())" #barcodefocus/>
+      </nz-form-control>
+  </nz-form-item>
+  </div>
+  <div *nzModalFooter>
+    <button nz-button nzType="default" (click)="destroyModal()">Cancelar</button>
+    <button nz-button nzType="primary" (click)="setCodeBar()">Ok</button>
+  </div>
+</form>
