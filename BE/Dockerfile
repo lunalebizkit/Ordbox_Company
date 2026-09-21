@@ -3,16 +3,16 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 80
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 WORKDIR /src
-COPY ["Api/Ordbox.Api.csproj", "Ordbox.Api/"]
-COPY ["Services/Ordbox.Services.csproj", "Ordbox.Services/"]
-COPY ["Sdk/Ordbox.SDK.csproj", "Ordbox.Sdk/"]
-COPY ["Domain/Ordbox.Domain.csproj", "Ordbox.Domain/"]
+COPY ["Api/Ordbox.Api.csproj", "Api/"]
+COPY ["Services/Ordbox.Services.csproj", "Services/"]
+COPY ["Sdk/Ordbox.SDK.csproj", "Sdk/"]
+COPY ["Domain/Ordbox.Domain.csproj", "Domain/"]
 
-RUN dotnet restore "Ordbox.Api/Ordbox.Api.csproj"
+RUN dotnet restore "Api/Ordbox.Api.csproj"
 COPY . .
-WORKDIR "/src/Ordbox.Api"
+WORKDIR "/src/Api"
 RUN dotnet build "Ordbox.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
