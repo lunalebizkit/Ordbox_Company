@@ -3,6 +3,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 80
 
+RUN addgroup --system --gid 1000 appgroup \
+    && adduser --system --uid 1000 --ingroup appgroup appuser
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 WORKDIR /src
 COPY ["Api/Ordbox.Api.csproj", "Api/"]
@@ -25,4 +28,6 @@ RUN apt-get update && apt-get install -y openssl
 COPY openssl.cnf /etc/ssl/openssl.cnf
 
 COPY --from=publish /app/publish .
+
+USER appuser
 ENTRYPOINT ["dotnet", "Ordbox.Api.dll"]

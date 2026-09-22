@@ -1,10 +1,11 @@
-version: '3'
+version: '3.9'
 services:
   api:
     image:  lunale/ordboxcompany:api-latest
     restart: always
     expose:
       - 80
+    user: "1000:1000"
     volumes:
       - /home/ordboxcompany/docker-compose-files/front/app/wwwroot/Production:/app/wwwroot/media/doc:rw
       - /home/ordboxcompany/docker-compose-files/front/app/wwwroot/media:/app/wwwroot/media:rw
@@ -22,6 +23,7 @@ services:
     restart: always
     expose:
       - 80
+    user: "1000:1000"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     environment:
@@ -34,7 +36,7 @@ services:
       - "traefik.http.routers.front-apasionados.rule=Host(`ordboxcompany.lunale.com.ar`)"
       - "traefik.http.routers.front-apasionados.entrypoints=web"
       
-  networks:
+networks:
   traefik_proxy:
-    external: true
+    driver: bridge
 
