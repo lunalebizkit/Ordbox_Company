@@ -27,9 +27,17 @@
                 "glob": "**/*",
                 "input": "./node_modules/@ant-design/icons-angular/src/inline-svg/",
                 "output": "/assets/"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets/env",
+                "output": "assets/env"
               }
             ],
-            "styles": ["./node_modules/ng-zorro-antd/ng-zorro-antd.min.css", "src/styles.css"]
+            "styles": [
+              "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
+              "src/styles.css"
+            ]
           },
           "configurations": {
             "production": {
