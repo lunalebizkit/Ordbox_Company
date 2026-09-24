@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { environment } from "../../../environments/environment";
+import { runtimeEnvironment } from "../../../environments/runtimeEnviroment";
 
 @Injectable ({
     providedIn: 'root'
@@ -16,7 +16,7 @@ import { environment } from "../../../environments/environment";
     *Url de la API
     */
    
-    public API_ENDPOINT: string = `${environment.api.url}v${environment.api.ver}`;
+    public API_ENDPOINT: string = `${runtimeEnvironment.apiUrl}v${runtimeEnvironment.apiVer}`;
   
     /**
     * Constructor

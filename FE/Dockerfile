@@ -1,28 +1,30 @@
-# Stage 1
+# Stage 1: Build Angular
 FROM node:24-alpine as build-step
-RUN mkdir -p /app
 WORKDIR /app
 
 COPY package.json /app
 RUN npm install --force
 
-
-#Variables de entorno 
 COPY . /app
 RUN npm run build
 
-# Stage 2
+# Stage 2: Servir con Nginx
 FROM nginx:alpine
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build-step /app/dist/Ordbox/browser /usr/share/nginx/html
 
-RUN chown -R appuser:appgroup /usr/share/nginx/html /etc/nginx
-USER appuser
+# Crear y dar permisos a las carpetas necesarias
+RUN mkdir -p /var/cache/nginx /run/nginx \
+    && chown -R 1000:1000 /usr/share/nginx/html \
+    && chown -R 1000:1000 /var/cache/nginx \
+    && chown -R 1000:1000 /run/nginx  \
+    && chmod -R 777 /usr/share/nginx/html \
+    && chmod -R 777 /var/cache/nginx \
+    && chmod -R 777 /run/nginx 
+USER 1000
+
 EXPOSE 80
 
-# Cuando el contenedor inicia, reemplaza el env.js con los valores de las variables de entorno
-CMD ["/bin/sh",  "-c",  "envsubst < /usr/share/nginx/html/assets/env/env.template.js > /usr/share/nginx/html/assets/env/env.js && exec nginx -g 'daemon off;'"]
-
+# Generar env.js al iniciar y correr Nginx
+CMD ["/bin/sh", "-c", "envsubst < /usr/share/nginx/html/assets/env/env.template.js > /usr/share/nginx/html/assets/env/env.js && exec nginx -g 'daemon off;' && chmod 777 /run/nginx/nginx.pid"]
