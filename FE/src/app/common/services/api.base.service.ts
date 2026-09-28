@@ -15,16 +15,19 @@ export class ApiService {
   *Url de la API
   */
   public get API_ENDPOINT(): string {
-    const baseUrl = (window as any).env?.apiUrl || 'https://localhost:7261/api/';
-    const version = (window as any).env?.apiVer || '1';
+    const rawUrl = (window as any).env?.apiUrl || 'https://localhost:7261/api/';
+  const version = (window as any).env?.apiVer || '1';
 
-    const cleanUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  // Quitar la barra diagonal final si existe
+  const baseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
 
-    if (baseUrl.endsWith('/api')) {
-      return `${baseUrl}/v${version}`;
-    }
-    return `${cleanUrl}v${version}`;
+  // Si baseUrl ya incluye '/api', no lo duplicamos; de lo contrario, lo agregamos
+  if (baseUrl.endsWith('/api')) {
+    return `${baseUrl}/v${version}`;
   }
+
+  return `${baseUrl}/api/v${version}`;
+}
 
   /**
   * Constructor
