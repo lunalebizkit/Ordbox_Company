@@ -2,7 +2,6 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { runtimeEnvironment } from "../../../environments/runtimeEnviroment";
 
 @Injectable ({
     providedIn: 'root'
@@ -15,8 +14,13 @@ import { runtimeEnvironment } from "../../../environments/runtimeEnviroment";
     /**
     *Url de la API
     */
-   
-    public API_ENDPOINT: string = `${runtimeEnvironment.apiUrl}v${runtimeEnvironment.apiVer}`;
+   public get API_ENDPOINT(): string {
+    const baseUrl = (window as any).env?.apiUrl || 'https://localhost:7261/api/';
+    const version = (window as any).env?.apiVer || '1';
+
+    const cleanUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+    return `${cleanUrl}v${version}`;
+   }
   
     /**
     * Constructor
