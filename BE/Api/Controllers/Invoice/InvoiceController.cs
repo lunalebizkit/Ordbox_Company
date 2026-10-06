@@ -204,34 +204,41 @@ namespace Ordbox.Api.Controllers.Invoice
         #region PRIVATE
 
         private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
-        { 
+        {
             var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
+            var certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
 
-            DtoResponseCompanyCertificate? certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
+            if (!(invoice.Success && invoice.Data != null && certificate?.IsActive == true))
+                return BadRequest("No se encontró número de factura");
 
-            if (invoice.Success && invoice.Data != null && certificate != null && certificate.IsActive)
+            // Ajustes de datos
+            invoice.Data.DateTime = dateTime ?? DateTime.Now;
+            if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
+
+            var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate)
+                .ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(responseCAE.Cae) && responseCAE.InvoiceNumber <= 0)
+                return BadRequest("No se pudo generar el CAE");
+
+            var result = await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false);
+
+            if (result.Success && !string.IsNullOrEmpty(invoice.Data.CustomerEmail))
             {
-                invoice.Data.DateTime = dateTime == null ? invoice.Data.DateTime : DateTime.Now;
+                var document = await _service.GetDocumentById(invoiceId).ConfigureAwait(false);
+                var company = await _companyService.GetById(requestedBy.CompanyId).ConfigureAwait(false);
+                var content = await _pdfService.PrintInvoiceARCA(document.Data, company.Data).ConfigureAwait(false);
 
-                if (!string.IsNullOrEmpty(observacion)) { invoice.Data.Observation = observacion; }
+                var emailResult = await _emailService
+                    .SendEmailInvoice(invoice.Data.CustomerEmail, content.Data, company.Data)
+                    .ConfigureAwait(false);
 
-                var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate).ConfigureAwait(false);
-
-                if (!string.IsNullOrEmpty(responseCAE.Cae) || responseCAE.InvoiceNumber > 0)
-                {
-                    var result = await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false);
-
-                    if (result.Success && !string.IsNullOrEmpty(invoice.Data.CustomerEmail))
-                    {
-                        var document = await _service.GetDocumentById(invoiceId);
-                        var company = await _companyService.GetById(requestedBy.CompanyId);
-                        var content = await _pdfService.PrintInvoiceARCA(document.Data, company.Data);
-                        return Return(await _emailService.SendEmailInvoice(invoice.Data.CustomerEmail, content.Data, company.Data));
-                    }
-                }
+                return Return(emailResult);
             }
-            return BadRequest("No se encontro número de factura");
+
+            return Return(result);
         }
+
 
         #endregion
     }
