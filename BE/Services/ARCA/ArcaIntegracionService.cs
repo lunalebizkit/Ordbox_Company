@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Ordbox.Domain;
 using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model;
@@ -106,8 +107,11 @@ namespace Ordbox.Services.ARCA
                 string wsaaUrl = _arcaConfig.URLCAEBase;
                 var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
 
-                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+                _logger.LogInfo($"Obteniend auth {JsonConvert.SerializeObject(auth)}");
+                _logger.LogInfo($"Obteniendo último comprobante para el tipo {invoice.Type} y punto de venta {companyCertificate.CompanyId}");
 
+                Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
+                _logger.LogInfo($"Obteniend company {JsonConvert.SerializeObject(company)}");
                 var ultimoComprobante = await ConsultarUltimoComprobanteAsync(invoice.Type, auth.Token, auth.Sign, company, ct);
 
                 if (ultimoComprobante.CbteNro != null && ultimoComprobante.Errores.Any() == false)

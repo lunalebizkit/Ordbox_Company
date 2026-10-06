@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Ordbox.Api.Extension;
 using Ordbox.Api.Filter;
 using Ordbox.Domain.Enum;
 using Ordbox.Domain.Model.Extensions;
+using Ordbox.SDK.Error;
 using Ordbox.Services.ARCA.Interface;
 using Ordbox.Services.Common;
 using Ordbox.Services.Models.Dtos.DtoRequest;
-using Ordbox.Services.Models.Dtos.DtoResponse;
 using Ordbox.Services.Services;
+using Serilog;
 using System.IO.Compression;
 
 namespace Ordbox.Api.Controllers.Invoice
@@ -22,13 +24,16 @@ namespace Ordbox.Api.Controllers.Invoice
         private readonly EmailService _emailService;
         private readonly IArcaIntegracion _arcaIntegracionService;
 
-        public InvoiceController(InvoiceService service, CompanyService companyService, PdfService pdfService, EmailService emailService, IArcaIntegracion arcaIntegracionService)
+        private readonly ErrorManager _logger;
+
+        public InvoiceController(InvoiceService service, CompanyService companyService, PdfService pdfService, EmailService emailService, IArcaIntegracion arcaIntegracionService, ErrorManager logger)
         {
             _service = service;
             _companyService = companyService;
             _pdfService = pdfService;
             _emailService = emailService;
             _arcaIntegracionService = arcaIntegracionService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -205,6 +210,8 @@ namespace Ordbox.Api.Controllers.Invoice
 
         private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
         {
+            _logger.LogInfo($"Iniciando proceso de obtención de CAE para la factura con ID: {invoiceId} por el usuario {requestedBy.UserName} (ID: {requestedBy.UserId}) de la empresa {requestedBy.CompanyId}.");
+
             var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
             var certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
 
@@ -215,6 +222,7 @@ namespace Ordbox.Api.Controllers.Invoice
             invoice.Data.DateTime = dateTime ?? DateTime.Now;
             if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
 
+            _logger.LogInfo(ErrorsMessages.GetMessage(ErrorsCodes.C_RQ_PRODUCT_REQUEST), $"Enviando solicitud a ARCA para generar CAE para la factura con ID: {invoiceId}. Datos de la certificado: {JsonConvert.SerializeObject(certificate)}");
             var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate)
                 .ConfigureAwait(false);
 
