@@ -222,7 +222,6 @@ namespace Ordbox.Api.Controllers.Invoice
             invoice.Data.DateTime = dateTime ?? DateTime.Now;
             if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
 
-            _logger.LogInfo(ErrorsMessages.GetMessage(ErrorsCodes.C_RQ_PRODUCT_REQUEST), $"Enviando solicitud a ARCA para generar CAE para la factura con ID: {invoiceId}. Datos de la certificado: {JsonConvert.SerializeObject(certificate)}");
             var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate)
                 .ConfigureAwait(false);
 

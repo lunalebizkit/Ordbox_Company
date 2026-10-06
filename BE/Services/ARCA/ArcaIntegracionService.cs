@@ -96,6 +96,7 @@ namespace Ordbox.Services.ARCA
         public async Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
 
+                _logger.LogInfo($"ingresando a crear comprobante ${_arcaConfig.URLCAEBase}");
             IntegrationLogInvoice integrationLog = new IntegrationLogInvoice
             {
                 CreatedOn = DateTimeOffset.Now,
@@ -105,7 +106,7 @@ namespace Ordbox.Services.ARCA
             try
             {
                 string wsaaUrl = _arcaConfig.URLCAEBase;
-                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct);
+                var auth = await ObtenerLoginTicketAsync(companyCertificate, ct).ConfigureAwait(false);
 
                 _logger.LogInfo($"Obteniend auth {JsonConvert.SerializeObject(auth)}");
                 _logger.LogInfo($"Obteniendo último comprobante para el tipo {invoice.Type} y punto de venta {companyCertificate.CompanyId}");
