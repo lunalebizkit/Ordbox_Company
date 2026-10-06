@@ -149,7 +149,8 @@ namespace Ordbox.Api.Controllers.Invoice
             {
                 try
                 {
-                    await GetCAEInvoiceAsync(invoiceId.Data.Id, requestedBy);
+                    
+                    await GetCAEInvoiceAsync(invoiceId.Data.Id, requestedBy).ConfigureAwait(false);
                 }
                 catch (Exception)
                 {

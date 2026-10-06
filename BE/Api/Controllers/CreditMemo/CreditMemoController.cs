@@ -65,7 +65,7 @@ namespace Ordbox.Api.Controllers.CreditMemoController
             {
                 try
                 {
-                    await GetCAEInvoiceAsync(result.Data.Id, requestedBy);
+                    await GetCAEInvoiceAsync(result.Data.Id, requestedBy).ConfigureAwait(false);
                 }
                 catch (Exception)
                 {
