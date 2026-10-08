@@ -96,21 +96,6 @@ namespace Ordbox.Services.ARCA
         public async Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
 
-            if (_logger == null)
-                throw new Exception("ARCA: _logger es NULL");
-
-            if (_arcaConfig == null)
-                throw new Exception("ARCA: _arcaConfig es NULL");
-
-            if (invoice == null)
-                throw new Exception("ARCA: invoice es NULL");
-
-            if (companyCertificate == null)
-                throw new Exception("ARCA: companyCertificate es NULL");
-
-            _logger.LogInfo(
-                $"ingresando a crear comprobante {_arcaConfig.URLCAEBase}");
-
             IntegrationLogInvoice integrationLog = new IntegrationLogInvoice
             {
                 CreatedOn = DateTimeOffset.Now,
@@ -122,11 +107,7 @@ namespace Ordbox.Services.ARCA
                 string wsaaUrl = _arcaConfig.URLCAEBase;
                 var auth = await ObtenerLoginTicketAsync(companyCertificate, ct).ConfigureAwait(false);
 
-                _logger.LogInfo($"Obteniend auth {JsonConvert.SerializeObject(auth)}");
-                _logger.LogInfo($"Obteniendo último comprobante para el tipo {invoice.Type} y punto de venta {companyCertificate.CompanyId}");
-
                 Company company = await _contextSql.Companies.FirstAsync(c => c.Id == companyCertificate.CompanyId, ct).ConfigureAwait(false);
-                _logger.LogInfo($"Obteniend company {JsonConvert.SerializeObject(company)}");
                 var ultimoComprobante = await ConsultarUltimoComprobanteAsync(invoice.Type, auth.Token, auth.Sign, company, ct);
 
                 if (ultimoComprobante.CbteNro != null && ultimoComprobante.Errores.Any() == false)
@@ -240,7 +221,7 @@ namespace Ordbox.Services.ARCA
             }
             finally
             {
-                SaveIntegrationLog(integrationLog);
+                SaveIntegrationLogCredits(integrationLog);
             }
         }
 
@@ -384,7 +365,6 @@ namespace Ordbox.Services.ARCA
 
             IntegrationLog? existingLog = await _contextSql.IntegrationLogs.FirstOrDefaultAsync(l => (l.Success == true && l.GenerationTime.Value <= ahora.DateTime && l.ExpirationTime.Value >= ahora.DateTime)).ConfigureAwait(false);
 
-            _logger.LogInfo($"buscando integration logs ${JsonConvert.SerializeObject(existingLog)}");
             if (existingLog != null)
             {
                 return new LoginTicketResponseDto
@@ -1075,7 +1055,7 @@ namespace Ordbox.Services.ARCA
             }
         }
 
-        private void SaveIntegrationLog(IntegrationLogCredit log)
+        private void SaveIntegrationLogCredits(IntegrationLogCredit log)
         {
             try
             {
