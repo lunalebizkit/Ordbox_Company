@@ -157,9 +157,11 @@ namespace Ordbox.Api.Controllers.Invoice
                     
                     await GetCAEInvoiceAsync(invoiceId.Data.Id, requestedBy).ConfigureAwait(false);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    return Return(invoiceId);
+                    _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ex);
+
+                    throw;
                 }
             }
 
@@ -221,29 +223,50 @@ namespace Ordbox.Api.Controllers.Invoice
             if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
 
             _logger.LogWarning("1",$"llamado a ARCA integracion para generar CAE de la factura {invoiceId} por el usuario {requestedBy.UserId} de la empresa {requestedBy.CompanyId}");
-            var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate).ConfigureAwait(false);
 
-            _logger.LogWarning("2", $"respuesta de ARCA integracion para generar CAE de la factura {invoiceId} por el usuario {requestedBy.UserId} de la empresa {requestedBy.CompanyId}: {JsonConvert.SerializeObject(responseCAE)}");
-
-            if (string.IsNullOrEmpty(responseCAE.Cae) && responseCAE.InvoiceNumber <= 0)
-                return BadRequest("No se pudo generar el CAE");
-
-            var result = await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false);
-
-            if (result.Success && !string.IsNullOrEmpty(invoice.Data.CustomerEmail))
+            try
             {
-                var document = await _service.GetDocumentById(invoiceId).ConfigureAwait(false);
-                var company = await _companyService.GetById(requestedBy.CompanyId).ConfigureAwait(false);
-                var content = await _pdfService.PrintInvoiceARCA(document.Data, company.Data).ConfigureAwait(false);
+                _logger.LogWarning(
+                    $"ARCA B - tipo servicio: {_arcaIntegracionService.GetType().FullName}"
+                );
 
-                var emailResult = await _emailService
-                    .SendEmailInvoice(invoice.Data.CustomerEmail, content.Data, company.Data)
+                var responseCAE = await _arcaIntegracionService
+                    .CrearComprobanteAsync(invoice.Data, certificate)
                     .ConfigureAwait(false);
 
-                return Return(emailResult);
-            }
+                _logger.LogWarning("ARCA C - volvió del servicio");
 
-            return Return(result);
+                _logger.LogWarning(
+                    $"ARCA D - respuesta: {JsonConvert.SerializeObject(responseCAE)}"
+                );
+
+
+                if (string.IsNullOrEmpty(responseCAE.Cae) && responseCAE.InvoiceNumber <= 0)
+                    return BadRequest("No se pudo generar el CAE");
+
+                var result = await _service.Update(invoice.Data, responseCAE, requestedBy).ConfigureAwait(false);
+
+                if (result.Success && !string.IsNullOrEmpty(invoice.Data.CustomerEmail))
+                {
+                    var document = await _service.GetDocumentById(invoiceId).ConfigureAwait(false);
+                    var company = await _companyService.GetById(requestedBy.CompanyId).ConfigureAwait(false);
+                    var content = await _pdfService.PrintInvoiceARCA(document.Data, company.Data).ConfigureAwait(false);
+
+                    var emailResult = await _emailService
+                        .SendEmailInvoice(invoice.Data.CustomerEmail, content.Data, company.Data)
+                        .ConfigureAwait(false);
+
+                    return Return(emailResult);
+                }
+                return Return(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ex);
+
+                throw;
+            }
+            
         }
 
 
