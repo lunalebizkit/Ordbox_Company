@@ -220,8 +220,10 @@ namespace Ordbox.Api.Controllers.Invoice
             invoice.Data.DateTime = dateTime ?? DateTime.Now;
             if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
 
-            var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate)
-                .ConfigureAwait(false);
+            _logger.LogWarning("1",$"llamado a ARCA integracion para generar CAE de la factura {invoiceId} por el usuario {requestedBy.UserId} de la empresa {requestedBy.CompanyId}");
+            var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate).ConfigureAwait(false);
+
+            _logger.LogWarning("2", $"respuesta de ARCA integracion para generar CAE de la factura {invoiceId} por el usuario {requestedBy.UserId} de la empresa {requestedBy.CompanyId}: {JsonConvert.SerializeObject(responseCAE)}");
 
             if (string.IsNullOrEmpty(responseCAE.Cae) && responseCAE.InvoiceNumber <= 0)
                 return BadRequest("No se pudo generar el CAE");
