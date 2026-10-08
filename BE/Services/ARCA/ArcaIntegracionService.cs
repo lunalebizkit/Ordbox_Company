@@ -96,7 +96,21 @@ namespace Ordbox.Services.ARCA
         public async Task<DtoResponseARCAInvoice> CrearComprobanteAsync(DtoRequestInvoice invoice, DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
 
-                _logger.LogInfo($"ingresando a crear comprobante ${_arcaConfig.URLCAEBase}");
+            if (_logger == null)
+                throw new Exception("ARCA: _logger es NULL");
+
+            if (_arcaConfig == null)
+                throw new Exception("ARCA: _arcaConfig es NULL");
+
+            if (invoice == null)
+                throw new Exception("ARCA: invoice es NULL");
+
+            if (companyCertificate == null)
+                throw new Exception("ARCA: companyCertificate es NULL");
+
+            _logger.LogInfo(
+                $"ingresando a crear comprobante {_arcaConfig.URLCAEBase}");
+
             IntegrationLogInvoice integrationLog = new IntegrationLogInvoice
             {
                 CreatedOn = DateTimeOffset.Now,
@@ -326,7 +340,7 @@ namespace Ordbox.Services.ARCA
                 throw;
             }
         }
-        
+
         public async Task<DtoResponseArcaUltimoComprobante> ConsultarPuntodeVentaAsync(string token, string sign, Company company, CancellationToken ct = default)
         {
             try
@@ -360,7 +374,7 @@ namespace Ordbox.Services.ARCA
 
         public async Task<LoginTicketResponseDto> ObtenerLoginTicketAsync(DtoResponseCompanyCertificate companyCertificate, CancellationToken ct = default)
         {
-            DtoRequestIntegrationLog integrationLog = new();            
+            DtoRequestIntegrationLog integrationLog = new();
 
             string wsaaUrl = _arcaConfig.URLLogin;
             string service = "wsfe";
@@ -464,7 +478,7 @@ namespace Ordbox.Services.ARCA
 
 
         #region Parseo de respuestas SOAP
-        private DtoResponseARCAInvoice ParseSoapResponse(string xml,long invoiceNumber)
+        private DtoResponseARCAInvoice ParseSoapResponse(string xml, long invoiceNumber)
         {
             var doc = XDocument.Parse(xml);
             XNamespace ns = "http://ar.gov.afip.dif.FEV1/";
@@ -859,7 +873,7 @@ namespace Ordbox.Services.ARCA
 
             return doc.ToString(SaveOptions.DisableFormatting);
         }
-        
+
         private string BuildGetPuntoDeVentaRequestXml(string token, string sign, string cuit)
         {
             XNamespace soapenv = "http://schemas.xmlsoap.org/soap/envelope/";
