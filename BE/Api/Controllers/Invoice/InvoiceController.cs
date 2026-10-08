@@ -210,8 +210,6 @@ namespace Ordbox.Api.Controllers.Invoice
 
         private async Task<IActionResult> GetCAEInvoiceAsync(long invoiceId, RequestedBy requestedBy, DateTime? dateTime = null, string? observacion = null)
         {
-            _logger.LogInfo($"Iniciando proceso de obtención de CAE para la factura con ID: {invoiceId} por el usuario {requestedBy.UserName} (ID: {requestedBy.UserId}) de la empresa {requestedBy.CompanyId}.");
-
             var invoice = await _service.GetById(invoiceId, requestedBy).ConfigureAwait(false);
             var certificate = await _companyService.GetCompanyCertificateAsync(requestedBy.CompanyId).ConfigureAwait(false);
 

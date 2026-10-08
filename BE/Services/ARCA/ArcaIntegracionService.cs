@@ -370,6 +370,7 @@ namespace Ordbox.Services.ARCA
 
             IntegrationLog? existingLog = await _contextSql.IntegrationLogs.FirstOrDefaultAsync(l => (l.Success == true && l.GenerationTime.Value <= ahora.DateTime && l.ExpirationTime.Value >= ahora.DateTime)).ConfigureAwait(false);
 
+            _logger.LogInfo($"buscando integration logs ${JsonConvert.SerializeObject(existingLog)}");
             if (existingLog != null)
             {
                 return new LoginTicketResponseDto
@@ -931,13 +932,15 @@ namespace Ordbox.Services.ARCA
         #endregion
 
 
-        private static string SignXmlCmsBase64(string xml, byte[] encryptedCert, byte[] encryptedPassword)
+        public string SignXmlCmsBase64(string xml, byte[] encryptedCert, byte[] encryptedPassword)
         {
             byte[] passByted = EncryptDecryptWithSeed.GetPasswordBytes();
 
             byte[]? pfxPassword = EncryptDecryptWithSeed.AESDecrypt(encryptedPassword, passByted);
             byte[] decryptedCert = EncryptDecryptWithSeed.AESDecrypt(encryptedCert, passByted);
             string decryptedPassword = Encoding.UTF8.GetString(pfxPassword);
+
+            _logger.LogInfo($"buscando integration logs ${JsonConvert.SerializeObject(decryptedCert)} password: ${JsonConvert.SerializeObject(decryptedPassword)}");
 
             using (var cert = new X509Certificate2(decryptedCert, decryptedPassword, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.EphemeralKeySet))
             {
