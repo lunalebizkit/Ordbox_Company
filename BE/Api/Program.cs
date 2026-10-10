@@ -73,17 +73,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<ArcaConfig>(p =>
-{
-    var config = p.GetRequiredService<IConfiguration>()
-        .GetSection("ArcaConfig")
-        .Get<ArcaConfig>();
-
-    if (config == null)
-        throw new Exception("ARCA CONFIGURATION NO ENCONTRADA");
-
-    return config;
-});
+builder.Services.AddSingleton<ArcaConfig>(p => builder.Configuration.GetSection("ArcaConfig").Get<ArcaConfig>());
 builder.Services.AddScoped<IArcaIntegracion, ArcaIntegracionService>();
 builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<UserMapperProfile>();

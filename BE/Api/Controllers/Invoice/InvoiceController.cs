@@ -153,14 +153,12 @@ namespace Ordbox.Api.Controllers.Invoice
             if (invoiceId.Success && invoiceId.Data != null)
             {
                 try
-                {
-                    
+                {                    
                     await GetCAEInvoiceAsync(invoiceId.Data.Id, requestedBy).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ex);
-
                     throw;
                 }
             }
@@ -222,24 +220,9 @@ namespace Ordbox.Api.Controllers.Invoice
             invoice.Data.DateTime = dateTime ?? DateTime.Now;
             if (!string.IsNullOrEmpty(observacion))  invoice.Data.Observation = observacion;
 
-            _logger.LogWarning("1",$"llamado a ARCA integracion para generar CAE de la factura {invoiceId} por el usuario {requestedBy.UserId} de la empresa {requestedBy.CompanyId}");
-
             try
             {
-                _logger.LogWarning(
-                    $"ARCA B - tipo servicio: {_arcaIntegracionService.GetType().FullName}"
-                );
-
-                var responseCAE = await _arcaIntegracionService
-                    .CrearComprobanteAsync(invoice.Data, certificate)
-                    .ConfigureAwait(false);
-
-                _logger.LogWarning("ARCA C - volvió del servicio");
-
-                _logger.LogWarning(
-                    $"ARCA D - respuesta: {JsonConvert.SerializeObject(responseCAE)}"
-                );
-
+                var responseCAE = await _arcaIntegracionService.CrearComprobanteAsync(invoice.Data, certificate).ConfigureAwait(false);
 
                 if (string.IsNullOrEmpty(responseCAE.Cae) && responseCAE.InvoiceNumber <= 0)
                     return BadRequest("No se pudo generar el CAE");
@@ -263,12 +246,9 @@ namespace Ordbox.Api.Controllers.Invoice
             catch (Exception ex)
             {
                 _logger.LogError(ErrorsCodes.C_010_ERROR_EXCEPTION, ex);
-
                 throw;
-            }
-            
+            }            
         }
-
 
         #endregion
     }
