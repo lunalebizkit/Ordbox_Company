@@ -74,7 +74,7 @@ export class ReceiptEditComponent extends BaseComponent implements OnInit {
   isLoading = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   isEditMode = signal<boolean>(false);
-  isInvoiceEditable = signal<boolean>(true);
+  isInvoiceEditable = signal<boolean>(false);
   permissions = Permission;
   id = signal<number>(0);
   startDate = Date.now();
@@ -664,6 +664,7 @@ export class ReceiptEditComponent extends BaseComponent implements OnInit {
 
   toggleEdit() {
     this.isEditMode.set(!this.isEditMode());
+    this.isInvoiceEditable.set(this.isEditMode());
     if (this.isEditMode()) {
       this.formReceipt.enable();
       this.formProductSearch.enable();

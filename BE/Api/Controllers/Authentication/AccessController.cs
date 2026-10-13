@@ -53,7 +53,7 @@ namespace Ordbox.Api.Controllers.Authentication
             var token = JWTService.CreateDefaultToken(
                 configuration["Jwt:Issuer"],
                 configuration["Jwt:Audience"],
-                1,
+                60,
                 configuration["Jwt:SecretKey"],
                 authClaims);
 
