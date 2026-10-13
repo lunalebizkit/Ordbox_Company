@@ -427,7 +427,7 @@
           <strong>{{ currencyFormat(total()) }}</strong>
         </div>
 
-        @if (isEditMode()) {
+        @if (isInvoiceEditable()) {
           <button
             id="actualizarbutton"
             nz-button
