@@ -82,7 +82,6 @@ export class DeliveryNotesEditComponent extends BaseComponent implements OnInit 
   cuit!: string;
   supplierId!: number;
   product= signal<string>('');
-  pagado: boolean = true;
   typeSelectedId: number = 1;
   statusPaid!: boolean;
   totalItems: number = 0;
@@ -108,10 +107,9 @@ export class DeliveryNotesEditComponent extends BaseComponent implements OnInit 
       acc + item.price * item.quantity, 0)
   );
 
-  isDisabled = false;
   viewOrder: boolean = false;
   switchValue = false;
-  isDisabledPaid = false;
+  isDisabledPaid = signal<boolean>(false);
   isDisabledGrabar = false;
 
   queryParams = {
@@ -195,11 +193,10 @@ export class DeliveryNotesEditComponent extends BaseComponent implements OnInit 
 
 
           if (r.paid === true) {
-            this.isDisabledPaid = true;
+            this.isDisabledPaid.set(true);
           }
 
           if (r.statusId === 1 || r.statusId === 2) {
-            this.isDisabled = true;
             this.isDisabledGrabar = true;
             this.form.controls['supplierAddress'].disable();
             this.form.controls['supplierCuit'].disable();
@@ -209,10 +206,7 @@ export class DeliveryNotesEditComponent extends BaseComponent implements OnInit 
           } else {
             this.viewOrder = false;
           }
-
-          if (this.isDisabled == true) {
-            this.formProductSearch.controls['productSearchFilter'].disable();
-          }
+          
           this.isLoading.set(false);
         },
         error: () => {
@@ -458,16 +452,7 @@ export class DeliveryNotesEditComponent extends BaseComponent implements OnInit 
       error: () => { },
     });
   }
-
-  typeSelectedChange(id: any): void {
-    this.typeSelectedId = id;
-    if (id == 1) {
-      this.pagado = true;
-    } else {
-      this.pagado = false;
-    }
-  }
-
+  
   save(): void {
     if (this.isValidForm(this.form)) {
       //EDITAR
