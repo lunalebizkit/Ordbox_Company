@@ -1,4 +1,3 @@
-
 <div class="invoice-page">
   <div class="invoice-container">
 
@@ -32,7 +31,6 @@
 
       <form nz-form [formGroup]="formDebitMemo">
         <div class="invoice-grid invoice-grid-4">
-
           <!-- Fecha -->
           <nz-form-item>
             <nz-form-label nzFor="startDate">
@@ -191,10 +189,48 @@
 
         </div>
       </form>
+    </section>    
+
+    <!-- OBSERVACIONES -->
+    <section class="invoice-section product-search-section" >
+      <div class="section-heading">
+        <div>
+          <h3>Observaciones</h3>
+        </div>
+      </div>
+
+      <form
+        nz-form
+        [formGroup]="formDebitMemo"
+        style="margin-bottom: 20px;">
+
+        <nz-form-item>
+          <nz-form-control>
+            <input
+              nz-input
+              formControlName="observation"
+              id="observation"
+              maxlength="250"
+              autocomplete="off"
+              placeholder="Agregar observaciones (opcional)" />
+          </nz-form-control>
+        </nz-form-item>
+
+      </form>
     </section>
 
-    <!-- AGREGAR PRODUCTOS -->
-    <section class="invoice-section product-search-section">
+    <!-- DETALLE -->
+    <section class="invoice-section invoice-detail-section">
+
+      <div class="section-heading detail-heading">
+        <div>
+          <h2>Detalle de la nota de débito</h2>
+          <p>Productos, cantidades, precios e impuestos</p>
+        </div>
+      </div>
+
+      <!-- AGREGAR PRODUCTOS -->
+    <section class="invoice-section product-search-section" style="margin: 5px; margin-bottom: 15px;">
       <div class="section-heading">
         <div>
           <h3>Agregar productos</h3>
@@ -251,44 +287,6 @@
         </div>
       </form>
     </section>
-
-    <!-- OBSERVACIONES -->
-    <section class="invoice-section product-search-section" >
-      <div class="section-heading">
-        <div>
-          <h3>Observaciones</h3>
-        </div>
-      </div>
-
-      <form
-        nz-form
-        [formGroup]="formDebitMemo"
-        style="margin-bottom: 20px;">
-
-        <nz-form-item>
-          <nz-form-control>
-            <input
-              nz-input
-              formControlName="observation"
-              id="observation"
-              maxlength="250"
-              autocomplete="off"
-              placeholder="Agregar observaciones (opcional)" />
-          </nz-form-control>
-        </nz-form-item>
-
-      </form>
-    </section>
-
-    <!-- DETALLE -->
-    <section class="invoice-section invoice-detail-section">
-
-      <div class="section-heading detail-heading">
-        <div>
-          <h2>Detalle de la nota de débito</h2>
-          <p>Productos, cantidades, precios e impuestos</p>
-        </div>
-      </div>
 
       <div class="invoice-table-wrapper">
         <nz-table
