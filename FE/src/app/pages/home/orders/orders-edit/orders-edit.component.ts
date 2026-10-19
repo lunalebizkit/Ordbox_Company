@@ -122,8 +122,6 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
    */
   /**Estado Rechazado y Aceptado (1) */
   viewOrder = signal<boolean>(true);
-  /**Estado Pendiente (1) */
-  editOrder = signal<boolean>(false);
   disableMail = signal<boolean>(false);
 
   /*
@@ -266,7 +264,9 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
           });
           this.supplierName.set(r.supplierName);
           this.formSupplierSearch.controls['supplierId'].setValue(r.supplierId);
+          this.onChange(r.supplierId);
           this.dateTime = r.dateTime;
+          this.statusId.set(r.statusId);
           r.supplierEmail.forEach((e: any) => {
             this.emailsArray.push(
               new FormControl({ value: `${e}`, disabled: true }, [Validators.required])
@@ -275,17 +275,23 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
           this.orderDetailGrid.set(r.orderDetail.map((item: OrderDetailGrid) => orderGridParser(item)));
           this.orderDetail.set(r.orderDetail.map((item: OrderDetailGrid) => orderOldProductParser(item)));
 
-          if (r.statusId == 1) {
-            this.editOrder.set(true);
+          // Estado y permisos del pedido
+          if (r.statusId === 1) {
             this.disableMail.set(true);
             this.disabled.set(false);
             this.viewOrder.set(false);
           } else {
-            this.editOrder.set(false);
             this.disableMail.set(false);
             this.viewOrder.set(true);
             this.disabled.set(true);
           }
+
+          // El pedido se carga inicialmente en modo lectura
+          this.isEditMode.set(false);
+
+          this.form.disable();
+          this.formSupplierSearch.disable();
+          this.formProductSearch.disable();
 
           this.isLoading.set(false);
         },
@@ -363,10 +369,6 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     this.editId.set(null);
   }
 
-  /*
-   ** Cambiar cantidades el pedido
-   */
-
   changeQuantity(quantity: number): void {
     if (!quantity || quantity <= 0) quantity = 1;
 
@@ -441,7 +443,6 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
       console.log(error);
     }
   }
-
 
   msjConfirmOk() {
     try {
@@ -587,11 +588,25 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
   }
 
   toggleEdit() {
-    this.isEditMode.set(!this.isEditMode());
-    if (this.isEditMode()) {
+    const editMode = !this.isEditMode();
+
+    this.isEditMode.set(editMode);
+    if (editMode) {
       this.form.enable();
       this.formSupplierSearch.enable();
       this.formProductSearch.enable();
+
+      // La fecha no se puede modificar manualmente
+      this.form.controls['datetime'].disable();
+
+      // Los correos del proveedor no son campos editables
+      this.emailsArray.controls.forEach(control => control.disable());
+      this.emailsEntityArray.controls.forEach(control => control.disable());
+
+      // Mantener las restricciones según el estado del pedido
+      if (this.viewOrder()) {
+        this.form.controls['statusId'].disable();
+      }
     } else {
       this.form.disable();
       this.formProductSearch.disable();
