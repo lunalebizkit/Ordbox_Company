@@ -580,14 +580,19 @@ export class OrdersEditComponent extends BaseComponent implements OnInit {
     let isEmail = this.emailList().find((email: string) => email == data);
 
     if (isEmail) {
-      this.emailList.set(this.emailList().filter((email: string) => email != data));
-    } else {
-      this.emailList().push(data);
-    }
+    this.emailList.update(emails =>
+      emails.filter(email => email !== data)
+    );
+  } else {
+    this.emailList.update(emails => [...emails, data]);
+  }
 
   }
 
   toggleEdit() {
+    if (this.id() > 0 && this.statusId() !== 1) {
+    return;
+  }
     const editMode = !this.isEditMode();
 
     this.isEditMode.set(editMode);
